@@ -270,6 +270,22 @@ export class Sfx {
   private bgmScaleId = 1;
   private bgmBoss = false;
   private nextNoteTime = 0;
+  private bgmVol = 0.6;
+  private sfxVol = 0.8;
+
+  setBgmVolume(ratio: number): void {
+    this.bgmVol = Math.max(0, Math.min(1, ratio));
+    if (this.bgmGain && this.ctx) {
+      this.bgmGain.gain.setValueAtTime(0.35 * this.bgmVol, this.ctx.currentTime);
+    }
+  }
+
+  setSfxVolume(ratio: number): void {
+    this.sfxVol = Math.max(0, Math.min(1, ratio));
+    if (this.master && this.ctx && !this.muted) {
+      this.master.gain.setValueAtTime(0.5 * this.sfxVol, this.ctx.currentTime);
+    }
+  }
 
   startBgm(): void {
     if (!this.ctx || this.bgmActive) return;

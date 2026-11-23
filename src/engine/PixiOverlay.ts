@@ -29,6 +29,8 @@ export interface EnemyView {
   titan?: boolean;
   /** Споровое заражение (Споровый Реактор): зелёная пульсация */
   sporeInf?: number;
+  /** Таймер особого навыка для визуального телеграфа атак */
+  skillCd?: number;
   /** Хвостик: [старые ... новые], новый ближе к телу */
   tail: { x: number; y: number }[];
 }
@@ -88,6 +90,8 @@ export interface RenderState {
   arcs: { x1: number; y1: number; x2: number; y2: number; color: number }[];
   /** Лазеры Пси-сети: лучи захваченных узлов */
   lasers: { x1: number; y1: number; x2: number; y2: number }[];
+  /** Настройки комфорта и глубины */
+  settings?: { parallax?: boolean; softFlashes?: boolean; subtleShake?: boolean };
 }
 
 /** Радужная текстура свечения: яркое ядро + мягкий ореол */
@@ -161,16 +165,20 @@ export class PixiOverlay {
   private playerTextures?: Record<PlayerSpriteKey, Texture>;
   /** Мир: контейнер для камеры (перемещение и зум происходят здесь) */
   private world = new Container();
+  private bgBokeh = new Graphics();    // глубина микромира: плавающие вне фокуса клетки боке
   private fxUnder = new Graphics();    // биом, мембраны границ и ауры под сущностями
   private entityLayer = new Container();
   private organLayer = new Graphics(); // морфология организма: жвалы, шипы, усики, кристаллы
-  private fxOver = new Graphics();     // полоски HP, вспышки, кольца, лазеры
+  private fxOver = new Graphics();     // полоски HP, вспышки, кольца, лазеры, телеграфы
+  private fgSnow = new Graphics();     // планктонная взвесь / морской снег перед линзой
   private rings: PulseRing[] = [];
   /** Вспышки полигона Кольца Смерти */
   private polys: { pts: { x: number; y: number }[]; life: number; color: number }[] = [];
   /** Пятна биомассы на месте погибших врагов */
   private splats: { x: number; y: number; r: number; color: number; life: number; maxLife: number }[] = [];
   private shakeT = 0;
+  private bokehParticles: { baseX: number; baseY: number; r: number; phase: number; color: number; alpha: number }[] = [];
+  private snowParticles: { x: number; y: number; r: number; vy: number; alpha: number }[] = [];
 
   private playerGlow!: Sprite;
   private playerCore!: Sprite;
@@ -242,11 +250,34 @@ export class PixiOverlay {
       console.warn('Failed to load biopunk vector textures, falling back to glowTex', e);
     }
 
+    // Процедурные частицы микромира: глубокие клетки боке и планктонный морской снег
+    for (let i = 0; i < 28; i++) {
+      this.bokehParticles.push({
+        baseX: (i * 137.5) % 2400,
+        baseY: ((i * 223.7) % 2400),
+        r: 32 + (i % 7) * 8,
+        phase: i * 0.8,
+        color: i % 3 === 0 ? 0x0e7490 : i % 3 === 1 ? 0x1e3a8a : 0x064e3b,
+        alpha: 0.045 + (i % 5) * 0.012,
+      });
+    }
+    for (let i = 0; i < 35; i++) {
+      this.snowParticles.push({
+        x: (i * 91.3) % 2400,
+        y: (i * 127.1) % 2400,
+        r: 1.2 + (i % 3) * 0.7,
+        vy: 0.4 + (i % 4) * 0.25,
+        alpha: 0.25 + (i % 4) * 0.15,
+      });
+    }
+
     this.app.stage.addChild(this.world);
+    this.world.addChild(this.bgBokeh);
     this.world.addChild(this.fxUnder);
     this.world.addChild(this.entityLayer);
     this.world.addChild(this.organLayer);
     this.world.addChild(this.fxOver);
+    this.world.addChild(this.fgSnow);
 
     this.playerGlow = this.makeSprite('player', 0x66fcf1, 'add');
     this.playerCore = this.makeSprite('playerCore', 0xffffff, 'normal');
@@ -294,8 +325,8 @@ export class PixiOverlay {
   }
 
   spawnPulse(x: number, y: number, color: number, maxRadius = 90): void {
-    if (this.rings.length > 40) this.rings.shift();
-    this.rings.push({ x, y, radius: 8, maxRadius, color, alpha: 0.85 });
+    if (this.rings.length > 14) this.rings.shift();
+    this.rings.push({ x, y, radius: 8, maxRadius, color, alpha: 0.42 });
   }
 
   /** Вспышка полигона Кольца Смерти: обводка + слабая заливка, тает за ~0.55 сек */
@@ -328,6 +359,8 @@ export class PixiOverlay {
 
   render(state: RenderState, time: number, dt: number): void {
     const s = this.sx();
+    this.bgBokeh.clear();
+    this.fgSnow.clear();
     this.fxUnder.clear();
     this.organLayer.clear();
     this.fxOver.clear();
@@ -346,15 +379,37 @@ export class PixiOverlay {
       this.world.position.set(0, 0);
     }
 
+    // Глубокий параллакс микромира (боке плавающих клеток в толще жидкости)
+    if (state.settings?.parallax !== false && cam) {
+      const pCamX = cam.x * 0.32;
+      const pCamY = cam.y * 0.32;
+      const wW = cam.worldW || 1200;
+      const wH = cam.worldH || 1200;
+      for (const b of this.bokehParticles) {
+        const driftX = Math.sin(time * 0.2 + b.phase) * 35;
+        const driftY = Math.cos(time * 0.18 + b.phase) * 35;
+        let bx = (b.baseX + driftX + pCamX) % wW;
+        let by = (b.baseY + driftY + pCamY) % wH;
+        if (bx < 0) bx += wW;
+        if (by < 0) by += wH;
+        const pulse = 1 + Math.sin(time * 0.5 + b.phase) * 0.08;
+        this.bgBokeh.circle(bx, by, b.r * pulse)
+          .fill({ color: b.color, alpha: b.alpha * 0.4 })
+          .stroke({ width: 1.5, color: b.color, alpha: b.alpha * 0.7 });
+        this.bgBokeh.circle(bx, by, b.r * 0.45 * pulse)
+          .fill({ color: b.color, alpha: b.alpha * 0.7 });
+      }
+    }
+
     // Живой декор биома под сущностями: среда, граница арены, циркуляция
     if (state.morph && cam) {
       this.drawBiome(state.morph, time, s, cam);
     }
 
-    // Тряска экрана: случайное смещение сцены
+    // Тряска экрана: случайное смещение сцены с мягким затуханием (без укачивания)
     if (this.shakeT > 0) {
       this.shakeT = Math.max(0, this.shakeT - dt);
-      const intensity = this.shakeT * 32;
+      const intensity = Math.min(8, this.shakeT * 12);
       this.app.stage.position.set((Math.random() - 0.5) * intensity, (Math.random() - 0.5) * intensity);
     } else {
       this.app.stage.position.set(0, 0);
@@ -469,25 +524,47 @@ export class PixiOverlay {
       if (i === 0 && tipBlink) alpha *= 0.12;
       const tint = (i / step) % 2 === 0 ? tc1 : tc2;
 
-      // Тангенс сочленения: точка впереди по цепи к голове
+      // Тангенс сочленения: вектор к голове
       const prevX = i < tn - 1 ? tail[i + 1].x : state.player.x;
       const prevY = i < tn - 1 ? tail[i + 1].y : state.player.y;
+      const tdx = prevX - tail[i].x;
+      const tdy = prevY - tail[i].y;
+      const tLen = Math.hypot(tdx, tdy) || 1;
+      const tnx = -tdy / tLen;
+      const tny = tdx / tLen;
+
+      // Синусоидальная био-волна плавания глубоководного угря
+      const waveAmp = Math.sin((1 - frac) * Math.PI) * Math.min(7, state.player.r * 0.55);
+      const waveOffset = Math.sin(time * 7 - (tn - 1 - i) * 0.28) * waveAmp;
+      const finalX = tail[i].x + tnx * waveOffset;
+      const finalY = tail[i].y + tny * waveOffset;
+      const alignPrevX = prevX + tnx * waveOffset * 0.8;
+      const alignPrevY = prevY + tny * waveOffset * 0.8;
+
+      // Тонкие боковые плавники угря вдоль туловища
+      if (i > 1 && i < tn - 2 && (i / step) % 2 === 0) {
+        const finW = segR * 1.3;
+        const finWave = Math.sin(time * 8.5 - (tn - 1 - i) * 0.35) * (segR * 0.22);
+        this.organLayer.moveTo(finalX - tnx * (finW + finWave), finalY - tny * (finW + finWave))
+          .lineTo(finalX + tnx * (finW + finWave), finalY + tny * (finW + finWave))
+          .stroke({ width: 1.4, color: tc1, alpha: alpha * 0.4 });
+      }
 
       if (i === 0 && this.v3Textures?.tail.tailStinger) {
         // Кончик хвоста: ядовитое хитиновое жало со светящейся ампулой
         const sp = this.makeSprite('ptail_stinger', tint, 'normal', this.v3Textures.tail.tailStinger);
-        alignTailSegment(sp, tail[i].x, tail[i].y, prevX, prevY);
+        alignTailSegment(sp, finalX, finalY, alignPrevX, alignPrevY);
         sp.scale.set((segR * 2.8) / 128);
         sp.alpha = alpha;
       } else if (this.v3Textures?.tail.tailVertebra) {
         // Хитиновый позвонок с отогнутыми рёбрами и нервным каналом
         const sp = this.makeSprite('ptail_vert', tint, 'normal', this.v3Textures.tail.tailVertebra);
-        alignTailSegment(sp, tail[i].x, tail[i].y, prevX, prevY);
+        alignTailSegment(sp, finalX, finalY, alignPrevX, alignPrevY);
         sp.scale.set((segR * 2.6) / 128);
         sp.alpha = alpha;
       } else {
         const sp = this.makeSprite('ptail', tint, 'normal');
-        sp.position.set(tail[i].x, tail[i].y);
+        sp.position.set(finalX, finalY);
         sp.scale.set((segR * 2.0) / 64);
         sp.alpha = alpha;
       }
@@ -535,8 +612,10 @@ export class PixiOverlay {
       const baseTint = e.infected ? 0x66fcf1 : spored ? 0x86efac : ENEMY_COLORS[e.type];
       const coreTint = e.infected ? 0xdffffc : spored ? 0xd8ffd8 : ENEMY_CORES[e.type];
 
-      // Обычный урон НЕ ослепляет игрока белой заливкой; только смерть или вспышка босса
-      const flashWhite = isDead || (e.flash > 0.08 && (e.type === 'boss' || e.titan));
+      // Органический отклик на урон: мягкая алая/янтарная вспышка вместо ослепляющего чисто-белого
+      const hitFlash = e.flash > 0.04;
+      const enemyTint = isDead ? 0xff3b5c : hitFlash ? 0xff7b93 : baseTint;
+      const enemyCoreTint = isDead ? 0xffffff : hitFlash ? 0xffcad4 : coreTint;
 
       let tex: Texture | undefined;
       if (e.titan) {
@@ -579,11 +658,46 @@ export class PixiOverlay {
         }
       }
 
-      const sp = this.makeSprite('enemy', flashWhite ? 0xffffff : baseTint, 'normal', tex);
-      sp.position.set(e.x, e.y);
       const texW = (tex && tex.width) ? tex.width : 64;
-      const pulse = e.type === 'colony' ? (1 + 0.06 * Math.sin(time * 4)) : 1;
-      sp.scale.set(((e.radius * 2.3) / texW) * pulse);
+      const baseScale = (e.radius * 2.3) / texW;
+      let scaleX = baseScale;
+      let scaleY = baseScale;
+
+      if (e.type === 'grub' || e.type === 'runner' || e.type === 'brood') {
+        // Гусеничный цикл растяжения-сжатия
+        const crawl = Math.sin(time * 7 + (e.x + e.y) * 0.06);
+        scaleX = baseScale * (1 + crawl * 0.16);
+        scaleY = baseScale * (1 - crawl * 0.14);
+      } else if (e.type === 'spitter' || e.type === 'mirror') {
+        // Медузоподобное пульсирование колокола
+        const bellPulse = Math.sin(time * 4.5 + e.x * 0.05);
+        scaleX = baseScale * (1 - bellPulse * 0.12);
+        scaleY = baseScale * (1 + bellPulse * 0.16);
+      } else if (e.type === 'colony') {
+        // Ритм сокращения матки
+        const heart = 1 + Math.sin(time * 3) * 0.08 + Math.sin(time * 6) * 0.04;
+        scaleX = baseScale * heart;
+        scaleY = baseScale * heart;
+      } else if (e.type === 'brute') {
+        // Бронированный панцирник: тяжёлое дыхание
+        const heavy = 1 + Math.sin(time * 2 + e.y * 0.05) * 0.05;
+        scaleX = baseScale * heavy;
+        scaleY = baseScale * heavy;
+      } else if (e.type === 'boss' || e.titan) {
+        // Колоссальный титан
+        const bossBreath = 1 + Math.sin(time * 1.8) * 0.08;
+        scaleX = baseScale * bossBreath;
+        scaleY = baseScale * bossBreath;
+      }
+
+      if (hitFlash) {
+        scaleX *= 1.14;
+        scaleY *= 0.88;
+      }
+
+      const sp = this.makeSprite('enemy', enemyTint, 'normal', tex);
+      sp.position.set(e.x, e.y);
+      sp.scale.set(scaleX, scaleY);
       sp.alpha = 0.95;
 
       // Ориентация и вращение сущностей по вектору движения
@@ -610,10 +724,35 @@ export class PixiOverlay {
       }
       sp.rotation = rot;
 
-      const core = this.makeSprite('enemyCore', flashWhite ? 0xffffff : coreTint, 'normal');
+      const core = this.makeSprite('enemyCore', enemyCoreTint, 'normal');
       core.position.set(e.x, e.y);
       core.scale.set((e.radius * 0.65) / 64);
       core.alpha = 0.85;
+
+      // Визуальный телеграф атак врагов (предупреждения перед ударом)
+      if (state.player && e.infected <= 0 && !isDead) {
+        const skillCd = e.skillCd ?? 99;
+        if ((e.type === 'spitter' || e.type === 'mirror') && skillCd <= 0.45 && skillCd > 0) {
+          const prog = 1 - skillCd / 0.45;
+          const beamAlpha = 0.3 + prog * 0.55;
+          this.fxOver.moveTo(e.x, e.y).lineTo(state.player.x, state.player.y)
+            .stroke({ width: 1.5 + prog * 1.8, color: 0xff3b5c, alpha: beamAlpha });
+          this.fxOver.circle(e.x, e.y, e.radius + 6 * prog)
+            .stroke({ width: 2, color: 0xff3b5c, alpha: beamAlpha });
+        } else if (e.type === 'pulsar' && skillCd <= 0.75 && skillCd > 0) {
+          const prog = 1 - skillCd / 0.75;
+          const warnRad = 130 * prog;
+          this.fxOver.circle(e.x, e.y, warnRad)
+            .stroke({ width: 2, color: 0xf97316, alpha: 0.35 + prog * 0.55 });
+        } else if (e.type === 'boss' || e.titan) {
+          const auraRad = e.radius * 1.35;
+          const aStart = time * 2.2;
+          this.fxOver.arc(e.x, e.y, auraRad, aStart, aStart + 1.2)
+            .stroke({ width: 3, color: 0xff3b5c, alpha: 0.65 });
+          this.fxOver.arc(e.x, e.y, auraRad, aStart + Math.PI, aStart + Math.PI + 1.2)
+            .stroke({ width: 3, color: 0xff3b5c, alpha: 0.65 });
+        }
+      }
 
       // Хвостик врага: масштаб хвоста соразмерен радиусу врага
       const et = e.tail;
@@ -679,15 +818,21 @@ export class PixiOverlay {
         .stroke({ width: 2.5, color: 0x9df5ff, alpha: 0.9 });
     }
 
-    // Яд плевателей
+    // Яд плевателей (высокая видимость: кислотно-алый био-снаряд с ярким ядром)
     this.releasePool('eproj');
+    this.releasePool('eproj_core');
     for (const p of state.eprojs) {
-      const sp = this.makeSprite('eproj', 0x39ff14, 'add', this.particleTextures?.spitVenom);
+      const sp = this.makeSprite('eproj', 0xff2a6d, 'add', this.particleTextures?.spitVenom);
       sp.position.set(p.x, p.y);
       const pw = this.particleTextures?.spitVenom?.width || 64;
-      sp.scale.set(16 / pw);
-      sp.rotation = time * 4;
+      sp.scale.set(22 / pw);
+      sp.rotation = time * 4.5;
       sp.alpha = 0.95;
+
+      const c = this.makeSprite('eproj_core', 0xffffff, 'normal');
+      c.position.set(p.x, p.y);
+      c.scale.set(6 / 64);
+      c.alpha = 0.9;
     }
 
     // Снаряды игрока: кинетические био-шипы с направлением полета
@@ -738,19 +883,19 @@ export class PixiOverlay {
     this.releasePool('ringShockwave');
     for (let j = this.rings.length - 1; j >= 0; j--) {
       const r = this.rings[j];
-      r.radius += (r.maxRadius - r.radius) * 0.11;
-      r.alpha *= 0.90;
+      r.radius += (r.maxRadius - r.radius) * 0.12;
+      r.alpha *= 0.86;
       if (this.v3Textures?.vfx.novaShockwave) {
         const sp = this.makeSprite('ringShockwave', r.color, 'add', this.v3Textures.vfx.novaShockwave);
         sp.position.set(r.x, r.y);
         sp.scale.set((r.radius * 2.2) / 256);
-        sp.alpha = r.alpha;
+        sp.alpha = r.alpha * 0.65;
         sp.rotation = time * 1.2 + j;
       } else {
         this.fxOver.circle(r.x, r.y, r.radius)
-          .stroke({ width: 2, color: r.color, alpha: r.alpha });
+          .stroke({ width: 1.8, color: r.color, alpha: r.alpha * 0.7 });
       }
-      if (r.alpha < 0.04) this.rings.splice(j, 1);
+      if (r.alpha < 0.03) this.rings.splice(j, 1);
     }
 
     // Всплывающие цифры урона (спрайтовый пул с кэшированными текстурами)
@@ -829,6 +974,22 @@ export class PixiOverlay {
           this.fxOver.circle(mx, my, 5 + Math.sin(time * 8) * 2)
             .stroke({ width: 2, color: 0xff3b5c, alpha: 0.9 });
         }
+      }
+    }
+
+    // Планктонная взвесь / морской снег перед линзой объектива (быстрый параллакс 1.32x)
+    if (state.settings?.parallax !== false && cam) {
+      const fgCamX = cam.x * 1.32;
+      const fgCamY = cam.y * 1.32;
+      const wW = cam.worldW || 1200;
+      const wH = cam.worldH || 1200;
+      for (const s of this.snowParticles) {
+        let sx = (s.x + Math.sin(time * 0.7 + s.y * 0.04) * 14 + fgCamX) % wW;
+        let sy = (s.y + (time * 16 * s.vy) + fgCamY) % wH;
+        if (sx < 0) sx += wW;
+        if (sy < 0) sy += wH;
+        this.fgSnow.circle(sx, sy, s.r)
+          .fill({ color: 0x9df5ff, alpha: s.alpha * (0.6 + Math.sin(time * 2 + s.x) * 0.35) });
       }
     }
   }

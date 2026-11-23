@@ -126,6 +126,14 @@ async function bootstrap() {
   const helpModalOpenBtn = document.getElementById('help-modal-open');
   const helpCloseBtn = document.getElementById('help-close');
 
+  const settingsModal = document.getElementById('settings-modal');
+  const settingsOpenBtn = document.getElementById('settings-open');
+  const settingsCloseBtn = document.getElementById('settings-close');
+  const sliderBgm = document.getElementById('slider-bgm') as HTMLInputElement | null;
+  const sliderSfx = document.getElementById('slider-sfx') as HTMLInputElement | null;
+  const bgmVolLabel = document.getElementById('bgm-vol-label');
+  const sfxVolLabel = document.getElementById('sfx-vol-label');
+
   const startBtnLabel = document.getElementById('start-btn-label');
   const menuRecordBadge = document.getElementById('menu-record-badge');
   const deathStatsEl = document.getElementById('death-stats')!;
@@ -452,19 +460,79 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     }
   }
 
+  interface SettingsData {
+    screenFlashes: 'soft' | 'off';
+    cameraShake: 'subtle' | 'off' | 'full';
+    microParallax: boolean;
+    bgmVolume: number; // 0..100
+    sfxVolume: number; // 0..100
+  }
+
+  function loadSettings(): SettingsData {
+    try {
+      const raw = localStorage.getItem('lumivore_settings_v1');
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return {
+      screenFlashes: 'soft',
+      cameraShake: 'subtle',
+      microParallax: true,
+      bgmVolume: 60,
+      sfxVolume: 80,
+    };
+  }
+
+  const gameSettings: SettingsData = loadSettings();
+
+  function saveSettings(): void {
+    try {
+      localStorage.setItem('lumivore_settings_v1', JSON.stringify(gameSettings));
+    } catch {}
+  }
+
+  // --- Реликвии органелл (Wave 3.5) ---
+  let relicGalvanic = false;
+  let galvanicTimer = 0;
+  let relicAbyssal = false;
+  let abyssalLureTimer = 0;
+  let relicCarapace = false;
+  let carapaceShieldReady = false;
+  let carapaceCooldown = 0;
+
   function hurtFlash(): void {
-    hurtEl.classList.remove('flash');
-    void hurtEl.offsetWidth;
-    hurtEl.classList.add('flash');
-    overlay.beginShake(0.16);
+    if (gameSettings.screenFlashes !== 'off') {
+      hurtEl.classList.add('hit');
+      setTimeout(() => hurtEl.classList.remove('hit'), 120);
+    }
+    if (gameSettings.cameraShake !== 'off') {
+      const dur = gameSettings.cameraShake === 'subtle' ? 0.08 : 0.16;
+      overlay.beginShake(dur);
+    }
     sfx.hurt();
   }
 
-  /** Оранжевая вспышка по краям при критическом хвосте (не путать с красной при уроне) */
+  /** Мягкое свечение по краям при критическом хвосте (без стробоскопа) */
   function tailwarnFlash(): void {
-    tailwarnEl.classList.remove('flash');
-    void tailwarnEl.offsetWidth;
-    tailwarnEl.classList.add('flash');
+    if (gameSettings.screenFlashes !== 'off') {
+      tailwarnEl.classList.add('active');
+      setTimeout(() => tailwarnEl.classList.remove('active'), 400);
+    }
+  }
+
+  function applyDamageToPlayer(amount: number): boolean {
+    if (relicCarapace && carapaceShieldReady) {
+      carapaceShieldReady = false;
+      carapaceCooldown = 18;
+      player.iframe = iframeNow() + 0.3;
+      overlay.spawnPulse(player.x, player.y, 0x00ff9d, 90);
+      showToast('КАРАПАКС: УДАР ПОГЛОЩЁН!');
+      sfx.zap();
+      return false;
+    }
+    player.hp -= amount;
+    player.iframe = iframeNow();
+    hurtFlash();
+    return true;
   }
 
   /** Пересчёт бонусов всех узлов по текущим владельцам (Этап 2.1) */
@@ -588,6 +656,28 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       curse: true,
       avail: () => !curseHunger,
       apply: () => { curseHunger = true; magnetR *= 2; atkSpdMul += 0.40; showToast('ПРОКЛЯТИЕ: ВЕЧНЫЙ ГОЛОД'); },
+    },
+    // --- Реликвии органелл (Wave 3.5) ---
+    {
+      id: 'relic_galvanic',
+      title: 'БИО-ГАЛЬВАНИКА',
+      desc: 'Хвост генерирует статику: цепная микро-молния поражает 3 врагов каждые 4 сек',
+      avail: () => !relicGalvanic,
+      apply: () => { relicGalvanic = true; showToast('РЕЛИКВИЯ: БИО-ГАЛЬВАНИКА'); },
+    },
+    {
+      id: 'relic_abyssal',
+      title: 'АБИССАЛЬНЫЙ ЛЮМИНОФОР',
+      desc: 'Радиус сбора душ +50%, а мерцающий био-фонарь каждые 6 сек ослепляет врагов в радиусе 180px',
+      avail: () => !relicAbyssal,
+      apply: () => { relicAbyssal = true; magnetR *= 1.5; showToast('РЕЛИКВИЯ: АБИССАЛЬНЫЙ ЛЮМИНОФОР'); },
+    },
+    {
+      id: 'relic_carapace',
+      title: 'ЖИВОЙ КАРАПАКС',
+      desc: 'Каждые 18 сек формирует живой барьер, полностью поглощающий следующий удар врага',
+      avail: () => !relicCarapace,
+      apply: () => { relicCarapace = true; carapaceShieldReady = true; showToast('РЕЛИКВИЯ: ЖИВОЙ КАРАПАКС'); },
     },
     { id: 'dmg', title: 'Острота', desc: '+15% ко всему урону', avail: () => stack('dmg'), apply: () => { dmgMul += 0.15; bump('dmg'); } },
     { id: 'aspd', title: 'Рефлексы', desc: '+12% скорости атаки', avail: () => stack('aspd'), apply: () => { atkSpdMul += 0.12; bump('aspd'); } },
@@ -820,19 +910,37 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     setSlot(wSlots.call, 1 - Math.max(0, callCd) / CALL.cd, 1);
   }
 
-  // ---------- Навигация по модальным окнам (Главное Меню, Кодекс, Биолаб, Справка) ----------
-  function showModal(which: 'intro' | 'biolab' | 'codex' | 'help' | null): void {
+  // ---------- Навигация по модальным окнам (Главное Меню, Кодекс, Биолаб, Справка, Настройки) ----------
+  function showModal(which: 'intro' | 'biolab' | 'codex' | 'help' | 'settings' | null): void {
     intro.classList.toggle('show', which === 'intro');
     biolabOverlay.classList.toggle('show', which === 'biolab');
     if (codexModal) codexModal.classList.toggle('show', which === 'codex');
     if (helpModal) helpModal.classList.toggle('show', which === 'help');
+    if (settingsModal) settingsModal.classList.toggle('show', which === 'settings');
 
     if (which === 'biolab') renderBiolab();
     if (which === 'codex') renderCodex();
+    if (which === 'settings') syncSettingsUI();
     if (which === 'intro' && menuRecordBadge) {
       const bl = loadBiolab();
       menuRecordBadge.textContent = `РЕКОРД: ${fmtTime(bl.bestTime)} · ЗАБЕГОВ ${bl.runs} · ОЧКИ: ${bl.points}`;
     }
+  }
+
+  function syncSettingsUI(): void {
+    document.querySelectorAll('#opt-flashes .settings-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-val') === gameSettings.screenFlashes);
+    });
+    document.querySelectorAll('#opt-shake .settings-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-val') === gameSettings.cameraShake);
+    });
+    document.querySelectorAll('#opt-parallax .settings-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-val') === (gameSettings.microParallax ? 'on' : 'off'));
+    });
+    if (sliderBgm) sliderBgm.value = String(gameSettings.bgmVolume);
+    if (sliderSfx) sliderSfx.value = String(gameSettings.sfxVolume);
+    if (bgmVolLabel) bgmVolLabel.textContent = `${gameSettings.bgmVolume}%`;
+    if (sfxVolLabel) sfxVolLabel.textContent = `${gameSettings.sfxVolume}%`;
   }
 
   // ---------- Бестиарий и Кодекс Гибридов: постраничная кнопочная навигация (Без скролла) ----------
@@ -935,6 +1043,52 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
 
   if (helpModalOpenBtn) helpModalOpenBtn.addEventListener('click', () => showModal('help'));
   if (helpCloseBtn) helpCloseBtn.addEventListener('click', () => showModal(!started || paused ? 'intro' : null));
+
+  // Настройки комфорта и звука
+  document.querySelectorAll('#opt-flashes .settings-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      gameSettings.screenFlashes = (btn.getAttribute('data-val') || 'soft') as typeof gameSettings.screenFlashes;
+      saveSettings();
+      syncSettingsUI();
+    });
+  });
+
+  document.querySelectorAll('#opt-shake .settings-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      gameSettings.cameraShake = (btn.getAttribute('data-val') || 'subtle') as typeof gameSettings.cameraShake;
+      saveSettings();
+      syncSettingsUI();
+    });
+  });
+
+  document.querySelectorAll('#opt-parallax .settings-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      gameSettings.microParallax = btn.getAttribute('data-val') === 'on';
+      saveSettings();
+      syncSettingsUI();
+    });
+  });
+
+  if (sliderBgm) {
+    sliderBgm.addEventListener('input', () => {
+      gameSettings.bgmVolume = Number(sliderBgm.value);
+      if (bgmVolLabel) bgmVolLabel.textContent = `${gameSettings.bgmVolume}%`;
+      sfx.setBgmVolume(gameSettings.bgmVolume / 100);
+      saveSettings();
+    });
+  }
+
+  if (sliderSfx) {
+    sliderSfx.addEventListener('input', () => {
+      gameSettings.sfxVolume = Number(sliderSfx.value);
+      if (sfxVolLabel) sfxVolLabel.textContent = `${gameSettings.sfxVolume}%`;
+      sfx.setSfxVolume(gameSettings.sfxVolume / 100);
+      saveSettings();
+    });
+  }
+
+  if (settingsOpenBtn) settingsOpenBtn.addEventListener('click', () => showModal('settings'));
+  if (settingsCloseBtn) settingsCloseBtn.addEventListener('click', () => showModal(!started || paused ? 'intro' : null));
 
   // ---------- Биолаб: мета-прогрессия между забегами (Этап 6.1) ----------
   function renderBiolab(): void {
@@ -1891,9 +2045,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
             for (const o of enemies) { if (o === e) continue; o.tailCd = Math.max(o.tailCd, 0); }
             const pd = Math.hypot(player.x - e.x, player.y - e.y);
             if (pd < radius + PLAYER.radius && player.iframe <= 0) {
-              player.hp -= def.dmg;
-              player.iframe = iframeNow();
-              hurtFlash();
+              applyDamageToPlayer(def.dmg);
               const kx = (player.x - e.x) / Math.max(1, pd);
               const ky = (player.y - e.y) / Math.max(1, pd);
               player.x = Math.max(16, Math.min(curWorldW - 16, player.x + kx * 40));
@@ -1959,11 +2111,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           // «Броня чешуёй» (Змея): хвост гасит до 50% урона, но не более 14 единиц
           const maxReduction = Math.min(Math.round(e.dmg * 0.5), Math.floor(tailLen / 20));
           const incoming = genes.has('scales') ? Math.max(2, e.dmg - maxReduction) : e.dmg;
-          player.hp -= incoming;
-          player.iframe = iframeNow();
+          applyDamageToPlayer(incoming);
           e.atkCd = 0.8;
-          hurtFlash();
-          overlay.beginShake(0.18);
         }
         // Заражённый союзник врезается во врагов
         if (e.infected > 0 && e.atkCd <= 0) {
@@ -2031,8 +2180,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
                 damageDealt += dmg;
                 // «Отражение» элиты: часть урона возвращается бойцу вблизи
                 if (e.elite === 'mirrored' && Math.hypot(e.x - player.x, e.y - player.y) < 200 && player.iframe <= 0) {
-                  player.hp -= dmg * 0.15;
-                  hurtFlash();
+                  applyDamageToPlayer(dmg * 0.15);
                 }
                 // «Поглощение» (Вермис) и «Живой Инкубатор» (Уроборос-Паразит):
                 // тело жертвы прирастает сегментами, гибрид растёт втрое сильнее
@@ -2198,9 +2346,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           }
         }
         if (Math.hypot(p.x - player.x, p.y - player.y) < 6 + PLAYER.radius && player.iframe <= 0) {
-          player.hp -= p.dmg;
-          player.iframe = iframeNow();
-          hurtFlash();
+          applyDamageToPlayer(p.dmg);
           p.life = 0;
         }
         if (p.life <= 0 || p.x < -100 || p.x > curWorldW + 100 || p.y < -100 || p.y > curWorldH + 100) eprojs.splice(i, 1);
@@ -2701,6 +2847,62 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       updateWeaponHud();
       // Дрон тревоги звучит только в критике хвоста
       sfx.setTailDrone(tailState === 'crit');
+
+      // Органическая низкоуровневая виньетка при критическом здоровье (без стробоскопа)
+      const hpRatio = player.hp / maxHp;
+      if (hpRatio < 0.35 && gameSettings.screenFlashes !== 'off') {
+        hurtEl.classList.add('low-hp');
+      } else {
+        hurtEl.classList.remove('low-hp');
+      }
+
+      // Обновление реликвий органелл
+      if (relicCarapace && !carapaceShieldReady) {
+        carapaceCooldown -= dt;
+        if (carapaceCooldown <= 0) {
+          carapaceShieldReady = true;
+          showToast('КАРАПАКС: ЩИТ ГОТОВ');
+          overlay.spawnPulse(player.x, player.y, 0x00ff9d, 60);
+        }
+      }
+
+      if (relicGalvanic) {
+        galvanicTimer += dt;
+        if (galvanicTimer >= 3.8) {
+          galvanicTimer = 0;
+          const targets = enemies
+            .filter((e) => e.hp > 0 && e.infected <= 0 && Math.hypot(e.x - player.x, e.y - player.y) < 220)
+            .sort((a, b) => Math.hypot(a.x - player.x, a.y - player.y) - Math.hypot(b.x - player.x, b.y - player.y))
+            .slice(0, 3);
+          if (targets.length > 0) {
+            let prevPt = { x: player.x, y: player.y };
+            for (const t of targets) {
+              frameArcs.push({ x1: prevPt.x, y1: prevPt.y, x2: t.x, y2: t.y, color: 0x66fcf1 });
+              t.hp -= 28 * effDmg();
+              t.flash = 0.08;
+              t.atkCd = Math.max(t.atkCd, 0.8);
+              overlay.pushDamage(t.x, t.y - t.radius - 6, 28 * effDmg(), 0x66fcf1);
+              prevPt = { x: t.x, y: t.y };
+            }
+            sfx.zap();
+          }
+        }
+      }
+
+      if (relicAbyssal) {
+        abyssalLureTimer += dt;
+        if (abyssalLureTimer >= 6.0) {
+          abyssalLureTimer = 0;
+          overlay.spawnPulse(player.x, player.y, 0xa855f7, 180);
+          for (const e of enemies) {
+            if (e.hp > 0 && e.infected <= 0 && Math.hypot(e.x - player.x, e.y - player.y) < 180) {
+              e.atkCd = Math.max(e.atkCd, 2.0);
+              e.flash = 0.12;
+            }
+          }
+          showToast('АБИССАЛЬНЫЙ СВЕТ: РОЙ ОСЛЕПЛЁН');
+        }
+      }
     } else {
       // До старта / на паузе / после конца: пыль дрейфует без маяков
       sfx.setTailDrone(false);
@@ -2791,6 +2993,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         cysts: liveCysts,
         mandibleSwipes,
         radarMarkers,
+        settings: {
+          parallax: gameSettings.microParallax,
+          subtleShake: gameSettings.cameraShake === 'subtle',
+          softFlashes: gameSettings.screenFlashes === 'soft',
+        },
       },
       t,
       dt
@@ -2803,6 +3010,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
 
   // Первый запуск: стартовые бонусы Биолаба, чип генома, ДНК и шкалы
   applyBiolabStart();
+  sfx.setBgmVolume(gameSettings.bgmVolume / 100);
+  sfx.setSfxVolume(gameSettings.sfxVolume / 100);
   updateStageBiome(SCALES[scaleIdx].id);
   updateBranchChip();
   updateDnaHud();

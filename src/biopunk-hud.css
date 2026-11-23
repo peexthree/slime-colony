@@ -38,6 +38,7 @@
 .biolab-card .corner,
 .codex-card .corner,
 .help-card .corner,
+.settings-card .corner,
 .up-card .corner {
   position: absolute;
   width: 24px;
@@ -55,10 +56,10 @@
 .up-card:hover .corner {
   opacity: 0.95;
 }
-.bio-card .corner.tl, .intro-card .corner.tl, .biolab-card .corner.tl, .codex-card .corner.tl, .help-card .corner.tl, .up-card .corner.tl { top: -1px; left: -1px; }
-.bio-card .corner.tr, .intro-card .corner.tr, .biolab-card .corner.tr, .codex-card .corner.tr, .help-card .corner.tr, .up-card .corner.tr { top: -1px; right: -1px; transform: scaleX(-1); }
-.bio-card .corner.bl, .intro-card .corner.bl, .biolab-card .corner.bl, .codex-card .corner.bl, .help-card .corner.bl, .up-card .corner.bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
-.bio-card .corner.br, .intro-card .corner.br, .biolab-card .corner.br, .codex-card .corner.br, .help-card .corner.br, .up-card .corner.br { bottom: -1px; right: -1px; transform: scale(-1, -1); }
+.bio-card .corner.tl, .intro-card .corner.tl, .biolab-card .corner.tl, .codex-card .corner.tl, .help-card .corner.tl, .settings-card .corner.tl, .up-card .corner.tl { top: -1px; left: -1px; }
+.bio-card .corner.tr, .intro-card .corner.tr, .biolab-card .corner.tr, .codex-card .corner.tr, .help-card .corner.tr, .settings-card .corner.tr, .up-card .corner.tr { top: -1px; right: -1px; transform: scaleX(-1); }
+.bio-card .corner.bl, .intro-card .corner.bl, .biolab-card .corner.bl, .codex-card .corner.bl, .help-card .corner.bl, .settings-card .corner.bl, .up-card .corner.bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
+.bio-card .corner.br, .intro-card .corner.br, .biolab-card .corner.br, .codex-card .corner.br, .help-card .corner.br, .settings-card .corner.br, .up-card .corner.br { bottom: -1px; right: -1px; transform: scale(-1, -1); }
 
 /* 3. Шкала Биомассы / HP со скобками (scale-bracket.svg) */
 .bio-meter {
@@ -794,4 +795,146 @@
 }
 #biolab {
   z-index: 30 !important;
+}
+
+/* 8. Окно настроек комфорта и звука (#settings-modal, Zero-Scroll) */
+#settings-modal {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: radial-gradient(circle at center, rgba(6, 16, 26, 0.94), rgba(2, 4, 8, 0.98));
+  backdrop-filter: blur(14px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden !important;
+}
+#settings-modal.show {
+  display: flex;
+}
+.settings-card {
+  position: relative;
+  width: min(720px, 92vw);
+  max-height: 88vh;
+  background: linear-gradient(160deg, rgba(8, 18, 28, 0.96), rgba(3, 7, 12, 0.98));
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 14px;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(168, 85, 247, 0.15);
+  padding: 24px 30px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important;
+  gap: 16px;
+}
+.settings-header {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+  padding-bottom: 10px;
+}
+.settings-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.settings-title-ico {
+  width: 24px;
+  height: 24px;
+}
+.settings-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #c084fc;
+  margin: 0;
+}
+.settings-subtitle {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #94a3b8;
+  font-weight: 700;
+}
+.settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden !important;
+}
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(13, 22, 35, 0.65);
+  border: 1px solid rgba(168, 85, 247, 0.16);
+  border-radius: 8px;
+  padding: 10px 16px;
+  gap: 16px;
+}
+.settings-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.settings-name {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #e2e8f0;
+}
+.settings-hint {
+  font-size: 9.5px;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+}
+.settings-options {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.settings-btn {
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: #94a3b8;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.settings-btn.active {
+  background: rgba(168, 85, 247, 0.22);
+  border-color: #c084fc;
+  color: #f3e8ff;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+}
+.settings-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}
+.bio-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 140px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  outline: none;
+  transition: opacity 0.2s;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.bio-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #c084fc;
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.8);
+  cursor: pointer;
 }
