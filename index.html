@@ -1136,75 +1136,166 @@
       </div>
     </div>
 
-    <div id="codex">
-      <div class="codex-card">
-        <svg class="corner tl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
-        <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
-        <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
-        <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
-        <h1 class="intro-title">БЕСТИАРИЙ И КОДЕКС ГИБРИДОВ</h1>
-        <p class="intro-sub">Каталог открытых организмов, штаммов ДНК и Великих Гибридов ЕвроКорп-3.</p>
-        <div id="codex-stats">ОТКРЫТО: 0 / 20</div>
-        <div id="codex-list"></div>
-        <button id="codex-close">ЗАКРЫТЬ</button>
+    <div id="intro" class="show">
+      <div class="intro-card main-menu-card">
+        <svg class="corner tl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        
+        <div class="menu-header">
+          <div class="menu-brand-badge">WEBGPU PHYSARUM ENGINE · 120 000 АГЕНТОВ</div>
+          <h1 class="intro-title menu-logo">LUMIVORE</h1>
+          <p class="intro-sub menu-tagline">THE LIVING FRACTAL — БИО-ЭВОЛЮТИВНЫЙ РОГАЛИК</p>
+          <div id="menu-record-badge" class="menu-record">РЕКОРД: 00:00 · ШКАЛА 1</div>
+        </div>
+
+        <div class="menu-btn-group">
+          <button id="intro-start" class="primary-btn">
+            <svg viewBox="0 0 32 32"><polygon points="10,6 26,16 10,26" fill="currentColor"/></svg>
+            <span id="start-btn-label">НАЧАТЬ ЗАБЕГ</span>
+          </button>
+          
+          <div class="menu-row-btns">
+            <button id="biolab-open" class="secondary-btn">
+              <svg viewBox="0 0 32 32" class="bio-emerald"><use href="#ico-biolab"/></svg>
+              <span>БИОЛАБ</span>
+            </button>
+            <button id="codex-open" class="secondary-btn">
+              <svg viewBox="0 0 32 32" class="bio-cyan"><use href="#ico-camera-dna"/></svg>
+              <span>КОДЕКС</span>
+            </button>
+            <button id="help-modal-open" class="secondary-btn">
+              <svg viewBox="0 0 32 32" class="bio-amber"><use href="#ico-petri-radar"/></svg>
+              <span>СПРАВКА</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="menu-controls-strip">
+          <div class="ctrl-chip"><span class="key">WASD</span> <span class="action">ДВИЖЕНИЕ</span></div>
+          <div class="ctrl-chip"><span class="key">SHIFT / ПКМ</span> <span class="action">РЫВОК</span></div>
+          <div class="ctrl-chip"><span class="key">ПРОБЕЛ</span> <span class="action">ЗОВ</span></div>
+          <div class="ctrl-chip"><span class="key">ESC</span> <span class="action">ПАУЗА</span></div>
+        </div>
       </div>
     </div>
 
-    <div id="intro" class="show">
-      <div class="intro-card">
-        <svg class="corner tl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
-        <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
-        <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
-        <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
-        <h1 class="intro-title">LUMIVORE</h1>
-        <p class="intro-sub">THE LIVING FRACTAL - ты не выживаешь в этом мире. Ты поглощаешь его, чтобы стать им.</p>
-        <div class="intro-grid">
-          <div class="intro-block">
-            <h3>УПРАВЛЕНИЕ</h3>
-            <p>Веди <span class="cyan">живой организм</span> мышью (или WASD). Оружие стреляет само - твоя задача поглощать.</p>
+    <div id="codex">
+      <div class="codex-card">
+        <svg class="corner tl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        
+        <div class="codex-header">
+          <div>
+            <h2 class="codex-title">БЕСТИАРИЙ И КОДЕКС ГИБРИДОВ</h2>
+            <p class="intro-sub">Каталог открытых организмов роя, штаммов ДНК и Великих Гибридов ЕвроКорп-3.</p>
           </div>
-          <div class="intro-block">
-            <h3>МЕТАМОРФОЗ</h3>
-            <p>Заполни шкалу <b>биомассы</b> сверху - из глубин выйдет <b>Титан масштаба</b>. Убей его: камера отдалится, и ты увидишь свой прежний мир как точку внутри нового тела. 5 шкал - от Капли до Фрактала.</p>
+          <div id="codex-stats" class="codex-stats-pill">ОТКРЫТО: 0 / 20</div>
+        </div>
+
+        <div class="codex-filter-tabs">
+          <button class="codex-tab active" data-cat="all">ВСЕ (20)</button>
+          <button class="codex-tab" data-cat="enemy">ВРАГИ РОЯ (10)</button>
+          <button class="codex-tab" data-cat="hybrid">ВЕЛИКИЕ ГИБРИДЫ (6)</button>
+          <button class="codex-tab" data-cat="branch">ШТАММЫ ДНК (4)</button>
+        </div>
+
+        <div id="codex-grid" class="codex-grid"></div>
+
+        <div class="codex-footer">
+          <div class="codex-page-nav">
+            <button id="codex-prev-btn" class="nav-btn">◀ ПРЕДЫДУЩАЯ</button>
+            <span id="codex-page-info">СТРАНИЦА 1 / 4</span>
+            <button id="codex-next-btn" class="nav-btn">СЛЕДУЮЩАЯ ▶</button>
           </div>
-          <div class="intro-block">
-            <h3>ДНК-МАТРИЦА</h3>
-            <p>Душа врага несёт цвет своего генома: <svg class="bio-icon bio-cyan"><use href="#ico-vermis"/>  </svg> <b>ВЕРМИС</b>, <svg class="bio-icon bio-magenta"><use href="#ico-chimera"/>  </svg> <b>ХИМЕРА</b>, <svg class="bio-icon bio-lime"><use href="#ico-mycelium"/>  </svg> <b>МИЦЕЛИЙ</b>, <svg class="bio-icon bio-amber"><use href="#ico-symbiont"/>  </svg> <b>СИМБИОНТ</b>. Корми геномы душами - открываются гены и гибриды.</p>
-          </div>
-          <div class="intro-block">
-            <h3>ГИБРИДИЗАЦИЯ</h3>
-            <p>3 ДНК-уровня в двух геномах открывают <b>Великий Гибрид</b>: <svg class="bio-icon bio-orange"><use href="#ico-hybrid-plasma-leviathan"/>  </svg> <b>Левиафан</b>, <svg class="bio-icon bio-emerald"><use href="#ico-hybrid-ouroboros"/>  </svg> <b>Уроборос</b>, <svg class="bio-icon bio-cyan"><use href="#ico-hybrid-phase-serpent"/>  </svg> <b>Фазовый Змей</b>, <svg class="bio-icon bio-lime"><use href="#ico-hybrid-spore-reactor"/>  </svg> <b>Споровый Реактор</b>, <svg class="bio-icon bio-amber"><use href="#ico-hybrid-ion-colossus"/>  </svg> <b>Ионный Колосс</b>, <svg class="bio-icon bio-violet"><use href="#ico-hybrid-psi-web"/>  </svg> <b>Пси-Сеть</b>. Каждый меняет правила боя.</p>
-          </div>
-          <div class="intro-block">
-            <h3>КОЛЬЦО СМЕРТИ</h3>
-            <p>Замкни траекторию хвоста вокруг толпы - полигон <b>схлопнется</b> и выжжет всё внутри. Чем длиннее хвост, тем страшнее кольцо.</p>
-          </div>
-          <div class="intro-block">
-            <h3>ШТАММЫ PHYSARUM</h3>
-            <p>Твоё движение сеет <span class="cyan">циановый штамм</span>. На своём поле ты на <b>+25% быстрее</b> и хвост регенерирует. Фиолетовое поле врага <b>растворяет хвост</b> - наступай и выжигай его спорами.</p>
-          </div>
-          <div class="intro-block">
-            <h3>ХВОСТ И ДУШИ</h3>
-            <p>Хвост = тело и оружие одновременно. Души кормят его и дают уровни. Без охоты он истаёт - <b>голод</b> мигает кончиком.</p>
-          </div>
-          <div class="intro-block">
-            <h3>ТЕРРИТОРИЯ</h3>
-            <p><span class="cyan">7 био-узлов</span> (<svg class="bio-icon bio-lime"><use href="#ico-node-gen"/>  </svg> <svg class="bio-icon bio-cyan"><use href="#ico-node-amp"/>  </svg> <svg class="bio-icon bio-amber"><use href="#ico-node-magnet"/>  </svg> <svg class="bio-icon bio-magenta"><use href="#ico-node-mutagen"/>  </svg> <svg class="bio-icon bio-violet"><use href="#ico-node-incubator"/>  </svg>) захватываются плотностью штамма. Держи узлы - они дают бонусы. Гибрид <b>Пси-Сеть</b> бьёт с узлов лазерами.</p>
-          </div>
-          <div class="intro-block">
-            <h3>ФЕРОМОН-ЗОВ</h3>
-            <p><b>Пробел</b> - токсин-маяк в точке курсора: толпа разбегает, чужое поле выжигается. Перезарядка 15 с.</p>
-          </div>
-          <div class="intro-block">
-            <h3>ЭКОСИСТЕМА</h3>
-            <p>Плеватели плюют ядом, целители лечат рой, пульсары бьют кольцами, матки плодят выводок. Элиты приходят с золотым ореолом каждые 45 с.</p>
+          <button id="codex-close" class="modal-close-btn">ЗАКРЫТЬ</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="help-modal">
+      <div class="help-card">
+        <svg class="corner tl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        
+        <div class="help-header">
+          <h2 class="help-title">РУКОВОДСТВО ОРГАНИЗМА</h2>
+          <div class="help-tabs">
+            <button class="help-tab active" data-tab="basics">ОСНОВЫ</button>
+            <button class="help-tab" data-tab="dna">ДНК И ЭВОЛЮЦИЯ</button>
+            <button class="help-tab" data-tab="world">МИР И ШТАММЫ</button>
           </div>
         </div>
-        <div class="intro-actions">
-          <button id="intro-start">НАЧАТЬ ЗАБЕГ</button>
-          <button id="biolab-open"><svg viewBox="0 0 32 32" class="bio-emerald"><use href="#ico-biolab"/>  </svg> <span>БИОЛАБ</span></button>
-          <button id="codex-open" class="ghost-btn"><svg viewBox="0 0 32 32" class="bio-cyan"><use href="#ico-camera-dna"/>  </svg> <span>КОДЕКС</span></button>
+
+        <div class="help-content" id="help-content-basics">
+          <div class="help-grid">
+            <div class="help-box">
+              <h3>ХВОСТ-ОРУЖИЕ</h3>
+              <p>Хвост — это ваше тело, биомасса и урон. Движение сжигает сегменты, добытые души восстанавливают длину. Не стойте без дела: метаболический голод сжигает HP.</p>
+            </div>
+            <div class="help-box">
+              <h3>КОЛЬЦО СМЕРТИ</h3>
+              <p>Замкните траекторию хвоста вокруг толпы. Замкнутый контур мгновенно схлопывается и аннигилирует всё внутри. Чем длиннее хвост, тем шире кольцо.</p>
+            </div>
+            <div class="help-box">
+              <h3>ФАЗОВЫЙ РЫВОК</h3>
+              <p><b>Shift</b> или <b>ПКМ</b> — мгновенное скольжение сквозь врагов. Дарует кратковременную неуязвимость и сеет за собой плотный споровый след.</p>
+            </div>
+            <div class="help-box">
+              <h3>ФЕРОМОН-ЗОВ</h3>
+              <p><b>Пробел</b> — токсин-маяк в точке курсора. Враги разбегаются в ужасе, вражеский штамм выжигается. Перезарядка 15 с.</p>
+            </div>
+          </div>
         </div>
+
+        <div class="help-content" id="help-content-dna" style="display:none;">
+          <div class="help-grid">
+            <div class="help-box">
+              <h3>4 ГЕНОМА ДНК</h3>
+              <p><span class="bio-cyan">Вермис</span> (длина и мощь хлыста), <span class="bio-magenta">Химера</span> (взрывы и урон), <span class="bio-lime">Мицелий</span> (споры и зомбирование), <span class="bio-amber">Симбионт</span> (фаза и резонанс).</p>
+            </div>
+            <div class="help-box">
+              <h3>ВЕЛИКИЕ ГИБРИДЫ</h3>
+              <p>3+3 ДНК-уровня в двух ветках открывают карту слияния: Левиафан, Уроборос, Фазовый Змей, Споровый Реактор, Ионный Колосс, Пси-Сеть. Каждый кардинально меняет геймплей.</p>
+            </div>
+            <div class="help-box">
+              <h3>МЕТАМОРФОЗ</h3>
+              <p>Заполняйте шкалу биомассы вверху экрана. При 100% пробуждается Титан шкалы. Победите его для перехода на следующий масштаб бытия.</p>
+            </div>
+            <div class="help-box">
+              <h3>ПРОКЛЯТЫЕ МУТАЦИИ</h3>
+              <p>Особые карточки с алой каймой: даруют колоссальный всплеск боевой мощи ценой суровых штрафов к выживанию.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="help-content" id="help-content-world" style="display:none;">
+          <div class="help-grid">
+            <div class="help-box">
+              <h3>ПОЛЕ PHYSARUM</h3>
+              <p>Циановый штамм — ваша колония (+25% скорости, регенерация хвоста). Фиолетовый штамм врага растворяет хвост в 2 раза быстрее.</p>
+            </div>
+            <div class="help-box">
+              <h3>7 БИО-УЗЛОВ</h3>
+              <p>Захватывайте узлы плотностью своего штамма: Генератор (+HP), Усилитель (хвост не тает), Магнит (радиус душ), Мутаген (+карты), Инкубатор (+XP).</p>
+            </div>
+            <div class="help-box">
+              <h3>ТАКТИЧЕСКИЙ РАДАР</h3>
+              <p>В правом нижнем углу — чашка Петри: отслеживает рой, элит с золотым ореолом, спящих боссов и био-узлы в реальном времени.</p>
+            </div>
+            <div class="help-box">
+              <h3>БИОЛАБ</h3>
+              <p>Очки, заработанные за выживание, сохраняются навсегда. Тратьте их в Биолабе на постоянные мутации Светляка между забегами.</p>
+            </div>
+          </div>
+        </div>
+
+        <button id="help-close" class="modal-close-btn">ЗАКРЫТЬ</button>
       </div>
     </div>
 

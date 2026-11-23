@@ -116,8 +116,18 @@ async function bootstrap() {
   const codexModal = document.getElementById('codex');
   const codexOpenBtn = document.getElementById('codex-open');
   const codexCloseBtn = document.getElementById('codex-close');
-  const codexListEl = document.getElementById('codex-list');
+  const codexGridEl = document.getElementById('codex-grid');
   const codexStatsEl = document.getElementById('codex-stats');
+  const codexPrevBtn = document.getElementById('codex-prev-btn') as HTMLButtonElement | null;
+  const codexNextBtn = document.getElementById('codex-next-btn') as HTMLButtonElement | null;
+  const codexPageInfo = document.getElementById('codex-page-info');
+
+  const helpModal = document.getElementById('help-modal');
+  const helpModalOpenBtn = document.getElementById('help-modal-open');
+  const helpCloseBtn = document.getElementById('help-close');
+
+  const startBtnLabel = document.getElementById('start-btn-label');
+  const menuRecordBadge = document.getElementById('menu-record-badge');
   const deathStatsEl = document.getElementById('death-stats')!;
   const portraitCanvas = document.getElementById('portrait-canvas') as HTMLCanvasElement;
   const gamepad = new GamepadController();
@@ -391,16 +401,17 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     if ((e.key === 'Shift' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && started && !gameOver) {
       dashRequested = true;
     }
-    // Escape = пауза через брифинг (Этап 1.4)
+    // Escape = пауза через главное меню
     if (e.key === 'Escape' && started && !gameOver && pendingUps === 0) {
       paused = !paused;
       if (paused) {
         sfx.setTailDrone(false);
         sfx.stopBgm();
+        showModal('intro');
       } else {
         sfx.startBgm();
+        showModal(null);
       }
-      intro.classList.toggle('show', paused);
     }
     // Пробел не должен скроллить страницу во время игры
     if (e.key === ' ' && started && !gameOver) e.preventDefault();
@@ -809,40 +820,121 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     setSlot(wSlots.call, 1 - Math.max(0, callCd) / CALL.cd, 1);
   }
 
+  // ---------- Навигация по модальным окнам (Главное Меню, Кодекс, Биолаб, Справка) ----------
+  function showModal(which: 'intro' | 'biolab' | 'codex' | 'help' | null): void {
+    intro.classList.toggle('show', which === 'intro');
+    biolabOverlay.classList.toggle('show', which === 'biolab');
+    if (codexModal) codexModal.classList.toggle('show', which === 'codex');
+    if (helpModal) helpModal.classList.toggle('show', which === 'help');
+
+    if (which === 'biolab') renderBiolab();
+    if (which === 'codex') renderCodex();
+    if (which === 'intro' && menuRecordBadge) {
+      const bl = loadBiolab();
+      menuRecordBadge.textContent = `РЕКОРД: ${fmtTime(bl.bestTime)} · ЗАБЕГОВ ${bl.runs} · ОЧКИ: ${bl.points}`;
+    }
+  }
+
+  // ---------- Бестиарий и Кодекс Гибридов: постраничная кнопочная навигация (Без скролла) ----------
+  let codexCategory: 'all' | 'enemy' | 'hybrid' | 'branch' = 'all';
+  let codexPage = 0;
+  const CODEX_PAGE_SIZE = 6;
+
   function renderCodex(): void {
     const unlocked = loadCodex();
     if (codexStatsEl) {
       codexStatsEl.textContent = `ОТКРЫТО: ${unlocked.size} / ${CODEX_ENTRIES.length} ВИДОВ`;
     }
-    if (!codexListEl) return;
-    codexListEl.innerHTML = '';
-    for (const entry of CODEX_ENTRIES) {
+
+    const filtered = CODEX_ENTRIES.filter((e) => {
+      if (codexCategory === 'all') return true;
+      return e.category === codexCategory;
+    });
+
+    const maxPage = Math.max(0, Math.ceil(filtered.length / CODEX_PAGE_SIZE) - 1);
+    if (codexPage > maxPage) codexPage = maxPage;
+    if (codexPage < 0) codexPage = 0;
+
+    if (codexPageInfo) {
+      codexPageInfo.textContent = `СТРАНИЦА ${codexPage + 1} / ${Math.max(1, maxPage + 1)}`;
+    }
+
+    if (codexPrevBtn) codexPrevBtn.disabled = codexPage <= 0;
+    if (codexNextBtn) codexNextBtn.disabled = codexPage >= maxPage;
+
+    if (!codexGridEl) return;
+    codexGridEl.innerHTML = '';
+
+    const start = codexPage * CODEX_PAGE_SIZE;
+    const pageItems = filtered.slice(start, start + CODEX_PAGE_SIZE);
+
+    for (const entry of pageItems) {
       const isUnl = unlocked.has(entry.id);
       const item = document.createElement('div');
       item.className = 'codex-item ' + (isUnl ? 'unlocked' : 'locked');
+      const catLabel = entry.category === 'enemy' ? 'ВРАГ РОЯ' : entry.category === 'hybrid' ? 'ВЕЛИКИЙ ГИБРИД' : 'ШТАММ ДНК';
       item.innerHTML = `
-        <div class="codex-head" style="color: ${entry.color};">
-          <svg viewBox="0 0 32 32"><use href="#${entry.iconId}"/></svg>
-          <span class="codex-title">${isUnl ? entry.name : '??? НЕИЗВЕСТНЫЙ ВИД'}</span>
+        <div class="codex-item-top">
+          <div class="codex-icon-wrap" style="color: ${isUnl ? entry.color : '#475569'};">
+            <svg viewBox="0 0 32 32"><use href="#${entry.iconId}"/></svg>
+          </div>
+          <div class="codex-meta">
+            <span class="codex-cat-badge" style="color: ${entry.color};">${catLabel}</span>
+            <div class="codex-item-title" style="color: ${isUnl ? entry.color : '#94a3b8'};">
+              ${isUnl ? entry.name : '??? НЕИЗВЕСТНЫЙ ВИД'}
+            </div>
+          </div>
         </div>
-        <div class="codex-lore">${isUnl ? entry.lore : 'Биологический образец не исследован. Уничтожьте или активируйте его в бою.'}</div>
-        ${isUnl && entry.bonus ? `<div class="codex-bonus">БОНУС: ${entry.bonus}</div>` : ''}
+        <div class="codex-lore">${isUnl ? entry.lore : 'Биологический образец не исследован. Встретьте или активируйте его в бою.'}</div>
+        <div class="codex-bonus">${isUnl && entry.bonus ? `⚡ БОНУС: ${entry.bonus}` : '🔒 ТРЕБУЕТСЯ ИССЛЕДОВАНИЕ'}</div>
       `;
-      codexListEl.appendChild(item);
+      codexGridEl.appendChild(item);
     }
   }
 
-  if (codexOpenBtn && codexModal) {
-    codexOpenBtn.addEventListener('click', () => {
+  // Переключение вкладок Кодекса
+  document.querySelectorAll('.codex-tab').forEach((tabBtn) => {
+    tabBtn.addEventListener('click', () => {
+      document.querySelectorAll('.codex-tab').forEach((b) => b.classList.remove('active'));
+      tabBtn.classList.add('active');
+      codexCategory = (tabBtn.getAttribute('data-cat') || 'all') as typeof codexCategory;
+      codexPage = 0;
       renderCodex();
-      codexModal.classList.add('show');
+    });
+  });
+
+  if (codexPrevBtn) {
+    codexPrevBtn.addEventListener('click', () => {
+      if (codexPage > 0) {
+        codexPage--;
+        renderCodex();
+      }
     });
   }
-  if (codexCloseBtn && codexModal) {
-    codexCloseBtn.addEventListener('click', () => {
-      codexModal.classList.remove('show');
+  if (codexNextBtn) {
+    codexNextBtn.addEventListener('click', () => {
+      codexPage++;
+      renderCodex();
     });
   }
+
+  if (codexOpenBtn) codexOpenBtn.addEventListener('click', () => showModal('codex'));
+  if (codexCloseBtn) codexCloseBtn.addEventListener('click', () => showModal(!started || paused ? 'intro' : null));
+
+  // Переключение вкладок Руководства
+  document.querySelectorAll('.help-tab').forEach((tabBtn) => {
+    tabBtn.addEventListener('click', () => {
+      document.querySelectorAll('.help-tab').forEach((b) => b.classList.remove('active'));
+      tabBtn.classList.add('active');
+      const targetId = 'help-content-' + tabBtn.getAttribute('data-tab');
+      document.querySelectorAll('.help-content').forEach((c) => {
+        (c as HTMLElement).style.display = c.id === targetId ? 'block' : 'none';
+      });
+    });
+  });
+
+  if (helpModalOpenBtn) helpModalOpenBtn.addEventListener('click', () => showModal('help'));
+  if (helpCloseBtn) helpCloseBtn.addEventListener('click', () => showModal(!started || paused ? 'intro' : null));
 
   // ---------- Биолаб: мета-прогрессия между забегами (Этап 6.1) ----------
   function renderBiolab(): void {
@@ -882,13 +974,9 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     }
     renderBiolab();
   });
-  function openBiolab(): void {
-    renderBiolab();
-    biolabOverlay.classList.add('show');
-  }
-  biolabOpenBtn.addEventListener('click', openBiolab);
-  biolabBtn.addEventListener('click', openBiolab);
-  biolabCloseBtn.addEventListener('click', () => biolabOverlay.classList.remove('show'));
+  if (biolabOpenBtn) biolabOpenBtn.addEventListener('click', () => showModal('biolab'));
+  if (biolabBtn) biolabBtn.addEventListener('click', () => showModal('biolab'));
+  biolabCloseBtn.addEventListener('click', () => showModal(!started || paused ? 'intro' : null));
   savePortraitBtn.addEventListener('click', () => {
     if (!lastGenome) return;
     downloadPortrait(portraitCanvas, `lumivore-${lastGenome.branch}-${Math.round(lastGenome.survivalTime)}s.png`);
@@ -914,15 +1002,15 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     started = true;
     paused = false;
     sfx.startBgm();
-    intro.classList.remove('show');
-    introStartBtn.textContent = 'ПРОДОЛЖИТЬ';
+    showModal(null);
+    if (startBtnLabel) startBtnLabel.textContent = 'ПРОДОЛЖИТЬ';
   });
   helpBtn.addEventListener('click', () => {
     if (!started || gameOver) return;
     paused = true;
     sfx.setTailDrone(false);
     sfx.stopBgm();
-    intro.classList.add('show');
+    showModal('help');
   });
 
   restartBtn.addEventListener('click', () => {
@@ -1037,6 +1125,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     sfx.startBgm();
     modal.classList.remove('show');
     upgradeModal.classList.remove('show');
+    if (startBtnLabel) startBtnLabel.textContent = 'ПРОДОЛЖИТЬ';
   });
 
   // ---------- Пространственный хеш для коллизий (Zero-Allocation Pool) ----------
@@ -1528,8 +1617,13 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (gp.callPressed) callRequested = true;
       if (gp.pausePressed && started && !gameOver && pendingUps === 0) {
         paused = !paused;
-        if (paused) sfx.stopBgm(); else sfx.startBgm();
-        intro.classList.toggle('show', paused);
+        if (paused) {
+          sfx.stopBgm();
+          showModal('intro');
+        } else {
+          sfx.startBgm();
+          showModal(null);
+        }
       }
 
       // Dash trigger & cooldown
@@ -2714,6 +2808,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   updateDnaHud();
   updateScaleHud();
   updateWeaponHud();
+  showModal('intro');
 
   // Отладочные хуки для тест-цикла браузером (не влияют на баланс игры)
   const debugApi = {
