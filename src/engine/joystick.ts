@@ -13,6 +13,8 @@ export interface Joystick {
   active(): boolean;
   callRequested(): boolean; // true один раз после тапа по «ЗОВ»
   consumeCall(): void;      // сбросить флаг запроса
+  dashRequested(): boolean; // true один раз после тапа по «РЫВОК»
+  consumeDash(): void;      // сбросить флаг запроса
   dispose(): void;          // снять слушатели и удалить DOM
 }
 
@@ -25,6 +27,7 @@ export function createJoystick(stage: HTMLElement, canvas: HTMLCanvasElement): J
   let vy = 0;
   let isActive = false;
   let callFlag = false;
+  let dashFlag = false;
   let callShown = false; // кнопка появляется после первого touch
   let disposed = false;
   const prevTouchAction = canvas.style.touchAction; // вернуть при dispose
@@ -71,9 +74,29 @@ export function createJoystick(stage: HTMLElement, canvas: HTMLCanvasElement): J
     'pointer-events:auto', 'z-index:60',
   ].join(';');
 
+  const dashBtn = document.createElement('div');
+  dashBtn.textContent = 'РЫВОК';
+  const dashGlow = 'box-shadow:0 0 18px rgba(102,252,241,0.45), inset 0 0 12px rgba(102,252,241,0.25)';
+  dashBtn.style.cssText = [
+    'position:fixed',
+    'right:calc(18px + env(safe-area-inset-right))',
+    'bottom:calc(88px + env(safe-area-inset-bottom))',
+    `width:${CALL_SIZE}px`, `height:${CALL_SIZE}px`,
+    'border-radius:50%',
+    'border:2px solid rgba(102,252,241,0.85)',
+    'background:rgba(14,110,107,0.35)',
+    dashGlow,
+    'color:#66fcf1', 'font:bold 10px/1 monospace', 'letter-spacing:1px',
+    'display:none', 'align-items:center', 'justify-content:center',
+    'user-select:none', '-webkit-user-select:none', '-webkit-tap-highlight-color:transparent',
+    'touch-action:none', 'cursor:pointer',
+    'pointer-events:auto', 'z-index:60',
+  ].join(';');
+
   stage.appendChild(base);
   stage.appendChild(knob);
   stage.appendChild(callBtn);
+  stage.appendChild(dashBtn);
 
   canvas.style.touchAction = 'none'; // запрет браузерных жестов на игровом поле
 
@@ -99,6 +122,7 @@ export function createJoystick(stage: HTMLElement, canvas: HTMLCanvasElement): J
     if (callShown) return;
     callShown = true;
     callBtn.style.display = 'flex';
+    dashBtn.style.display = 'flex';
   };
 
   // ---- Вектор: клэмп по радиусу, мёртвая зона, нормировка ----
@@ -182,6 +206,21 @@ export function createJoystick(stage: HTMLElement, canvas: HTMLCanvasElement): J
     callBtn.style.boxShadow = callGlow.slice(callGlow.indexOf(':') + 1);
   };
 
+  const DASH_DOWN_GLOW =
+    'box-shadow:0 0 26px rgba(102,252,241,0.85), inset 0 0 16px rgba(102,252,241,0.5)';
+
+  const onDashDown = (e: PointerEvent): void => {
+    if (e.pointerType !== 'touch') return;
+    e.preventDefault();
+    e.stopPropagation();
+    dashFlag = true;
+    dashBtn.style.boxShadow = DASH_DOWN_GLOW;
+  };
+
+  const onDashUp = (): void => {
+    dashBtn.style.boxShadow = dashGlow.slice(dashGlow.indexOf(':') + 1);
+  };
+
   canvas.addEventListener('pointerdown', onCanvasDown, { passive: false });
   window.addEventListener('pointermove', onWindowMove, { passive: false });
   window.addEventListener('pointerup', onWindowUp);
@@ -190,6 +229,9 @@ export function createJoystick(stage: HTMLElement, canvas: HTMLCanvasElement): J
   callBtn.addEventListener('pointerdown', onCallDown, { passive: false });
   callBtn.addEventListener('pointerup', onCallUp);
   callBtn.addEventListener('pointercancel', onCallUp);
+  dashBtn.addEventListener('pointerdown', onDashDown, { passive: false });
+  dashBtn.addEventListener('pointerup', onDashUp);
+  dashBtn.addEventListener('pointercancel', onDashUp);
 
   // ---- API ----
   return {
@@ -197,6 +239,8 @@ export function createJoystick(stage: HTMLElement, canvas: HTMLCanvasElement): J
     active: () => isActive,
     callRequested: () => callFlag,
     consumeCall: () => { callFlag = false; },
+    dashRequested: () => dashFlag,
+    consumeDash: () => { dashFlag = false; },
     dispose: () => {
       if (disposed) return;
       disposed = true;
@@ -208,9 +252,13 @@ export function createJoystick(stage: HTMLElement, canvas: HTMLCanvasElement): J
       callBtn.removeEventListener('pointerdown', onCallDown);
       callBtn.removeEventListener('pointerup', onCallUp);
       callBtn.removeEventListener('pointercancel', onCallUp);
+      dashBtn.removeEventListener('pointerdown', onDashDown);
+      dashBtn.removeEventListener('pointerup', onDashUp);
+      dashBtn.removeEventListener('pointercancel', onDashUp);
       base.remove();
       knob.remove();
       callBtn.remove();
+      dashBtn.remove();
       canvas.style.touchAction = prevTouchAction;
     },
   };

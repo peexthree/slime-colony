@@ -78,6 +78,12 @@ export interface RenderState {
   nodes: NodeView[];
   orbit: { count: number; cx: number; cy: number; radius: number; angle: number } | null;
   aura: { x: number; y: number; r: number } | null;
+  /** Споровые цисты (мины хвоста) */
+  cysts?: { x: number; y: number; r: number }[];
+  /** Удары жвалами (рассекающие конусы) */
+  mandibleSwipes?: { x: number; y: number; dirX: number; dirY: number; range: number; arc: number; life: number }[];
+  /** Маркеры био-радара на краях экрана (узлы и боссы) */
+  radarMarkers?: { angle: number; dist: number; color: number; icon: 'node' | 'boss' | 'titan' }[];
   /** Дуги Тесла-сети (Ионный Колосс): одноразовые линии на кадр */
   arcs: { x1: number; y1: number; x2: number; y2: number; color: number }[];
   /** Лазеры Пси-сети: лучи захваченных узлов */
@@ -162,6 +168,8 @@ export class PixiOverlay {
   private rings: PulseRing[] = [];
   /** Вспышки полигона Кольца Смерти */
   private polys: { pts: { x: number; y: number }[]; life: number; color: number }[] = [];
+  /** Пятна биомассы на месте погибших врагов */
+  private splats: { x: number; y: number; r: number; color: number; life: number; maxLife: number }[] = [];
   private shakeT = 0;
 
   private playerGlow!: Sprite;
@@ -296,6 +304,12 @@ export class PixiOverlay {
     this.polys.push({ pts, life: 0.55, color });
   }
 
+  /** Пятно био-крови на месте смерти */
+  spawnSplat(x: number, y: number, color: number): void {
+    if (this.splats.length > 60) this.splats.shift();
+    this.splats.push({ x, y, r: 8 + Math.random() * 10, color, life: 2.2, maxLife: 2.2 });
+  }
+
   /** Всплывающая цифра урона над врагом */
   pushDamage(x: number, y: number, value: number, color: number): void {
     if (this.dmgLive.length > 40) this.dmgLive.shift();
@@ -344,6 +358,31 @@ export class PixiOverlay {
       this.app.stage.position.set((Math.random() - 0.5) * intensity, (Math.random() - 0.5) * intensity);
     } else {
       this.app.stage.position.set(0, 0);
+    }
+
+    // Пятна био-крови от погибших врагов
+    for (let j = this.splats.length - 1; j >= 0; j--) {
+      const sp = this.splats[j];
+      sp.life -= dt;
+      if (sp.life <= 0) {
+        this.splats.splice(j, 1);
+        continue;
+      }
+      const a = Math.min(1, sp.life / sp.maxLife);
+      this.fxUnder.circle(sp.x, sp.y, sp.r)
+        .fill({ color: sp.color, alpha: 0.25 * a });
+    }
+
+    // Споровые цисты (мины на земле)
+    if (state.cysts) {
+      for (const cy of state.cysts) {
+        const pulse = 1 + Math.sin(time * 6 + cy.x) * 0.12;
+        this.fxUnder.circle(cy.x, cy.y, cy.r * pulse)
+          .fill({ color: 0x86efac, alpha: 0.18 })
+          .stroke({ width: 2, color: 0x39ff14, alpha: 0.85 });
+        this.fxUnder.circle(cy.x, cy.y, cy.r * 0.45)
+          .fill({ color: 0xffffff, alpha: 0.75 });
+      }
     }
 
     // Аура токсина под сущностями в мировых координатах (Wave 3: мембрана с биением ресничек)
@@ -757,6 +796,40 @@ export class PixiOverlay {
       this.fxOver.closePath()
         .stroke({ width: 2.5, color: p.color, alpha: 0.85 * a })
         .fill({ color: p.color, alpha: 0.10 * a });
+    }
+
+    // Рассекающие удары жвал (мандибулы)
+    if (state.mandibleSwipes) {
+      for (const ms of state.mandibleSwipes) {
+        const a = Math.min(1, ms.life / 0.16);
+        const startAng = Math.atan2(ms.dirY, ms.dirX) - ms.arc / 2;
+        const endAng = Math.atan2(ms.dirY, ms.dirX) + ms.arc / 2;
+        this.fxOver.arc(ms.x, ms.y, ms.range, startAng, endAng)
+          .stroke({ width: 4.5 * a, color: 0xffd166, alpha: 0.9 * a });
+        this.fxOver.arc(ms.x, ms.y, ms.range * 0.8, startAng + 0.1, endAng - 0.1)
+          .stroke({ width: 2.0 * a, color: 0xffffff, alpha: 0.75 * a });
+      }
+    }
+
+    // Био-радар: стрелки-маркеры направления на удалённые узлы и боссов
+    if (state.radarMarkers && state.player) {
+      for (const rm of state.radarMarkers) {
+        const markerDist = 95;
+        const mx = state.player.x + Math.cos(rm.angle) * markerDist;
+        const my = state.player.y + Math.sin(rm.angle) * markerDist;
+        const tipX = mx + Math.cos(rm.angle) * 12;
+        const tipY = my + Math.sin(rm.angle) * 12;
+        const leftX = mx + Math.cos(rm.angle + 2.4) * 8;
+        const leftY = my + Math.sin(rm.angle + 2.4) * 8;
+        const rightX = mx + Math.cos(rm.angle - 2.4) * 8;
+        const rightY = my + Math.sin(rm.angle - 2.4) * 8;
+        this.fxOver.moveTo(tipX, tipY).lineTo(leftX, leftY).lineTo(rightX, rightY).closePath()
+          .fill({ color: rm.color, alpha: 0.95 });
+        if (rm.icon === 'boss' || rm.icon === 'titan') {
+          this.fxOver.circle(mx, my, 5 + Math.sin(time * 8) * 2)
+            .stroke({ width: 2, color: 0xff3b5c, alpha: 0.9 });
+        }
+      }
     }
   }
 

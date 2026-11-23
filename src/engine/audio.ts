@@ -23,6 +23,11 @@ export class Sfx {
     this.master = this.ctx.createGain();
     this.master.gain.value = this.muted ? 0 : 0.4;
     this.master.connect(this.ctx.destination);
+
+    this.bgmGain = this.ctx.createGain();
+    this.bgmGain.gain.value = 0.25;
+    this.bgmGain.connect(this.master);
+
     // Буфер белого шума для перкуссии
     const len = Math.floor(this.ctx.sampleRate * 0.4);
     this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
@@ -234,5 +239,111 @@ export class Sfx {
     this.tone('triangle', 784, 784, 1.2, 0.13, 0.24);
     this.tone('triangle', 1047, 1047, 1.2, 0.13, 0.5);
     this.burst(0.8, 0.05, 3000, 0.5);
+  }
+
+  /** Фазовый рывок */
+  dash(): void {
+    if (!this.gate('dash', 100)) return;
+    this.tone('sine', 480, 160, 0.22, 0.12);
+    this.burst(0.18, 0.14, 2200, 0.6);
+  }
+
+  /** Удар жвалами */
+  mandible(): void {
+    if (!this.gate('mandible', 80)) return;
+    this.tone('sawtooth', 240, 60, 0.09, 0.16);
+    this.burst(0.08, 0.12, 1100, 0.8);
+  }
+
+  /** Взрыв/сброс цисты */
+  cyst(): void {
+    if (!this.gate('cyst', 70)) return;
+    this.tone('sine', 160, 440, 0.08, 0.14);
+    this.burst(0.12, 0.15, 600, 0.9);
+  }
+
+  // ---------- Процедурный био-саундтрек (Adaptive BGM) ----------
+  private bgmGain: GainNode | null = null;
+  private bgmActive = false;
+  private bgmTimer: number | null = null;
+  private bgmStep = 0;
+  private bgmScaleId = 1;
+  private bgmBoss = false;
+  private nextNoteTime = 0;
+
+  startBgm(): void {
+    if (!this.ctx || this.bgmActive) return;
+    this.bgmActive = true;
+    this.nextNoteTime = this.ctx.currentTime + 0.1;
+    this.scheduleBgmLoop();
+  }
+
+  stopBgm(): void {
+    this.bgmActive = false;
+    if (this.bgmTimer !== null) {
+      window.clearTimeout(this.bgmTimer);
+      this.bgmTimer = null;
+    }
+  }
+
+  setBgmIntensity(scaleId: number, isBoss: boolean): void {
+    this.bgmScaleId = scaleId;
+    this.bgmBoss = isBoss;
+  }
+
+  private scheduleBgmLoop(): void {
+    if (!this.bgmActive || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    while (this.nextNoteTime < now + 0.25) {
+      this.playBgmStep(this.nextNoteTime);
+      const bpm = this.bgmBoss ? 135 : 95 + (this.bgmScaleId - 1) * 8;
+      const stepDuration = 60 / (bpm * 4); // 16-я нота
+      this.nextNoteTime += stepDuration;
+      this.bgmStep = (this.bgmStep + 1) % 32;
+    }
+    this.bgmTimer = window.setTimeout(() => this.scheduleBgmLoop(), 40);
+  }
+
+  private playBgmStep(t: number): void {
+    if (!this.ctx || !this.bgmGain || this.muted) return;
+    const roots = [55, 55, 65.4, 73.4, 49, 55, 65.4, 82.4];
+    const root = roots[Math.floor(this.bgmStep / 4) % roots.length];
+
+    // Бас каждые 4 шага (четверть)
+    if (this.bgmStep % 4 === 0) {
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      o.type = this.bgmBoss ? 'sawtooth' : 'triangle';
+      o.frequency.setValueAtTime(root, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(this.bgmBoss ? 0.08 : 0.06, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+      o.connect(g);
+      g.connect(this.bgmGain);
+      o.start(t);
+      o.stop(t + 0.4);
+    }
+
+    // Арпеджиатор на 16-х
+    const arpIntervals = [0, 3, 7, 10, 12, 10, 7, 3];
+    const arpFreq = root * 2 * Math.pow(2, arpIntervals[this.bgmStep % arpIntervals.length] / 12);
+    if (this.bgmScaleId > 1 || this.bgmBoss || this.bgmStep % 2 === 0) {
+      const o = this.ctx.createOscillator();
+      const f = this.ctx.createBiquadFilter();
+      const g = this.ctx.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(arpFreq, t);
+      f.type = 'lowpass';
+      f.frequency.setValueAtTime(this.bgmBoss ? 2200 : 600 + this.bgmScaleId * 250, t);
+      f.Q.value = 4;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(this.bgmBoss ? 0.03 : 0.02, t + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+      o.connect(f);
+      f.connect(g);
+      g.connect(this.bgmGain);
+      o.start(t);
+      o.stop(t + 0.14);
+    }
   }
 }

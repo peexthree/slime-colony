@@ -285,3 +285,135 @@
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+
+
+/* 4. Проклятые мутации (Cursed Mutagens) */
+.up-card.curse {
+  border-color: #ff3b4e !important;
+  background: linear-gradient(145deg, rgba(38, 5, 12, 0.94), rgba(18, 2, 6, 0.98)) !important;
+  box-shadow: 0 0 22px rgba(255, 59, 78, 0.28), inset 0 0 16px rgba(255, 59, 78, 0.12) !important;
+  animation: cursePulse 1.8s ease-in-out infinite alternate;
+}
+@keyframes cursePulse {
+  from { border-color: #ff3b4e; box-shadow: 0 0 16px rgba(255, 59, 78, 0.25); }
+  to { border-color: #ff758c; box-shadow: 0 0 28px rgba(255, 59, 78, 0.45); }
+}
+.up-card.curse h3 {
+  color: #ff4d6d !important;
+  text-shadow: 0 0 10px rgba(255, 77, 109, 0.6);
+}
+.up-card.curse p {
+  color: #fecdd3 !important;
+}
+.curse-crest {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #ff3b4e;
+  margin-bottom: 6px;
+  text-shadow: 0 0 8px rgba(255, 59, 78, 0.7);
+}
+
+/* 5. Бестиарий и Кодекс Гибридов */
+#codex {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: rgba(2, 4, 8, 0.88);
+  backdrop-filter: blur(12px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+#codex.show {
+  display: flex;
+}
+.codex-card {
+  position: relative;
+  width: min(880px, 92vw);
+  max-height: 86vh;
+  background: linear-gradient(160deg, rgba(8, 16, 26, 0.96), rgba(3, 7, 12, 0.98));
+  border: 1px solid rgba(102, 252, 241, 0.3);
+  border-radius: 14px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(102, 252, 241, 0.15);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#codex-stats {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #66fcf1;
+  margin: 4px 0 12px;
+  text-shadow: 0 0 8px rgba(102, 252, 241, 0.5);
+}
+#codex-list {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+  padding-right: 6px;
+  margin-bottom: 16px;
+}
+.codex-item {
+  background: rgba(13, 22, 35, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.15s;
+}
+.codex-item.unlocked {
+  border-color: rgba(102, 252, 241, 0.25);
+}
+.codex-item.locked {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+}
+.codex-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.codex-head svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.codex-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.codex-lore {
+  font-size: 10px;
+  line-height: 1.4;
+  color: #94a3b8;
+}
+.codex-bonus {
+  font-size: 10px;
+  font-weight: 600;
+  color: #00ff9d;
+  margin-top: 2px;
+}
+#codex-close {
+  align-self: center;
+  padding: 8px 24px;
+  background: rgba(102, 252, 241, 0.12);
+  border: 1px solid rgba(102, 252, 241, 0.4);
+  color: #66fcf1;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+#codex-close:hover {
+  background: rgba(102, 252, 241, 0.25);
+  box-shadow: 0 0 16px rgba(102, 252, 241, 0.35);
+}

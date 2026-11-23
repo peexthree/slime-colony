@@ -2,15 +2,18 @@
 // Змейка-хвост + ДНК-матрица Spore + Кольцо Смерти + метаморфоз 5 шкал.
 // Сущности на CPU + Pixi-пулы, physarum-симуляция живёт вместе с игроком
 import { PixiOverlay } from './engine/PixiOverlay';
+import { PetriRadar } from './engine/radar';
 import { WebGPUSim, NodeStat } from './engine/WebGPUSim';
 import { Sfx } from './engine/audio';
 import { WaveDirector } from './engine/waves';
 import { BIOLAB_UNLOCKS, DnaBranch, RunGenome, isUnlocked, loadBiolab, pointsEarned, purchase, recordRun } from './engine/biolab';
 import { downloadPortrait, renderPortrait } from './engine/portrait';
 import { createJoystick } from './engine/joystick';
+import { GamepadController } from './engine/gamepad';
+import { CODEX_ENTRIES, loadCodex, unlockCodexEntry } from './engine/codex';
 import {
-  AURA, Beacon, BioNode, BOSS_EVERY, BOSS_FIRST_AT, CALL, DNA_COLORS, DNA_ICONS, DNA_LEVELS,
-  DNA_NAMES, ELITE, ENEMIES, ENEMY_CAP, EnemyType, GROWTH, HybridId, HYBRIDS, IFRAME,
+  AURA, Beacon, BioNode, BOSS_EVERY, BOSS_FIRST_AT, CALL, CYSTS, DASH, DNA_COLORS, DNA_ICONS, DNA_LEVELS,
+  DNA_NAMES, ELITE, ENEMIES, ENEMY_CAP, EnemyType, GROWTH, HybridId, HYBRIDS, IFRAME, MANDIBLES,
   METAMORPH, NOVA, NodeKind, ORBS, PLAYER, PROJ_LIFE, PROJ_RADIUS, PROJ_SPEED, RING,
   SCALES, SIM_HEIGHT, SIM_WIDTH, SPAWN_TABLE, SPIKES, STAT_MAX_STACKS, STRAIN, TAIL,
   WeaponId, WEAPON_MAX_LVL, WORLD, worldSize,
@@ -110,17 +113,32 @@ async function bootstrap() {
   const biolabCloseBtn = document.getElementById('biolab-close')!;
   const biolabPointsEl = document.getElementById('biolab-points')!;
   const biolabListEl = document.getElementById('biolab-list')!;
+  const codexModal = document.getElementById('codex');
+  const codexOpenBtn = document.getElementById('codex-open');
+  const codexCloseBtn = document.getElementById('codex-close');
+  const codexListEl = document.getElementById('codex-list');
+  const codexStatsEl = document.getElementById('codex-stats');
   const deathStatsEl = document.getElementById('death-stats')!;
   const portraitCanvas = document.getElementById('portrait-canvas') as HTMLCanvasElement;
-  const wSlots: Record<string, HTMLElement> = {
-    spikes: document.getElementById('wh-spikes')!,
-    orbs: document.getElementById('wh-orbs')!,
-    nova: document.getElementById('wh-nova')!,
-    aura: document.getElementById('wh-aura')!,
-    call: document.getElementById('wh-call')!,
+  const gamepad = new GamepadController();
+  const wSlots: Record<string, HTMLElement | null> = {
+    spikes: document.getElementById('wh-spikes'),
+    orbs: document.getElementById('wh-orbs'),
+    nova: document.getElementById('wh-nova'),
+    aura: document.getElementById('wh-aura'),
+    mandibles: document.getElementById('wh-mandibles'),
+    cysts: document.getElementById('wh-cysts'),
+    dash: document.getElementById('wh-dash'),
+    call: document.getElementById('wh-call'),
   };
   const bloomCanvas = document.getElementById('bloom-canvas') as HTMLCanvasElement;
   const bloomCtx = bloomCanvas.getContext('2d')!;
+  const radarCanvas = document.getElementById('radar-canvas') as HTMLCanvasElement;
+  const radarBadgeEl = document.getElementById('radar-badge');
+  const radar = new PetriRadar();
+  if (radarCanvas) {
+    radar.init(radarCanvas, radarBadgeEl);
+  }
 
   const sim = new WebGPUSim();
   const overlay = new PixiOverlay();
@@ -175,12 +193,25 @@ async function bootstrap() {
   let atkSpdMul = 1;
   const statStacks: Record<string, number> = {};
 
-  const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0 };
+const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, mandibles: 0, cysts: 0 };
   let spikesCd = 0;
   let novaCd = 2;
   let auraTick = 0;
   let orbAngle = 0;
-  let toxinFlash = 0; // ttl визуального токсина от новы
+  let toxinFlash = 0;
+  let mandiblesCd = 0;
+  let cystsCd = 0;
+  let dashCd = 0;
+  let dashT = 0;
+  let dashRequested = false;
+
+  const liveCysts: { x: number; y: number; r: number; dmg: number; life: number }[] = [];
+  const mandibleSwipes: { x: number; y: number; dirX: number; dirY: number; range: number; arc: number; life: number }[] = [];
+  const corpseBeacons: { x: number; y: number; ttl: number }[] = [];
+
+  let cursePredator = false;
+  let curseChitin = false;
+  let curseHunger = false;
 
   let enemies: Enemy[] = [];
   let projs: Proj[] = [];
@@ -320,7 +351,7 @@ async function bootstrap() {
   const effDmg = () => dmgMul * weaponPenalty * (genes.has('unstable') ? (unstableT > 0 ? 0.55 : 1.8) : 1);
   const effAtkSpd = () => atkSpdMul * (unstableT > 0 && unstableKind === 2 ? 0.6 : 1);
   /** Неуязвимость после урона: ген «Фазовый сдвиг» удваивает окно */
-  const iframeNow = () => IFRAME * (genes.has('phantom') ? 2 : 1);
+  const iframeNow = () => IFRAME * (genes.has('phantom') ? 2 : 1) + (curseChitin ? 1.5 : 0);
 
   let kills = 0;
   let level = 1;
@@ -348,13 +379,27 @@ async function bootstrap() {
     mouse.active = true;
   });
   pixiCanvas.addEventListener('mouseleave', () => (mouse.active = false));
+  pixiCanvas.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    if (started && !gameOver && !paused) {
+      dashRequested = true;
+    }
+  });
   window.addEventListener('keydown', (e) => {
     sfx.unlock();
     keys.add(e.key.toLowerCase());
+    if ((e.key === 'Shift' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') && started && !gameOver) {
+      dashRequested = true;
+    }
     // Escape = пауза через брифинг (Этап 1.4)
     if (e.key === 'Escape' && started && !gameOver && pendingUps === 0) {
       paused = !paused;
-      if (paused) sfx.setTailDrone(false);
+      if (paused) {
+        sfx.setTailDrone(false);
+        sfx.stopBgm();
+      } else {
+        sfx.startBgm();
+      }
       intro.classList.toggle('show', paused);
     }
     // Пробел не должен скроллить страницу во время игры
@@ -465,6 +510,8 @@ async function bootstrap() {
     branch?: DnaBranch;
     /** Великий Гибрид: золотая карта слияния двух геномов */
     hybrid?: HybridId;
+    /** Проклятая мутация: колоссальная мощь с фатальной расплатой */
+    curse?: boolean;
   }
   const stack = (id: string) => (statStacks[id] ?? 0) < STAT_MAX_STACKS;
   const bump = (id: string) => (statStacks[id] = (statStacks[id] ?? 0) + 1);
@@ -480,6 +527,7 @@ async function bootstrap() {
   /** Взятие гибрида: флавор-бонус + механика включается через hybridsTaken */
   function applyHybrid(id: HybridId): void {
     hybridsTaken.add(id);
+    unlockCodexEntry(id);
     sfx.hybrid();
     const def = HYBRIDS.find((h) => h.id === id)!;
     showToast(`ГИБРИДИЗАЦИЯ: ${def.name}`);
@@ -501,6 +549,35 @@ async function bootstrap() {
     { id: 'nova+', title: 'Нова-импульс', desc: 'Больше радиус и урон, короче перезарядка', avail: () => wlvl.nova > 0 && wlvl.nova < WEAPON_MAX_LVL, apply: () => wlvl.nova++ },
     { id: 'aura0', title: 'Токсин-аура', desc: 'Ваши вены отравляют всё вокруг', avail: () => wlvl.aura === 0, apply: () => (wlvl.aura = 1) },
     { id: 'aura+', title: 'Токсин-аура', desc: 'Больше радиус и урон в секунду', avail: () => wlvl.aura > 0 && wlvl.aura < WEAPON_MAX_LVL, apply: () => wlvl.aura++ },
+    { id: 'mandibles0', title: 'Хищные жвала', desc: 'Фронтальный конус урона: разрывает врагов перед вами', avail: () => wlvl.mandibles === 0, apply: () => (wlvl.mandibles = 1) },
+    { id: 'mandibles+', title: 'Хищные жвала', desc: 'Больше радиус, угол рассечения и урон', avail: () => wlvl.mandibles > 0 && wlvl.mandibles < WEAPON_MAX_LVL, apply: () => wlvl.mandibles++ },
+    { id: 'cysts0', title: 'Споровые цисты', desc: 'Органические мины: сбрасываются позади и взрываются при контакте', avail: () => wlvl.cysts === 0, apply: () => (wlvl.cysts = 1) },
+    { id: 'cysts+', title: 'Споровые цисты', desc: 'Больше цист в кладке, выше радиус и урон детонации', avail: () => wlvl.cysts > 0 && wlvl.cysts < WEAPON_MAX_LVL, apply: () => wlvl.cysts++ },
+    // --- Проклятые мутации: сверхсила с расплатой ---
+    {
+      id: 'curse_predator',
+      title: 'СВЕРХХИЩНИК',
+      desc: 'Урон x2.2 и вампиризм +4 HP при убийстве элит, но хвост тает в 3 раза быстрее',
+      curse: true,
+      avail: () => !cursePredator,
+      apply: () => { cursePredator = true; dmgMul *= 2.2; showToast('ПРОКЛЯТИЕ: СВЕРХХИЩНИК'); },
+    },
+    {
+      id: 'curse_chitin',
+      title: 'ТИТАНОВЫЙ ХИТИН',
+      desc: 'Макс. HP +120 и неуязвимость +1.5 сек, но скорость бега снижена на 30%',
+      curse: true,
+      avail: () => !curseChitin,
+      apply: () => { curseChitin = true; maxHp += 120; player.hp += 120; moveSpeed *= 0.70; showToast('ПРОКЛЯТИЕ: ТИТАНОВЫЙ ХИТИН'); },
+    },
+    {
+      id: 'curse_hunger',
+      title: 'ВЕЧНЫЙ ГОЛОД',
+      desc: 'Радиус сбора x2 и скорость атаки +40%, но при голоде организм теряет 3 HP/сек',
+      curse: true,
+      avail: () => !curseHunger,
+      apply: () => { curseHunger = true; magnetR *= 2; atkSpdMul += 0.40; showToast('ПРОКЛЯТИЕ: ВЕЧНЫЙ ГОЛОД'); },
+    },
     { id: 'dmg', title: 'Острота', desc: '+15% ко всему урону', avail: () => stack('dmg'), apply: () => { dmgMul += 0.15; bump('dmg'); } },
     { id: 'aspd', title: 'Рефлексы', desc: '+12% скорости атаки', avail: () => stack('aspd'), apply: () => { atkSpdMul += 0.12; bump('aspd'); } },
     { id: 'move', title: 'Скользство', desc: '+8% скорости бега', avail: () => stack('move'), apply: () => { moveSpeed *= 1.08; bump('move'); } },
@@ -565,6 +642,10 @@ async function bootstrap() {
     if (id === 'nova+') return ` · ур.${wlvl.nova} → ${wlvl.nova + 1}`;
     if (id === 'aura0') return ' · открытие';
     if (id === 'aura+') return ` · ур.${wlvl.aura} → ${wlvl.aura + 1}`;
+    if (id === 'mandibles0') return ' · открытие';
+    if (id === 'mandibles+') return ` · ур.${wlvl.mandibles} → ${wlvl.mandibles + 1}`;
+    if (id === 'cysts0') return ' · открытие';
+    if (id === 'cysts+') return ` · ур.${wlvl.cysts} → ${wlvl.cysts + 1}`;
     return '';
   }
 
@@ -591,9 +672,13 @@ async function bootstrap() {
       const card = document.createElement('button');
       card.className = 'up-card';
       card.dataset.id = u.id;
-      if (u.branch) card.classList.add(`branch-${u.branch}`);
-      if (u.hybrid) card.classList.add('hybrid');
       let crestHtml = '';
+      if (u.branch) card.classList.add(`branch-${u.branch}`);
+      if (u.curse) {
+        card.classList.add('curse');
+        crestHtml = '<div class="card-crest curse-crest">⚠️ ПРОКЛЯТИЕ ⚠️</div>';
+      }
+      if (u.hybrid) card.classList.add('hybrid');
       let branchTag = '';
       if (u.branch) {
         branchTag = `<span class="b-ico"><svg class="inline-card-ico" viewBox="0 0 32 32"><use href="#ico-${u.branch}"/></svg></span> `;
@@ -691,7 +776,8 @@ async function bootstrap() {
     bioFillEl.classList.toggle('titan-ready', frac >= 1);
   }
 
-  function setSlot(el: HTMLElement, frac: number, lvl: number): void {
+  function setSlot(el: HTMLElement | null, frac: number, lvl: number): void {
+    if (!el) return;
     const ring = el.querySelector('.wh-ring') as HTMLElement;
     const lvlEl = el.querySelector('.wh-lvl') as HTMLElement;
     const clamped = Math.max(0, Math.min(1, frac));
@@ -710,7 +796,52 @@ async function bootstrap() {
     const nvMax = (NOVA.cd[nvIdx] * (genes.has('supercharge') ? 1.6 : 1)) / effAtkSpd();
     setSlot(wSlots.nova, wlvl.nova > 0 ? 1 - Math.max(0, novaCd) / nvMax : 0, wlvl.nova);
     setSlot(wSlots.aura, 1, wlvl.aura);
+
+    const mandIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.mandibles - 1));
+    const mandMax = MANDIBLES.cd[mandIdx] / effAtkSpd();
+    setSlot(wSlots.mandibles, wlvl.mandibles > 0 ? 1 - Math.max(0, mandiblesCd) / mandMax : 0, wlvl.mandibles);
+
+    const cystIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.cysts - 1));
+    const cystMax = CYSTS.cd[cystIdx] / effAtkSpd();
+    setSlot(wSlots.cysts, wlvl.cysts > 0 ? 1 - Math.max(0, cystsCd) / cystMax : 0, wlvl.cysts);
+
+    setSlot(wSlots.dash, 1 - Math.max(0, dashCd) / DASH.cd, 1);
     setSlot(wSlots.call, 1 - Math.max(0, callCd) / CALL.cd, 1);
+  }
+
+  function renderCodex(): void {
+    const unlocked = loadCodex();
+    if (codexStatsEl) {
+      codexStatsEl.textContent = `ОТКРЫТО: ${unlocked.size} / ${CODEX_ENTRIES.length} ВИДОВ`;
+    }
+    if (!codexListEl) return;
+    codexListEl.innerHTML = '';
+    for (const entry of CODEX_ENTRIES) {
+      const isUnl = unlocked.has(entry.id);
+      const item = document.createElement('div');
+      item.className = 'codex-item ' + (isUnl ? 'unlocked' : 'locked');
+      item.innerHTML = `
+        <div class="codex-head" style="color: ${entry.color};">
+          <svg viewBox="0 0 32 32"><use href="#${entry.iconId}"/></svg>
+          <span class="codex-title">${isUnl ? entry.name : '??? НЕИЗВЕСТНЫЙ ВИД'}</span>
+        </div>
+        <div class="codex-lore">${isUnl ? entry.lore : 'Биологический образец не исследован. Уничтожьте или активируйте его в бою.'}</div>
+        ${isUnl && entry.bonus ? `<div class="codex-bonus">БОНУС: ${entry.bonus}</div>` : ''}
+      `;
+      codexListEl.appendChild(item);
+    }
+  }
+
+  if (codexOpenBtn && codexModal) {
+    codexOpenBtn.addEventListener('click', () => {
+      renderCodex();
+      codexModal.classList.add('show');
+    });
+  }
+  if (codexCloseBtn && codexModal) {
+    codexCloseBtn.addEventListener('click', () => {
+      codexModal.classList.remove('show');
+    });
   }
 
   // ---------- Биолаб: мета-прогрессия между забегами (Этап 6.1) ----------
@@ -782,6 +913,7 @@ async function bootstrap() {
   introStartBtn.addEventListener('click', () => {
     started = true;
     paused = false;
+    sfx.startBgm();
     intro.classList.remove('show');
     introStartBtn.textContent = 'ПРОДОЛЖИТЬ';
   });
@@ -789,6 +921,7 @@ async function bootstrap() {
     if (!started || gameOver) return;
     paused = true;
     sfx.setTailDrone(false);
+    sfx.stopBgm();
     intro.classList.add('show');
   });
 
@@ -817,7 +950,20 @@ async function bootstrap() {
     wlvl.orbs = 0;
     wlvl.nova = 0;
     wlvl.aura = 0;
+    wlvl.mandibles = 0;
+    wlvl.cysts = 0;
     spikesCd = 0;
+    mandiblesCd = 0;
+    cystsCd = 0;
+    dashCd = 0;
+    dashT = 0;
+    dashRequested = false;
+    liveCysts.length = 0;
+    mandibleSwipes.length = 0;
+    corpseBeacons.length = 0;
+    cursePredator = false;
+    curseChitin = false;
+    curseHunger = false;
     novaCd = 2;
     auraTick = 0;
     orbAngle = 0;
@@ -888,6 +1034,7 @@ async function bootstrap() {
     updateWeaponHud();
     paused = false;
     gameOver = false;
+    sfx.startBgm();
     modal.classList.remove('show');
     upgradeModal.classList.remove('show');
   });
@@ -1008,9 +1155,16 @@ async function bootstrap() {
     const def = ENEMIES[e.type];
     kills++;
     sfx.kill();
+    unlockCodexEntry(e.type);
+    const tip = e.tail.length > 0 ? e.tail[e.tail.length - 1] : e;
+    overlay.spawnSplat(tip.x, tip.y, def.color);
+    corpseBeacons.push({ x: tip.x, y: tip.y, ttl: 4 });
+    sim.spawnPlayerSpores(toSimX(tip.x), toSimY(tip.y), e.type === 'boss' ? 1800 : 350);
+    if (cursePredator && (e.elite || e.type === 'boss' || e.titan)) {
+      player.hp = Math.min(maxHp, player.hp + 4);
+    }
     // Хвостик отрывается и становится душой на его кончике.
     // Душа несёт ДНК своего генома (цвет = геном); босс рассыпается на 4 души всех геномов
-    const tip = e.tail.length > 0 ? e.tail[e.tail.length - 1] : e;
     const xpVal = Math.round(def.xp * (e.elite ? ELITE.xpMul : 1));
     if (e.type === 'boss') {
       const per = Math.max(1, Math.round(xpVal / 4));
@@ -1150,6 +1304,7 @@ async function bootstrap() {
     gameOver = true;
     winRun = win;
     sfx.setTailDrone(false);
+    sfx.stopBgm();
     if (win) sfx.victory();
     const bl = loadBiolab();
     const genome: RunGenome = {
@@ -1367,6 +1522,37 @@ async function bootstrap() {
       gameTime += dt;
 
       // Движение игрока: мышь как цель, WASD и мобильный джойстик как альтернатива
+      // Gamepad controller polling
+      const gp = gamepad.poll();
+      if (gp.dashPressed) dashRequested = true;
+      if (gp.callPressed) callRequested = true;
+      if (gp.pausePressed && started && !gameOver && pendingUps === 0) {
+        paused = !paused;
+        if (paused) sfx.stopBgm(); else sfx.startBgm();
+        intro.classList.toggle('show', paused);
+      }
+
+      // Dash trigger & cooldown
+      dashCd -= dt;
+      if (dashT > 0) {
+        dashT -= dt;
+        player.iframe = Math.max(player.iframe, 0.1);
+      }
+      const joyDash = joystick.dashRequested();
+      if ((dashRequested || joyDash) && dashCd <= 0) {
+        dashRequested = false;
+        if (joyDash) joystick.consumeDash();
+        dashCd = DASH.cd;
+        dashT = DASH.duration;
+        player.iframe = Math.max(player.iframe, DASH.duration + 0.15);
+        sfx.dash();
+        gamepad.vibrate(120, 0.8, 0.4);
+        overlay.spawnPulse(player.x, player.y, 0x66fcf1, 55);
+        overlay.beginShake(0.08);
+        sim.spawnPlayerSpores(toSimX(player.x), toSimY(player.y), 400);
+      }
+      dashRequested = false;
+
       let mx = 0;
       let my = 0;
       if (keys.has('w') || keys.has('arrowup')) my -= 1;
@@ -1375,6 +1561,7 @@ async function bootstrap() {
       if (keys.has('d') || keys.has('arrowright')) mx += 1;
       const jv = joystick.vector();
       if (jv.x !== 0 || jv.y !== 0) { mx += jv.x; my += jv.y; }
+      if (Math.hypot(gp.moveX, gp.moveY) > 0.1) { mx += gp.moveX; my += gp.moveY; }
       if (mx === 0 && my === 0 && mouse.active) {
         const dx = mouse.x - player.x;
         const dy = mouse.y - player.y;
@@ -1382,12 +1569,17 @@ async function bootstrap() {
         if (d > 7) { mx = dx / d; my = dy / d; }
       }
       const mLen = Math.hypot(mx, my) || 1;
-      if (mx !== 0 || my !== 0) {
+      if (Math.hypot(gp.aimX, gp.aimY) > 0.2) {
+        playerDirX = gp.aimX;
+        playerDirY = gp.aimY;
+      } else if (mx !== 0 || my !== 0) {
         playerDirX = mx / mLen;
         playerDirY = my / mLen;
       }
       // Симбиоз со штаммом: свой след ускоряет, чужой растворяет хвост
+      const dashMul = dashT > 0 ? DASH.speedMul : 1;
       const spdNow = moveSpeed
+        * dashMul
         * (trailOwn ? STRAIN.ownSpeedMul : 1)
         * (unstableT > 0 && unstableKind === 0 ? 0.55 : 1);
       player.x = Math.max(16, Math.min(curWorldW - 16, player.x + (mx / mLen) * spdNow * dt));
@@ -1402,11 +1594,11 @@ async function bootstrap() {
       const isVoidEvent = waves.isVoidActive();
       if (!tailFreeze && !isVoidEvent) {
         if (isMoving) {
-          const melt = moveCost() * (trailEnemy ? STRAIN.enemyMeltMul : 1);
+          const melt = moveCost() * (trailEnemy ? STRAIN.enemyMeltMul : 1) * (cursePredator ? 3 : 1);
           tailLen = Math.max(TAIL.minLen, tailLen - melt * dt);
         } else {
           // Метаболический голод неподвижности: если стоять на месте, организм тратит биомассу хвоста
-          const idleMelt = TAIL.idleCost * (trailEnemy ? STRAIN.enemyMeltMul : 1);
+          const idleMelt = TAIL.idleCost * (trailEnemy ? STRAIN.enemyMeltMul : 1) * (cursePredator ? 3 : 1);
           tailLen = Math.max(TAIL.minLen, tailLen - idleMelt * dt);
         }
       }
@@ -1431,6 +1623,9 @@ async function bootstrap() {
 
       // Голод: без душ дольше 3 секунд кончик мигает, критика - оранжевая кромка
       sinceSoul += dt;
+      if (curseHunger && sinceSoul > 2.5) {
+        player.hp = Math.max(1, player.hp - 3 * dt);
+      }
       tailMaxReached = Math.max(tailMaxReached, tailLen);
       const tailRatio = tailLen / maxTail();
       const newTailState: 'ok' | 'low' | 'crit' = tailRatio > 0.7 ? 'ok' : tailRatio > 0.4 ? 'low' : 'crit';
@@ -2011,6 +2206,99 @@ async function bootstrap() {
         }
       }
 
+      // Хищные жвала (Mandibles)
+      mandiblesCd -= dt;
+      for (let i = mandibleSwipes.length - 1; i >= 0; i--) {
+        mandibleSwipes[i].life -= dt;
+        if (mandibleSwipes[i].life <= 0) mandibleSwipes.splice(i, 1);
+      }
+      if (wlvl.mandibles > 0 && mandiblesCd <= 0 && enemies.length > 0) {
+        const mandIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.mandibles - 1));
+        const range = MANDIBLES.range[mandIdx];
+        const arc = MANDIBLES.arc;
+        const dmg = MANDIBLES.dmg[mandIdx] * effDmg();
+        let enemyInCone = false;
+        for (const e of nearby(player.x, player.y, range + 20)) {
+          const dx = e.x - player.x;
+          const dy = e.y - player.y;
+          const d = Math.hypot(dx, dy);
+          if (d <= range + ENEMIES[e.type].radius) {
+            const dot = (dx * playerDirX + dy * playerDirY) / Math.max(0.001, d);
+            if (dot >= Math.cos(arc / 2)) { enemyInCone = true; break; }
+          }
+        }
+        if (enemyInCone) {
+          mandiblesCd = MANDIBLES.cd[mandIdx] / effAtkSpd();
+          sfx.mandible();
+          mandibleSwipes.push({ x: player.x, y: player.y, dirX: playerDirX, dirY: playerDirY, range, arc, life: 0.22 });
+          for (const e of nearby(player.x, player.y, range + 20)) {
+            const dx = e.x - player.x;
+            const dy = e.y - player.y;
+            const d = Math.hypot(dx, dy);
+            if (d <= range + ENEMIES[e.type].radius) {
+              const dot = (dx * playerDirX + dy * playerDirY) / Math.max(0.001, d);
+              if (dot >= Math.cos(arc / 2)) {
+                e.hp -= dmg;
+                e.flash = 0.1;
+                e.kbx += playerDirX * 180;
+                e.kby += playerDirY * 180;
+                overlay.pushDamage(e.x, e.y - e.radius - 6, dmg, 0x00ff9d);
+                damageDealt += dmg;
+              }
+            }
+          }
+        }
+      }
+
+      // Споровые цисты (Cysts)
+      cystsCd -= dt;
+      if (wlvl.cysts > 0 && cystsCd <= 0) {
+        const cIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.cysts - 1));
+        cystsCd = CYSTS.cd[cIdx] / effAtkSpd();
+        const count = CYSTS.maxCysts[cIdx];
+        const dmg = CYSTS.dmg[cIdx] * effDmg();
+        const r = CYSTS.radius[cIdx];
+        for (let k = 0; k < count; k++) {
+          const dropA = Math.atan2(-playerDirY, -playerDirX) + (Math.random() - 0.5) * 1.2;
+          const dropD = 18 + Math.random() * 26;
+          liveCysts.push({
+            x: player.x + Math.cos(dropA) * dropD,
+            y: player.y + Math.sin(dropA) * dropD,
+            r,
+            dmg,
+            life: 14,
+          });
+          sfx.cyst();
+        }
+      }
+      for (let i = liveCysts.length - 1; i >= 0; i--) {
+        const cyst = liveCysts[i];
+        cyst.life -= dt;
+        let explode = cyst.life <= 0;
+        if (!explode) {
+          for (const e of nearby(cyst.x, cyst.y, cyst.r + 20)) {
+            if (Math.hypot(e.x - cyst.x, e.y - cyst.y) < cyst.r + ENEMIES[e.type].radius) {
+              explode = true;
+              break;
+            }
+          }
+        }
+        if (explode) {
+          sfx.nova();
+          overlay.spawnPulse(cyst.x, cyst.y, 0x39ff14, cyst.r * 1.8);
+          sim.spawnPlayerSpores(toSimX(cyst.x), toSimY(cyst.y), 300);
+          for (const e of nearby(cyst.x, cyst.y, cyst.r * 1.8)) {
+            if (Math.hypot(e.x - cyst.x, e.y - cyst.y) < cyst.r * 1.8 + ENEMIES[e.type].radius) {
+              e.hp -= cyst.dmg;
+              e.flash = 0.12;
+              overlay.pushDamage(e.x, e.y - e.radius - 6, cyst.dmg, 0x39ff14);
+              damageDealt += cyst.dmg;
+            }
+          }
+          liveCysts.splice(i, 1);
+        }
+      }
+
       // Осколки опыта: вялый дрейф к игроку отовсюду + магнит вблизи
       const effMagnet = magnetR * (magnetNodeOwned ? 2.5 : 1);
       // Консолидация душ: если душ на поле больше 70, объединяем дальние, устраняя мусор
@@ -2125,6 +2413,22 @@ async function bootstrap() {
 
       // ---- Physarum живёт вместе с игроком (Этапы 1.2 / 2.2 / 2.3) ----
       const simBeacons: Beacon[] = [];
+      // Био-цветение Physarum на телах павших
+      for (let i = corpseBeacons.length - 1; i >= 0; i--) {
+        corpseBeacons[i].ttl -= dt;
+        if (corpseBeacons[i].ttl <= 0) {
+          corpseBeacons.splice(i, 1);
+        } else {
+          simBeacons.push({
+            x: corpseBeacons[i].x,
+            y: corpseBeacons[i].y,
+            radius: 45,
+            kind: 1,
+            ttl: corpseBeacons[i].ttl,
+            maxTtl: 4,
+          });
+        }
+      }
       // Нова: токсин подсвечивается на полсекунды
       if (toxinFlash > 0) {
         const safeNovaIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.nova - 1));
@@ -2295,6 +2599,10 @@ async function bootstrap() {
         }
       }
       nodesChipEl.innerHTML = chip || '·';
+      // BGM адаптивная интенсивность
+      const danger = Math.min(1, enemies.length / 28 + (tailState === 'crit' ? 0.35 : tailState === 'low' ? 0.15 : 0) + (titanPending ? 0.4 : 0));
+      sfx.setBgmIntensity(SCALES[scaleIdx].id, titanPending || enemies.some((e) => e.type === 'boss'));
+
       // Кулдауны оружий и зова (Этап 5.2)
       updateWeaponHud();
       // Дрон тревоги звучит только в критике хвоста
@@ -2303,6 +2611,52 @@ async function bootstrap() {
       // До старта / на паузе / после конца: пыль дрейфует без маяков
       sfx.setTailDrone(false);
       sim.step(t, dt, [], [], { x: -500, y: -500 }, -0.75, 0.90, SCALES[scaleIdx].id, () => {});
+    }
+
+    // Био-радар чашки Петри: обновление миникарты и направлений
+    if (started && !gameOver) {
+      radar.update(
+        dt,
+        { x: player.x, y: player.y, dirX: playerDirX, dirY: playerDirY },
+        enemies,
+        bioNodes,
+        Math.max(650, 850 / camZoom)
+      );
+    }
+
+    // Био-радар: стрелки к скрытым за экраном вражеским узлам и титанам
+    const radarMarkers: { angle: number; dist: number; color: number; icon: 'boss' | 'titan' | 'node' }[] = [];
+    if (started && !gameOver) {
+      const halfViewW = (overlay.screenWidth / 2) / (camZoom * overlay.scale);
+      const halfViewH = (overlay.screenHeight / 2) / (camZoom * overlay.scale);
+      for (const n of bioNodes) {
+        if (n.owner === 1) continue;
+        const dx = n.x - camX;
+        const dy = n.y - camY;
+        if (Math.abs(dx) > halfViewW - 30 || Math.abs(dy) > halfViewH - 30) {
+          radarMarkers.push({
+            angle: Math.atan2(n.y - player.y, n.x - player.x),
+            dist: Math.hypot(n.x - player.x, n.y - player.y),
+            color: n.owner === -1 ? 0xff3b4e : 0xa855f7,
+            icon: 'node',
+          });
+        }
+      }
+      for (const e of enemies) {
+        if (!e.titan && e.type !== 'boss' && !e.elite) continue;
+        const dx = e.x - camX;
+        const dy = e.y - camY;
+        if (Math.abs(dx) > halfViewW - 30 || Math.abs(dy) > halfViewH - 30) {
+          radarMarkers.push({
+            angle: Math.atan2(e.y - player.y, e.x - player.x),
+            dist: Math.hypot(e.x - player.x, e.y - player.y),
+            color: e.titan ? 0xffb800 : e.type === 'boss' ? 0xff2a85 : 0xfacc15,
+            icon: e.titan ? 'titan' : 'boss',
+          });
+        }
+      }
+      radarMarkers.sort((a, b) => a.dist - b.dist);
+      if (radarMarkers.length > 6) radarMarkers.length = 6;
     }
 
     overlay.render(
@@ -2340,6 +2694,9 @@ async function bootstrap() {
         aura: wlvl.aura > 0 ? { x: player.x, y: player.y, r: AURA.radius[Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.aura - 1))] } : null,
         arcs: frameArcs,
         lasers: frameLasers,
+        cysts: liveCysts,
+        mandibleSwipes,
+        radarMarkers,
       },
       t,
       dt

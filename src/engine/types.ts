@@ -42,7 +42,7 @@ export const CALL = {
 } as const;
 
 export type EnemyType = 'grub' | 'runner' | 'brute' | 'boss' | 'splitter' | 'spitter' | 'healer' | 'pulsar' | 'mirror' | 'colony' | 'brood';
-export type WeaponId = 'spikes' | 'orbs' | 'nova' | 'aura';
+export type WeaponId = 'spikes' | 'orbs' | 'nova' | 'aura' | 'mandibles' | 'cysts';
 
 // ============================ ДНК-МАТРИЦА ============================
 
@@ -162,6 +162,30 @@ export const AURA = {
   dps:    [6, 9, 12, 16],
   radius: [45, 52, 60, 70],
   tick:   0.25,
+} as const;
+
+/** Жвалы: рассекающий фронтальный укус перед организмом */
+export const MANDIBLES = {
+  cd:     [1.6, 1.4, 1.2, 1.0],
+  dmg:    [28, 38, 52, 68],
+  range:  [58, 66, 75, 86],
+  arc:    Math.PI * 0.65, // ~117 градусов сектор удара
+} as const;
+
+/** Споровые цисты: коконы-мины, оставляемые хвостом */
+export const CYSTS = {
+  cd:       [3.2, 2.7, 2.2, 1.8],
+  dmg:      [32, 45, 60, 80],
+  radius:   [48, 54, 60, 68],
+  maxCysts: [3, 4, 5, 6],
+} as const;
+
+/** Фазовый рывок (Dash) */
+export const DASH = {
+  cd: 3.5,
+  duration: 0.22,
+  speedMul: 3.4,
+  iframe: 0.35,
 } as const;
 
 export const WEAPON_MAX_LVL = 4;
