@@ -192,7 +192,7 @@ export class WebGPUSim {
       data[base + 2] = a;
       data[base + 3] = 0;
     }
-    const capacity = half - batch;
+    const capacity = Math.max(1, half - batch);
     const startIdx = this.sporeCursor % capacity;
     this.sporeCursor = (startIdx + batch) % capacity;
     this.device.queue.writeBuffer(this.agentsBuffer, startIdx * 16, data, 0, batch * 4);

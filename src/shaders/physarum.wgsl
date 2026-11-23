@@ -34,7 +34,9 @@ struct Beacon {
   radius: f32,
   kind: f32, // 1.0 аттрактор игрока, -1.0 токсин, 2.0 ИИ-маяк
   ttlAlpha: f32, // затухание маяка 0..1
-  pad: vec3<f32>,
+  pad0: f32,
+  pad1: f32,
+  pad2: f32,
 };
 
 struct Node {

@@ -190,6 +190,7 @@ async function bootstrap() {
 
   // ---- ДНК-матрица: накопленная биомасса душ по 4 геномам + гены и гибриды ----
   const dnaXp: Record<DnaBranch, number> = { vermis: 0, chimera: 0, mycelium: 0, symbiont: 0 };
+  const lastDnaLvl: Record<DnaBranch, number> = { vermis: 0, chimera: 0, mycelium: 0, symbiont: 0 };
   const genes = new Set<string>();
   const hybridsTaken = new Set<HybridId>();
   const hybridNotified = new Set<string>(); // пары геномов, для которых уже был тост
@@ -486,8 +487,8 @@ async function bootstrap() {
     if (id === 'plasma_leviathan') dmgMul += 0.25;
     if (id === 'ouroboros') tailCapBonus += 8;
     if (id === 'phase_serpent') moveSpeed *= 1.12;
-    if (id === 'spore_reactor') { if (wlvl.aura > 0) wlvl.aura++; else dmgMul += 0.15; }
-    if (id === 'ion_colossus') { if (wlvl.orbs > 0) wlvl.orbs++; else wlvl.orbs = 1; }
+    if (id === 'spore_reactor') { if (wlvl.aura > 0) wlvl.aura = Math.min(WEAPON_MAX_LVL, wlvl.aura + 1); else dmgMul += 0.15; }
+    if (id === 'ion_colossus') { if (wlvl.orbs > 0) wlvl.orbs = Math.min(WEAPON_MAX_LVL, wlvl.orbs + 1); else wlvl.orbs = 1; }
     if (id === 'psi_web') magnetR *= 1.3;
     refreshMainGenome();
   }
@@ -510,7 +511,7 @@ async function bootstrap() {
     { id: 'ver_cap', branch: 'vermis', title: 'Хвост длиннее', desc: '+6 к ёмкости хвоста: тело-оружие растёт', avail: () => tailCapBonus < 30, apply: () => { tailCapBonus += 6; } },
     { id: 'ver_dps', branch: 'vermis', title: 'Мощь хлыста', desc: 'Урон хвоста x1.3', avail: () => tailDpsMul < 3.2, apply: () => { tailDpsMul *= 1.3; } },
     { id: 'chi_dmg', branch: 'chimera', title: 'Мутация урона', desc: '+25% ко всему урону', avail: () => stack('chi_dmg'), apply: () => { dmgMul += 0.25; bump('chi_dmg'); } },
-    { id: 'chi_lvl', branch: 'chimera', title: 'Радикал', desc: 'Случайное оружие +1 уровень', avail: () => wlvl.orbs + wlvl.nova + wlvl.aura < 12, apply: () => { const ids: WeaponId[] = ['orbs', 'nova', 'aura']; const pick = ids[Math.floor(Math.random() * ids.length)]; if (wlvl[pick] < WEAPON_MAX_LVL) wlvl[pick]++; } },
+    { id: 'chi_lvl', branch: 'chimera', title: 'Радикал', desc: 'Случайное оружие +1 уровень', avail: () => (wlvl.orbs < WEAPON_MAX_LVL || wlvl.nova < WEAPON_MAX_LVL || wlvl.aura < WEAPON_MAX_LVL), apply: () => { const ids: WeaponId[] = (['orbs', 'nova', 'aura'] as WeaponId[]).filter((w) => wlvl[w] < WEAPON_MAX_LVL); if (ids.length > 0) { const pick = ids[Math.floor(Math.random() * ids.length)]; wlvl[pick]++; } } },
     { id: 'my_regen', branch: 'mycelium', title: 'Симбиоз', desc: '+1.5 HP в секунду', avail: () => stack('my_regen'), apply: () => { regen += 1.5; bump('my_regen'); } },
     { id: 'my_aura', branch: 'mycelium', title: 'Спороносность', desc: 'Токсин-аура +1 уровень (если открыта)', avail: () => wlvl.aura > 0 && wlvl.aura < WEAPON_MAX_LVL, apply: () => { wlvl.aura++; } },
     { id: 'si_magnet', branch: 'symbiont', title: 'Феромонный магнит', desc: '+35% радиус подбора душ', avail: () => stack('si_magnet'), apply: () => { magnetR *= 1.35; bump('si_magnet'); } },
@@ -701,10 +702,12 @@ async function bootstrap() {
   }
 
   function updateWeaponHud(): void {
-    const spMax = SPIKES.cd[Math.max(0, wlvl.spikes - 1)] / effAtkSpd();
+    const spIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.spikes - 1));
+    const spMax = SPIKES.cd[spIdx] / effAtkSpd();
     setSlot(wSlots.spikes, wlvl.spikes > 0 ? 1 - Math.max(0, spikesCd) / spMax : 0, wlvl.spikes);
     setSlot(wSlots.orbs, 1, wlvl.orbs);
-    const nvMax = (NOVA.cd[Math.max(0, wlvl.nova - 1)] * (genes.has('supercharge') ? 1.6 : 1)) / effAtkSpd();
+    const nvIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.nova - 1));
+    const nvMax = (NOVA.cd[nvIdx] * (genes.has('supercharge') ? 1.6 : 1)) / effAtkSpd();
     setSlot(wSlots.nova, wlvl.nova > 0 ? 1 - Math.max(0, novaCd) / nvMax : 0, wlvl.nova);
     setSlot(wSlots.aura, 1, wlvl.aura);
     setSlot(wSlots.call, 1 - Math.max(0, callCd) / CALL.cd, 1);
@@ -769,10 +772,10 @@ async function bootstrap() {
     if (isUnlocked('perm_regen')) regen += 0.3;
     if (isUnlocked('perm_magnet')) magnetR *= 1.25;
     // Синтез генома: старт с 1 ДНК-уровнем ветки
-    if (isUnlocked('unlock_vermis')) dnaXp.vermis = DNA_LEVELS[0];
-    if (isUnlocked('unlock_chimera')) dnaXp.chimera = DNA_LEVELS[0];
-    if (isUnlocked('unlock_mycelium')) dnaXp.mycelium = DNA_LEVELS[0];
-    if (isUnlocked('unlock_symbiont')) dnaXp.symbiont = DNA_LEVELS[0];
+    if (isUnlocked('unlock_vermis')) { dnaXp.vermis = DNA_LEVELS[0]; lastDnaLvl.vermis = 1; }
+    if (isUnlocked('unlock_chimera')) { dnaXp.chimera = DNA_LEVELS[0]; lastDnaLvl.chimera = 1; }
+    if (isUnlocked('unlock_mycelium')) { dnaXp.mycelium = DNA_LEVELS[0]; lastDnaLvl.mycelium = 1; }
+    if (isUnlocked('unlock_symbiont')) { dnaXp.symbiont = DNA_LEVELS[0]; lastDnaLvl.symbiont = 1; }
   }
 
   // ---------- Старт / пауза / рестарт ----------
@@ -844,6 +847,7 @@ async function bootstrap() {
     frameN = 0;
     // Сброс ДНК-матрицы, гибридов, шкалы бытия и статистики забега
     dnaXp.vermis = 0; dnaXp.chimera = 0; dnaXp.mycelium = 0; dnaXp.symbiont = 0;
+    lastDnaLvl.vermis = 0; lastDnaLvl.chimera = 0; lastDnaLvl.mycelium = 0; lastDnaLvl.symbiont = 0;
     genes.clear();
     hybridsTaken.clear();
     hybridNotified.clear();
@@ -1056,8 +1060,11 @@ async function bootstrap() {
     }
     if (e.type === 'colony') {
       // Матка умерла: выводок гибнет вместе с ней
-      for (let k = enemies.length - 1; k >= 0; k--) {
-        if (enemies[k].colonyId === e.id) killEnemy(enemies[k], k);
+      for (let k = 0; k < enemies.length; k++) {
+        if (enemies[k].colonyId === e.id) {
+          enemies[k].hp = 0;
+          enemies[k].colonyId = 0;
+        }
       }
     }
     if (e.type === 'brood' && e.colonyId > 0) {
@@ -1075,8 +1082,8 @@ async function bootstrap() {
       // Заражённый союзник умирает: пульс в цвет игрока
       overlay.spawnPulse(e.x, e.y, 0x66fcf1, 30);
     }
-    // «Инфицирование» / «Феромон-раб» (Паразит): жертва переходит на вашу сторону
-    if (!e.elite && e.type !== 'boss' && e.type !== 'brood' && e.infected <= 0) {
+    // «Инфицирование» / «Феромон-раб» (Паразит): жертва переходит на вашу сторону (только если не была уже заражена)
+    if (!e.elite && e.type !== 'boss' && e.type !== 'brood' && e.infected === 0) {
       if (genes.has('infection') && Math.random() < 0.35) {
         e.infected = 8;
         e.hp = e.maxHp * 0.6;
@@ -1111,6 +1118,10 @@ async function bootstrap() {
 
   // ---------- Метаморфоз: переход между шкалами бытия ----------
   function startMetamorphosis(): void {
+    if (scaleIdx >= SCALES.length - 1) {
+      finishRun(true);
+      return;
+    }
     scaleIdx++;
     scaleMaxReached = Math.max(scaleMaxReached, SCALES[scaleIdx].id);
     biomass = 0;
@@ -1306,8 +1317,6 @@ async function bootstrap() {
   /** Резонанс: орбиты шире и больнее (используется и в рендере) */
   const orbRadiusMul = () => (genes.has('resonance') ? 1.25 : 1);
   const orbDmgMul = () => (genes.has('resonance') ? 1.2 : 1);
-  /** Последний ДНК-уровень каждого генома: для тостов о росте */
-  const lastDnaLvl: Record<DnaBranch, number> = { vermis: 0, chimera: 0, mycelium: 0, symbiont: 0 };
 
   /** Магнитная элита притягивает душу; true - душа захвачена её полем */
   function eliteMagnetPull(o: XpOrb, dt: number): boolean {
@@ -1618,7 +1627,7 @@ async function bootstrap() {
         // Заражённые союзники тают со временем
         if (e.infected > 0) {
           e.infected -= dt;
-          if (e.infected <= 0) { e.hp = 0; }
+          if (e.infected <= 0) { e.hp = 0; e.infected = -1; }
         }
         // Споровое заражение (Споровый Реактор): тик урона зелёными спорами
         if (e.sporeInf > 0) {
@@ -1771,9 +1780,10 @@ async function bootstrap() {
       // Оружие: шипы
       spikesCd -= dt;
       if (wlvl.spikes > 0 && spikesCd <= 0 && enemies.length > 0) {
-        spikesCd = SPIKES.cd[wlvl.spikes - 1] / effAtkSpd();
-        const count = SPIKES.count[wlvl.spikes - 1];
-        const dmg = SPIKES.dmg[wlvl.spikes - 1] * effDmg();
+        const safeSpikesIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.spikes - 1));
+        spikesCd = SPIKES.cd[safeSpikesIdx] / effAtkSpd();
+        const count = SPIKES.count[safeSpikesIdx];
+        const dmg = SPIKES.dmg[safeSpikesIdx] * effDmg();
         sfx.shoot();
         // Поиск до 3 ближайших целей за 1 линейный проход без аллокаций
         const maxTargets = Math.min(count, 3);
@@ -1802,8 +1812,9 @@ async function bootstrap() {
         }
         for (let i = 0; i < count; i++) {
           const target = closestTargets[i % Math.max(1, closestTargets.length)];
+          const spread = count > 1 ? (i - (count - 1) / 2) * 0.12 : 0;
           let ang: number;
-          if (target) ang = Math.atan2(target.y - player.y, target.x - player.x);
+          if (target) ang = Math.atan2(target.y - player.y, target.x - player.x) + spread;
           else ang = (i / count) * Math.PI * 2;
           projs.push({
             x: player.x, y: player.y,
@@ -1909,9 +1920,10 @@ async function bootstrap() {
       // Молния-орбиты (+ Резонанс: шире и больнее)
       if (wlvl.orbs > 0) {
         orbAngle += ORBS.speed * dt;
-        const count = ORBS.count[wlvl.orbs - 1];
-        const dmg = ORBS.dmg[wlvl.orbs - 1] * effDmg() * orbDmgMul();
-        const orbR = ORBS.radius[wlvl.orbs - 1] * orbRadiusMul();
+        const safeOrbsIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.orbs - 1));
+        const count = ORBS.count[safeOrbsIdx];
+        const dmg = ORBS.dmg[safeOrbsIdx] * effDmg() * orbDmgMul();
+        const orbR = ORBS.radius[safeOrbsIdx] * orbRadiusMul();
         for (let k = 0; k < count; k++) {
           const ang = orbAngle + (k * Math.PI * 2) / count;
           const ox = player.x + Math.cos(ang) * orbR;
@@ -1954,10 +1966,11 @@ async function bootstrap() {
       novaCd -= dt;
       toxinFlash = Math.max(0, toxinFlash - dt);
       if (wlvl.nova > 0 && novaCd <= 0) {
+        const safeNovaIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.nova - 1));
         const scMul = genes.has('supercharge') ? 4 : 1;
-        novaCd = (NOVA.cd[wlvl.nova - 1] * (genes.has('supercharge') ? 1.6 : 1)) / effAtkSpd();
-        const radius = NOVA.radius[wlvl.nova - 1] * (genes.has('supercharge') ? 2 : 1);
-        const dmg = NOVA.dmg[wlvl.nova - 1] * effDmg() * scMul;
+        novaCd = (NOVA.cd[safeNovaIdx] * (genes.has('supercharge') ? 1.6 : 1)) / effAtkSpd();
+        const radius = NOVA.radius[safeNovaIdx] * (genes.has('supercharge') ? 2 : 1);
+        const dmg = NOVA.dmg[safeNovaIdx] * effDmg() * scMul;
         sfx.nova();
         for (const e of nearby(player.x, player.y, radius)) {
           const d = Math.hypot(player.x - e.x, player.y - e.y);
@@ -1984,8 +1997,9 @@ async function bootstrap() {
         auraTick -= dt;
         if (auraTick <= 0) {
           auraTick = AURA.tick;
-          const radius = AURA.radius[wlvl.aura - 1];
-          const dmg = AURA.dps[wlvl.aura - 1] * AURA.tick * effDmg();
+          const safeAuraIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.aura - 1));
+          const radius = AURA.radius[safeAuraIdx];
+          const dmg = AURA.dps[safeAuraIdx] * AURA.tick * effDmg();
           for (const e of nearby(player.x, player.y, radius + 24)) {
             if (Math.hypot(player.x - e.x, player.y - e.y) < radius + ENEMIES[e.type].radius) {
               e.hp -= dmg;
@@ -2113,9 +2127,10 @@ async function bootstrap() {
       const simBeacons: Beacon[] = [];
       // Нова: токсин подсвечивается на полсекунды
       if (toxinFlash > 0) {
+        const safeNovaIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.nova - 1));
         simBeacons.push({
           x: player.x, y: player.y,
-          radius: NOVA.radius[Math.max(0, wlvl.nova - 1)] * 0.9,
+          radius: NOVA.radius[safeNovaIdx] * 0.9,
           kind: -1, ttl: toxinFlash, maxTtl: 0.5,
         });
       }
@@ -2314,9 +2329,15 @@ async function bootstrap() {
         xpOrbs: orbs,
         nodes: bioNodes.map((n) => ({ x: n.x, y: n.y, radius: n.radius, owner: n.owner, capture: n.capture, kind: n.kind })),
         orbit: wlvl.orbs > 0
-          ? { count: ORBS.count[wlvl.orbs - 1], cx: player.x, cy: player.y, radius: ORBS.radius[wlvl.orbs - 1] * orbRadiusMul(), angle: orbAngle }
+          ? {
+              count: ORBS.count[Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.orbs - 1))],
+              cx: player.x,
+              cy: player.y,
+              radius: ORBS.radius[Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.orbs - 1))] * orbRadiusMul(),
+              angle: orbAngle,
+            }
           : null,
-        aura: wlvl.aura > 0 ? { x: player.x, y: player.y, r: AURA.radius[wlvl.aura - 1] } : null,
+        aura: wlvl.aura > 0 ? { x: player.x, y: player.y, r: AURA.radius[Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.aura - 1))] } : null,
         arcs: frameArcs,
         lasers: frameLasers,
       },
