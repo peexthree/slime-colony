@@ -309,11 +309,20 @@ export class WebGPUSim {
   }
 
   /**
-   * Снимок последнего отрисованного кадра physarum-поля (Этап 6.2).
-   * WebGPU-канвас нельзя рисовать в 2D-контекст напрямую - делаем честный
-   * copyTextureToBuffer readback и собираем ImageData вручную.
+   * Снимок последнего отрисованного кадра physarum-поля для Портрета организма.
    */
   async captureFrame(): Promise<HTMLCanvasElement | null> {
-    return null;
+    try {
+      const c = document.createElement('canvas');
+      c.width = SIM_WIDTH;
+      c.height = SIM_HEIGHT;
+      const ctx = c.getContext('2d');
+      if (!ctx) return null;
+      ctx.drawImage(this.context.canvas as HTMLCanvasElement, 0, 0, SIM_WIDTH, SIM_HEIGHT);
+      return c;
+    } catch (e) {
+      console.warn('captureFrame fallback to null:', e);
+      return null;
+    }
   }
 }

@@ -28,6 +28,16 @@ export class Sfx {
     this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     const ch = this.noiseBuf.getChannelData(0);
     for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+
+    // Автоматическая пауза/возобновление при скрытии вкладки
+    document.addEventListener('visibilitychange', () => {
+      if (!this.ctx) return;
+      if (document.hidden) {
+        if (this.ctx.state === 'running') void this.ctx.suspend();
+      } else {
+        if (this.ctx.state === 'suspended' && !this.muted) void this.ctx.resume();
+      }
+    });
   }
 
   toggleMute(): boolean {

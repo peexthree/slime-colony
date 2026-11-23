@@ -131,7 +131,22 @@ async function bootstrap() {
     await sim.init(gpuCanvas);
     await overlay.init(pixiCanvas, stage);
   } catch (err) {
-    timerEl.textContent = (err as Error).message;
+    const errorMsg = (err as Error).message || String(err);
+    console.error('Initialization error:', err);
+    timerEl.textContent = errorMsg;
+    const errorModal = document.createElement('div');
+    errorModal.style.cssText = 'position:absolute;inset:0;z-index:999;background:rgba(2,6,12,0.96);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;color:#ff5570;font-family:inherit;';
+    errorModal.innerHTML = `
+      <h2 style="font-size:22px;letter-spacing:0.1em;margin-bottom:14px;color:#ff3b5c;">ТРЕБУЕТСЯ WEBGPU</h2>
+      <p style="max-width:560px;font-size:13px;line-height:1.6;color:#cbd5e1;margin-bottom:16px;">
+        Для физической симуляции 120 000 агентов слизевика Physarum необходима поддержка <b>WebGPU Compute Shaders</b>.<br><br>
+        ${errorMsg}
+      </p>
+      <div style="font-size:11px;color:#7c8ba1;max-width:480px;line-height:1.5;">
+        Рекомендуется: Chromium / Chrome 113+, Edge 113+, или Firefox с включённым флагом <code>dom.webgpu.enabled</code>.
+      </div>
+    `;
+    stage.appendChild(errorModal);
     return;
   }
 
@@ -333,17 +348,19 @@ async function bootstrap() {
   });
   pixiCanvas.addEventListener('mouseleave', () => (mouse.active = false));
   window.addEventListener('keydown', (e) => {
+    sfx.unlock();
     keys.add(e.key.toLowerCase());
     // Escape = пауза через брифинг (Этап 1.4)
     if (e.key === 'Escape' && started && !gameOver && pendingUps === 0) {
       paused = !paused;
+      if (paused) sfx.setTailDrone(false);
       intro.classList.toggle('show', paused);
     }
     // Пробел не должен скроллить страницу во время игры
     if (e.key === ' ' && started && !gameOver) e.preventDefault();
   });
   window.addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
-  // Аудио разблокируется первым жестом пользователя
+  // Аудио разблокируется первым жестом пользователя (клик или клавиша)
   window.addEventListener('pointerdown', () => sfx.unlock(), { once: false });
 
   let toastTimer = 0;
@@ -604,6 +621,7 @@ async function bootstrap() {
       cardsEl.appendChild(card);
     }
     paused = true;
+    sfx.setTailDrone(false);
     upgradeModal.classList.add('show');
   }
 
@@ -767,6 +785,7 @@ async function bootstrap() {
   helpBtn.addEventListener('click', () => {
     if (!started || gameOver) return;
     paused = true;
+    sfx.setTailDrone(false);
     intro.classList.add('show');
   });
 
@@ -869,21 +888,41 @@ async function bootstrap() {
     upgradeModal.classList.remove('show');
   });
 
-  // ---------- Пространственный хеш для коллизий ----------
+  // ---------- Пространственный хеш для коллизий (Zero-Allocation Pool) ----------
   const CELL = 40;
   const hash = new Map<number, Enemy[]>();
+  const cellPool: Enemy[][] = [];
+  const activeKeys: number[] = [];
   function buildHash(): void {
+    for (let i = 0; i < activeKeys.length; i++) {
+      const arr = hash.get(activeKeys[i]);
+      if (arr) {
+        arr.length = 0;
+        cellPool.push(arr);
+      }
+    }
     hash.clear();
-    for (const e of enemies) {
+    activeKeys.length = 0;
+
+    for (let i = 0; i < enemies.length; i++) {
+      const e = enemies[i];
       const cx = Math.floor(e.x / CELL);
       const cy = Math.floor(e.y / CELL);
       const key = cx * 1024 + cy;
-      const arr = hash.get(key);
-      if (arr) arr.push(e); else hash.set(key, [e]);
+      let arr = hash.get(key);
+      if (!arr) {
+        arr = cellPool.pop() ?? [];
+        hash.set(key, arr);
+        activeKeys.push(key);
+      }
+      arr.push(e);
     }
   }
-  function nearby(x: number, y: number, radius: number): Enemy[] {
-    const out: Enemy[] = [];
+
+  const defaultNearbyBuf: Enemy[] = [];
+  const sporeNearbyBuf: Enemy[] = [];
+  function nearby(x: number, y: number, radius: number, outBuf: Enemy[] = defaultNearbyBuf): Enemy[] {
+    outBuf.length = 0;
     const c0x = Math.floor((x - radius) / CELL);
     const c1x = Math.floor((x + radius) / CELL);
     const c0y = Math.floor((y - radius) / CELL);
@@ -891,10 +930,12 @@ async function bootstrap() {
     for (let cx = c0x; cx <= c1x; cx++) {
       for (let cy = c0y; cy <= c1y; cy++) {
         const arr = hash.get(cx * 1024 + cy);
-        if (arr) for (let k = 0; k < arr.length; k++) out.push(arr[k]);
+        if (arr) {
+          for (let k = 0; k < arr.length; k++) outBuf.push(arr[k]);
+        }
       }
     }
-    return out;
+    return outBuf;
   }
 
   function spawnEnemy(type: EnemyType, side?: number, atX?: number, atY?: number): void {
@@ -999,7 +1040,7 @@ async function bootstrap() {
     if (hybridsTaken.has('spore_reactor') && e.sporeInf > 0) {
       const boom = 16 * effDmg();
       overlay.spawnPulse(e.x, e.y, 0x86efac, 70);
-      for (const o of nearby(e.x, e.y, 70)) {
+      for (const o of nearby(e.x, e.y, 70, sporeNearbyBuf)) {
         if (o === e || o.hp <= 0) continue;
         o.hp -= boom;
         o.flash = 0.1;
@@ -1349,7 +1390,8 @@ async function bootstrap() {
       // Усилитель (Этап 2.1) замораживает таяние, пока узел ваш;
       // чужой штамм ускоряет растворение, свой штамм регенерирует хвост
       const isMoving = mx !== 0 || my !== 0;
-      if (!tailFreeze) {
+      const isVoidEvent = waves.isVoidActive();
+      if (!tailFreeze && !isVoidEvent) {
         if (isMoving) {
           const melt = moveCost() * (trailEnemy ? STRAIN.enemyMeltMul : 1);
           tailLen = Math.max(TAIL.minLen, tailLen - melt * dt);
@@ -1363,7 +1405,7 @@ async function bootstrap() {
         tailLen = Math.min(maxTail(), tailLen + STRAIN.ownTailRegen * dt);
       }
       // Если хвост сжался до минимума и игрок стоит на месте без движения - голод грызёт здоровье
-      if (tailLen <= TAIL.minLen + 0.1 && !isMoving && !tailFreeze) {
+      if (tailLen <= TAIL.minLen + 0.1 && !isMoving && !tailFreeze && !isVoidEvent) {
         player.hp = Math.max(0, player.hp - 10 * dt);
       }
       // Траектория пишется с шагом, длина ограничена ёмкостью
@@ -1648,28 +1690,60 @@ async function bootstrap() {
         tailTick = TAIL.tick;
         const dmg = tailDps() * TAIL.tick * effDmg();
         const pts = visibleTail();
-        for (const e of nearby(player.x, player.y, 260)) {
-          if (e.tailCd > 0 || e.hp <= 0) continue;
-          for (let i = pts.length - 1; i >= 0; i -= 2) {
+        if (pts.length > 0) {
+          // Bounding Box хвоста: гарантирует попадания по всей длине любого хвоста
+          let minX = player.x, maxX = player.x, minY = player.y, maxY = player.y;
+          for (let i = 0; i < pts.length; i++) {
             const pt = pts[i];
-            if (Math.hypot(e.x - pt.x, e.y - pt.y) < TAIL.hitRadius + e.radius * 0.4) {
-              e.hp -= dmg;
-              e.flash = 0.06;
-              e.tailCd = TAIL.cd;
-              overlay.pushDamage(e.x, e.y - e.radius - 6, dmg, 0x66fcf1);
-              damageDealt += dmg;
-              // «Отражение» элиты: часть урона возвращается бойцу вблизи
-              if (e.elite === 'mirrored' && Math.hypot(e.x - player.x, e.y - player.y) < 200 && player.iframe <= 0) {
-                player.hp -= dmg * 0.15;
-                hurtFlash();
+            if (pt.x < minX) minX = pt.x;
+            if (pt.x > maxX) maxX = pt.x;
+            if (pt.y < minY) minY = pt.y;
+            if (pt.y > maxY) maxY = pt.y;
+          }
+          const pad = TAIL.hitRadius + 32;
+          const c0x = Math.floor((minX - pad) / CELL);
+          const c1x = Math.floor((maxX + pad) / CELL);
+          const c0y = Math.floor((minY - pad) / CELL);
+          const c1y = Math.floor((maxY + pad) / CELL);
+
+          defaultNearbyBuf.length = 0;
+          for (let cx = c0x; cx <= c1x; cx++) {
+            for (let cy = c0y; cy <= c1y; cy++) {
+              const arr = hash.get(cx * 1024 + cy);
+              if (arr) {
+                for (let k = 0; k < arr.length; k++) defaultNearbyBuf.push(arr[k]);
               }
-              // «Поглощение» (Вермис) и «Живой Инкубатор» (Уроборос-Паразит):
-              // тело жертвы прирастает сегментами, гибрид растёт втрое сильнее
-              if (e.hp <= 0 && (genes.has('absorb') || hybridsTaken.has('ouroboros'))) {
-                const gain = e.radius * (hybridsTaken.has('ouroboros') ? 2.4 : 0.8);
-                tailLen = Math.min(maxTail(), tailLen + gain);
+            }
+          }
+
+          for (let k = 0; k < defaultNearbyBuf.length; k++) {
+            const e = defaultNearbyBuf[k];
+            if (e.tailCd > 0 || e.hp <= 0) continue;
+            const hitDist = TAIL.hitRadius + e.radius * 0.4;
+            const hitDistSq = hitDist * hitDist;
+            for (let i = pts.length - 1; i >= 0; i -= 2) {
+              const pt = pts[i];
+              const dx = e.x - pt.x;
+              const dy = e.y - pt.y;
+              if (dx * dx + dy * dy < hitDistSq) {
+                e.hp -= dmg;
+                e.flash = 0.06;
+                e.tailCd = TAIL.cd;
+                overlay.pushDamage(e.x, e.y - e.radius - 6, dmg, 0x66fcf1);
+                damageDealt += dmg;
+                // «Отражение» элиты: часть урона возвращается бойцу вблизи
+                if (e.elite === 'mirrored' && Math.hypot(e.x - player.x, e.y - player.y) < 200 && player.iframe <= 0) {
+                  player.hp -= dmg * 0.15;
+                  hurtFlash();
+                }
+                // «Поглощение» (Вермис) и «Живой Инкубатор» (Уроборос-Паразит):
+                // тело жертвы прирастает сегментами, гибрид растёт втрое сильнее
+                if (e.hp <= 0 && (genes.has('absorb') || hybridsTaken.has('ouroboros'))) {
+                  const gain = e.radius * (hybridsTaken.has('ouroboros') ? 2.4 : 0.8);
+                  tailLen = Math.min(maxTail(), tailLen + gain);
+                }
+                break;
               }
-              break;
             }
           }
         }
@@ -1701,12 +1775,33 @@ async function bootstrap() {
         const count = SPIKES.count[wlvl.spikes - 1];
         const dmg = SPIKES.dmg[wlvl.spikes - 1] * effDmg();
         sfx.shoot();
-        // N ближайших целей (или направления веером)
-        const sorted = [...enemies].sort(
-          (a, b) => Math.hypot(a.x - player.x, a.y - player.y) - Math.hypot(b.x - player.x, b.y - player.y)
-        );
+        // Поиск до 3 ближайших целей за 1 линейный проход без аллокаций
+        const maxTargets = Math.min(count, 3);
+        const closestTargets: Enemy[] = [];
+        const closestD2: number[] = [];
+        for (let j = 0; j < enemies.length; j++) {
+          const e = enemies[j];
+          if (e.hp <= 0) continue;
+          const dx = e.x - player.x;
+          const dy = e.y - player.y;
+          const d2 = dx * dx + dy * dy;
+          if (closestTargets.length < maxTargets) {
+            closestTargets.push(e);
+            closestD2.push(d2);
+          } else {
+            let maxIdx = 0;
+            let maxVal = closestD2[0];
+            for (let k = 1; k < closestD2.length; k++) {
+              if (closestD2[k] > maxVal) { maxVal = closestD2[k]; maxIdx = k; }
+            }
+            if (d2 < maxVal) {
+              closestTargets[maxIdx] = e;
+              closestD2[maxIdx] = d2;
+            }
+          }
+        }
         for (let i = 0; i < count; i++) {
-          const target = sorted[i % Math.min(sorted.length, 3)];
+          const target = closestTargets[i % Math.max(1, closestTargets.length)];
           let ang: number;
           if (target) ang = Math.atan2(target.y - player.y, target.x - player.x);
           else ang = (i / count) * Math.PI * 2;
@@ -2036,13 +2131,15 @@ async function bootstrap() {
       if (callRequested || joyCall) { callRequested = false; joystick.consumeCall(); }
       if (callTap && callCd <= 0) {
         callCd = CALL.cd;
-        simBeacons.push({ x: mouse.x, y: mouse.y, radius: CALL.beaconRadius, kind: -1, ttl: CALL.ttl, maxTtl: CALL.ttl });
-        for (const e of nearby(mouse.x, mouse.y, CALL.radius)) {
-          const d = Math.max(1, Math.hypot(e.x - mouse.x, e.y - mouse.y));
-          e.kbx += ((e.x - mouse.x) / d) * CALL.knock;
-          e.kby += ((e.y - mouse.y) / d) * CALL.knock;
+        const callTargetX = mouse.active ? mouse.x : (player.x + playerDirX * 120);
+        const callTargetY = mouse.active ? mouse.y : (player.y + playerDirY * 120);
+        simBeacons.push({ x: callTargetX, y: callTargetY, radius: CALL.beaconRadius, kind: -1, ttl: CALL.ttl, maxTtl: CALL.ttl });
+        for (const e of nearby(callTargetX, callTargetY, CALL.radius)) {
+          const d = Math.max(1, Math.hypot(e.x - callTargetX, e.y - callTargetY));
+          e.kbx += ((e.x - callTargetX) / d) * CALL.knock;
+          e.kby += ((e.y - callTargetY) / d) * CALL.knock;
         }
-        overlay.spawnPulse(mouse.x, mouse.y, 0xff3b5c, CALL.beaconRadius + 40);
+        overlay.spawnPulse(callTargetX, callTargetY, 0xff3b5c, CALL.beaconRadius + 40);
         overlay.beginShake(0.12);
         sfx.call();
         showToast('ФЕРОМОН-ЗОВ');
@@ -2157,11 +2254,8 @@ async function bootstrap() {
         onNodeStatsCb
       );
 
-      // Бесплатный bloom: копия GPU-кадра под blur + screen (Этап 1.3)
-      frameBloom3++;
-      if (frameBloom3 % 3 === 0) {
-        bloomCtx.drawImage(gpuCanvas, 0, 0, bloomCanvas.width, bloomCanvas.height);
-      }
+      // Мягкий неон bloom: плавное 60 FPS наложение без рывков
+      bloomCtx.drawImage(gpuCanvas, 0, 0, bloomCanvas.width, bloomCanvas.height);
 
       // HUD
       hpFillEl.style.width = `${Math.max(0, (player.hp / maxHp) * 100)}%`;

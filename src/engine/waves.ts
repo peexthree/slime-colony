@@ -142,6 +142,11 @@ export class WaveDirector {
     return this.active?.kind !== 'void';
   }
 
+  /** Активно ли событие затишья «тишина» (хвост не тает от голода) */
+  isVoidActive(): boolean {
+    return this.active?.kind === 'void';
+  }
+
   speedMul(): number {
     return this.active?.kind === 'berserker' ? this.active.speedMul : 1;
   }

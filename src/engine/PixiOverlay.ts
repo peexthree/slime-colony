@@ -175,9 +175,30 @@ export class PixiOverlay {
   private pools = new Map<string, Sprite[]>();
   private poolCursor = new Map<string, number>();
   private nodeTexts: Text[] = [];
-  /** Всплывающие цифры урона: пул + активный список */
-  private dmgTexts: Text[] = [];
+  /** Всплывающие цифры урона: спрайтовый пул с кэшированными текстурами */
+  private dmgSprites: Sprite[] = [];
+  private dmgTextureCache = new Map<string, Texture>();
   private dmgLive: { x: number; y: number; vy: number; life: number; color: number; txt: string }[] = [];
+
+  private getDamageTexture(txt: string): Texture {
+    let tex = this.dmgTextureCache.get(txt);
+    if (!tex) {
+      const c = document.createElement('canvas');
+      const ctx = c.getContext('2d')!;
+      ctx.font = 'bold 13px "JetBrains Mono", Consolas, monospace';
+      const m = ctx.measureText(txt);
+      c.width = Math.ceil(m.width) + 8;
+      c.height = 20;
+      ctx.font = 'bold 13px "JetBrains Mono", Consolas, monospace';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(txt, c.width / 2, c.height / 2);
+      tex = Texture.from(c);
+      this.dmgTextureCache.set(txt, tex);
+    }
+    return tex;
+  }
 
   get screenWidth(): number {
     return this.app.screen.width;
@@ -693,34 +714,33 @@ export class PixiOverlay {
       if (r.alpha < 0.04) this.rings.splice(j, 1);
     }
 
-    // Всплывающие цифры урона
+    // Всплывающие цифры урона (спрайтовый пул с кэшированными текстурами)
     for (let j = this.dmgLive.length - 1; j >= 0; j--) {
       const d = this.dmgLive[j];
       d.life -= dt;
       d.y += d.vy * dt;
       d.vy *= 0.94;
       if (d.life <= 0) {
-        if (j < this.dmgTexts.length) this.dmgTexts[j].visible = false;
+        if (j < this.dmgSprites.length) this.dmgSprites[j].visible = false;
         this.dmgLive.splice(j, 1);
         continue;
       }
-      let txt = this.dmgTexts[j];
-      if (!txt) {
-        txt = new Text({
-          text: d.txt,
-          style: { fontSize: 13, fontWeight: '700', fill: 0xffffff, fontFamily: 'JetBrains Mono, Consolas, monospace' },
-        });
-        txt.anchor.set(0.5);
-        this.world.addChild(txt);
-        this.dmgTexts.push(txt);
+      let sp = this.dmgSprites[j];
+      const tex = this.getDamageTexture(d.txt);
+      if (!sp) {
+        sp = new Sprite(tex);
+        sp.anchor.set(0.5);
+        this.world.addChild(sp);
+        this.dmgSprites.push(sp);
+      } else if (sp.texture !== tex) {
+        sp.texture = tex;
       }
-      txt.visible = true;
-      txt.text = d.txt;
-      txt.position.set(d.x, d.y);
-      txt.tint = d.color;
-      txt.alpha = Math.min(1, d.life / 0.35);
+      sp.visible = true;
+      sp.position.set(d.x, d.y);
+      sp.tint = d.color;
+      sp.alpha = Math.min(1, d.life / 0.35);
     }
-    for (let j = this.dmgLive.length; j < this.dmgTexts.length; j++) this.dmgTexts[j].visible = false;
+    for (let j = this.dmgLive.length; j < this.dmgSprites.length; j++) this.dmgSprites[j].visible = false;
 
     // Вспышки полигона Кольца Смерти
     for (let j = this.polys.length - 1; j >= 0; j--) {
