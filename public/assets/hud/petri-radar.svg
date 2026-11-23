@@ -1,0 +1,18 @@
+<svg viewBox="0 0 160 160" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Внешний обод чашки Петри -->
+  <circle cx="80" cy="80" r="74" fill="currentColor" fill-opacity="0.06" stroke="currentColor" stroke-width="2.2" vector-effect="non-scaling-stroke"/>
+  <circle cx="80" cy="80" r="67" stroke="currentColor" stroke-width="1.4" stroke-dasharray="14 6 3 6" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
+  <!-- Кольца дальности сканера -->
+  <circle cx="80" cy="80" r="48" stroke="currentColor" stroke-width="1.2" stroke-opacity="0.38" vector-effect="non-scaling-stroke"/>
+  <circle cx="80" cy="80" r="26" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 4" stroke-opacity="0.45" vector-effect="non-scaling-stroke"/>
+  <!-- Координатное перекрестие -->
+  <path d="M80 12V148M12 80H148" stroke="currentColor" stroke-width="1.1" stroke-opacity="0.3" vector-effect="non-scaling-stroke"/>
+  <!-- 4 угловых зажима предметного столика микроскопа -->
+  <path d="M80 2V11M80 149V158M2 80H11M149 80H158" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+  <path d="M25 25L32 32M135 25L128 32M135 135L128 128M25 135L32 128" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.72" vector-effect="non-scaling-stroke"/>
+  <!-- Градусные микро-риски по кругу -->
+  <path d="M104 10L101 16M130 28L125 33M150 56L144 59M150 104L144 101M130 132L125 127M104 150L101 144M56 150L59 144M30 132L35 127M10 104L16 101M10 56L16 59M30 28L35 33M56 10L59 16" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-opacity="0.55" vector-effect="non-scaling-stroke"/>
+  <!-- Центральная метка Светляка -->
+  <circle cx="80" cy="80" r="4" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+  <circle cx="80" cy="80" r="1.6" fill="currentColor"/>
+</svg>

@@ -1,0 +1,19 @@
+<svg viewBox="0 0 64 64" width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="brood-glow" cx="62%" cy="50%" r="44%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.88"/>
+      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="38" cy="32" r="24" fill="url(#brood-glow)"/>
+  <!-- Микро-жвала -->
+  <path d="M49 26L57 23M49 38L57 41" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/>
+  <!-- Хвост-жгутик -->
+  <path d="M18 32C12 30 9 35 5 32" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-opacity="0.72"/>
+  <!-- Тело микро-личинки -->
+  <path d="M16 32C18 22 29 18 42 20C50 21.5 54 26 54 32C54 38 50 42.5 42 44C29 46 18 42 16 32Z" fill="#FFFFFF" fill-opacity="0.48" stroke="#FFFFFF" stroke-width="2.4"/>
+  <!-- Сегментные полоски и ядро -->
+  <path d="M29 22C32 28 32 36 29 42M39 21C42 28 42 36 39 43" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.82"/>
+  <circle cx="44" cy="32" r="4.5" fill="#FFFFFF"/>
+</svg>

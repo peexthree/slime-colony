@@ -1,0 +1,27 @@
+<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="split-aura-l" cx="30%" cy="50%" r="36%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="split-aura-r" cx="70%" cy="50%" r="36%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="38" cy="64" r="44" fill="url(#split-aura-l)"/>
+  <circle cx="90" cy="64" r="44" fill="url(#split-aura-r)"/>
+  <!-- Две головы-мандибулы по краям -->
+  <path d="M18 52L7 44M18 76L7 84M110 52L121 44M110 76L121 84" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- Восьмёркообразное тело в процессе деления -->
+  <path d="M36 28C51 28 55 48 64 48C73 48 77 28 92 28C107 28 116 44 116 64C116 84 107 100 92 100C77 100 73 80 64 80C55 80 51 100 36 100C21 100 12 84 12 64C12 44 21 28 36 28Z" fill="#FFFFFF" fill-opacity="0.32" stroke="#FFFFFF" stroke-width="3.2"/>
+  <!-- Нити веретена деления (митоз) -->
+  <path d="M40 54C52 57 76 57 88 54M40 64H88M40 74C52 71 76 71 88 74" stroke="#FFFFFF" stroke-width="2.2" stroke-opacity="0.8" stroke-dasharray="4 3"/>
+  <!-- Перетяжка разрыва по центру -->
+  <path d="M64 40V88" stroke="#FFFFFF" stroke-width="2.4" stroke-dasharray="3 4" stroke-opacity="0.9"/>
+  <!-- Два независимых ядра -->
+  <circle cx="37" cy="64" r="14" fill="#FFFFFF" fill-opacity="0.55" stroke="#FFFFFF" stroke-width="2.4"/>
+  <circle cx="37" cy="64" r="7.5" fill="#FFFFFF"/>
+  <circle cx="91" cy="64" r="14" fill="#FFFFFF" fill-opacity="0.55" stroke="#FFFFFF" stroke-width="2.4"/>
+  <circle cx="91" cy="64" r="7.5" fill="#FFFFFF"/>
+</svg>

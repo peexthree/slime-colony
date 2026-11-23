@@ -1,0 +1,34 @@
+<svg viewBox="0 0 256 256" width="256" height="256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="diatom-bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.34"/>
+      <stop offset="65%" stop-color="#FFFFFF" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="122" fill="url(#diatom-bg)"/>
+  <!-- 12 кремниевых игл радиолярии -->
+  <g stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.72">
+    <path d="M128 8V42M128 214V248M8 128H42M214 128H248"/>
+    <path d="M43 43L68 68M188 188L213 213M213 43L188 68M68 188L43 213"/>
+    <path d="M82 18L95 48M161 208L174 238M238 82L208 95M48 161L18 174"/>
+    <path d="M174 18L161 48M95 208L82 238M238 174L208 161M48 95L18 82"/>
+  </g>
+  <!-- Внешняя зубчатая створка диатомеи -->
+  <circle cx="128" cy="128" r="88" fill="#FFFFFF" fill-opacity="0.1" stroke="#FFFFFF" stroke-width="3"/>
+  <circle cx="128" cy="128" r="74" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="6 6" stroke-opacity="0.75"/>
+  <!-- Симметричный ребристый каркас -->
+  <polygon points="128,44 198,86 198,170 128,212 58,170 58,86" fill="#FFFFFF" fill-opacity="0.08" stroke="#FFFFFF" stroke-width="2.2" stroke-opacity="0.75"/>
+  <polygon points="128,60 184,94 184,162 128,196 72,162 72,94" stroke="#FFFFFF" stroke-width="1.8" stroke-opacity="0.6"/>
+  <!-- Кольцо микропор -->
+  <g fill="#FFFFFF" fill-opacity="0.65">
+    <circle cx="128" cy="72" r="5"/><circle cx="176" cy="100" r="5"/><circle cx="176" cy="156" r="5"/>
+    <circle cx="128" cy="184" r="5"/><circle cx="80" cy="156" r="5"/><circle cx="80" cy="100" r="5"/>
+    <circle cx="152" cy="86" r="3.2"/><circle cx="184" cy="128" r="3.2"/><circle cx="152" cy="170" r="3.2"/>
+    <circle cx="104" cy="170" r="3.2"/><circle cx="72" cy="128" r="3.2"/><circle cx="104" cy="86" r="3.2"/>
+  </g>
+  <!-- Центральная вакуоль / камера -->
+  <circle cx="128" cy="128" r="32" fill="#FFFFFF" fill-opacity="0.18" stroke="#FFFFFF" stroke-width="2.6"/>
+  <circle cx="128" cy="128" r="14" fill="#FFFFFF" fill-opacity="0.55" stroke="#FFFFFF" stroke-width="2"/>
+  <circle cx="128" cy="128" r="5" fill="#FFFFFF"/>
+</svg>

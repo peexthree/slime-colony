@@ -1,0 +1,19 @@
+<svg viewBox="0 0 320 56" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Левый и правый металлические био-зажимы колбы -->
+  <path d="M4 16L12 8H28V48H12L4 40V16Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  <path d="M316 16L308 8H292V48H308L316 40V16Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  <path d="M14 14V42M21 14V42M299 14V42M306 14V42" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
+  <!-- Стеклянный цилиндр ампулы -->
+  <rect x="24" y="12" width="272" height="32" rx="14" fill="currentColor" fill-opacity="0.06" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/>
+  <!-- Верхний стеклянный блик на колбе -->
+  <path d="M40 17.5H280" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.42"/>
+  <path d="M44 39.5H120M200 39.5H276" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.35"/>
+  <!-- Мерные деления микроскопа (10 секций) -->
+  <g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.78" vector-effect="non-scaling-stroke">
+    <path d="M56 12V20M82 12V18M108 12V20M134 12V18M160 12V23M186 12V18M212 12V20M238 12V18M264 12V20"/>
+    <path d="M56 44V38M108 44V38M160 44V36M212 44V38M264 44V38"/>
+  </g>
+  <!-- Клапанные болты на скобах -->
+  <circle cx="11" cy="28" r="2.2" fill="currentColor"/>
+  <circle cx="309" cy="28" r="2.2" fill="currentColor"/>
+</svg>

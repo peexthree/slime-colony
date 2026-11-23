@@ -1,0 +1,31 @@
+<svg viewBox="0 0 256 256" width="256" height="256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="elite-ring-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="78%" stop-color="#FFFFFF" stop-opacity="0.48"/>
+      <stop offset="92%" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="128" r="122" fill="url(#elite-ring-glow)"/>
+  <!-- Двойное силовое кольцо элитного статуса -->
+  <circle cx="128" cy="128" r="96" stroke="#FFFFFF" stroke-width="3.2" stroke-opacity="0.92"/>
+  <circle cx="128" cy="128" r="84" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="18 8 4 8" stroke-linecap="round" stroke-opacity="0.72"/>
+  <!-- 4 главные коронные иглы (N, E, S, W) -->
+  <polygon points="128,8 140,36 128,46 116,36" fill="#FFFFFF" fill-opacity="0.95"/>
+  <polygon points="128,248 140,220 128,210 116,220" fill="#FFFFFF" fill-opacity="0.95"/>
+  <polygon points="248,128 220,140 210,128 220,116" fill="#FFFFFF" fill-opacity="0.95"/>
+  <polygon points="8,128 36,140 46,128 36,116" fill="#FFFFFF" fill-opacity="0.95"/>
+  <!-- 4 диагональных хитиновых клыка -->
+  <polygon points="43,43 68,54 70,70 54,68" fill="#FFFFFF" fill-opacity="0.8"/>
+  <polygon points="213,43 202,68 186,70 188,54" fill="#FFFFFF" fill-opacity="0.8"/>
+  <polygon points="213,213 188,202 186,186 202,188" fill="#FFFFFF" fill-opacity="0.8"/>
+  <polygon points="43,213 54,188 70,186 68,202" fill="#FFFFFF" fill-opacity="0.8"/>
+  <!-- Руны мутации на орбитальном ободе -->
+  <g stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.88">
+    <path d="M162 42L172 48L168 58M94 42L84 48L88 58"/>
+    <path d="M214 162L208 172L198 168M214 94L208 84L198 88"/>
+    <path d="M162 214L172 208L168 198M94 214L84 208L88 198"/>
+    <path d="M42 162L48 172L58 168M42 94L48 84L58 88"/>
+  </g>
+</svg>

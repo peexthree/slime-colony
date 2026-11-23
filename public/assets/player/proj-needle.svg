@@ -1,0 +1,20 @@
+<svg viewBox="0 0 64 64" width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="needle-wake" x1="4" y1="32" x2="60" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="1"/>
+    </linearGradient>
+    <radialGradient id="needle-tip" cx="78%" cy="50%" r="36%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="44" cy="32" rx="18" ry="12" fill="url(#needle-tip)"/>
+  <!-- Сверхзвуковой шлейф -->
+  <path d="M4 32H44" stroke="url(#needle-wake)" stroke-width="4" stroke-linecap="round"/>
+  <!-- Зазубренный хитиновый шип -->
+  <path d="M60 32L35 21L40 29L18 32L40 35L35 43L60 32Z" fill="#FFFFFF" fill-opacity="0.92"/>
+  <!-- Яркая кинетическая жилка -->
+  <path d="M56 32H30" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,32 @@
+<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="titan-aura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="48%" stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="82%" stop-color="#FFFFFF" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="62" fill="url(#titan-aura)"/>
+  <!-- Внешние 8 изогнутых био-отростков -->
+  <path d="M64 6C69 14 70 20 64 26M64 122C59 114 58 108 64 102M6 64C14 59 20 58 26 64M122 64C114 69 108 70 102 64" stroke="#FFFFFF" stroke-width="3.6" stroke-linecap="round"/>
+  <path d="M23 23C31 25 36 28 38 36M105 105C97 103 92 100 90 92M105 23C103 31 100 36 92 38M23 105C25 97 28 92 36 90" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round"/>
+  <!-- Внешняя мембрана колосса -->
+  <circle cx="64" cy="64" r="44" fill="#FFFFFF" fill-opacity="0.2" stroke="#FFFFFF" stroke-width="3.4" stroke-dasharray="22 8" stroke-linecap="round"/>
+  <!-- Средний ребристый био-панцирь -->
+  <circle cx="64" cy="64" r="33" fill="#FFFFFF" fill-opacity="0.3" stroke="#FFFFFF" stroke-width="3"/>
+  <!-- 4 силовых узла на ободе -->
+  <circle cx="64" cy="24" r="5" fill="#FFFFFF"/>
+  <circle cx="64" cy="104" r="5" fill="#FFFFFF"/>
+  <circle cx="24" cy="64" r="5" fill="#FFFFFF"/>
+  <circle cx="104" cy="64" r="5" fill="#FFFFFF"/>
+  <!-- Связи многоядерного центра -->
+  <polygon points="64,45 80,74 48,74" fill="#FFFFFF" fill-opacity="0.32" stroke="#FFFFFF" stroke-width="2.4" stroke-linejoin="round"/>
+  <!-- 3 симбиотических ядра -->
+  <circle cx="64" cy="46" r="6.5" fill="#FFFFFF"/>
+  <circle cx="79" cy="73" r="6.5" fill="#FFFFFF"/>
+  <circle cx="49" cy="73" r="6.5" fill="#FFFFFF"/>
+  <!-- Центральная сингулярность -->
+  <circle cx="64" cy="64" r="7.5" fill="#FFFFFF" fill-opacity="0.85"/>
+  <circle cx="64" cy="64" r="3.5" fill="#FFFFFF"/>
+</svg>

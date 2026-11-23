@@ -1,0 +1,29 @@
+<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="colony-aura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.88"/>
+      <stop offset="56%" stop-color="#FFFFFF" stop-opacity="0.26"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="61" fill="url(#colony-aura)"/>
+  <!-- Внешняя органическая стенка био-гнезда -->
+  <path d="M64 11C79 11 91 18 101 29C111 40 117 51 116 66C115 81 107 95 94 105C81 115 68 118 52 115C36 112 22 102 16 86C10 70 11 52 20 37C29 22 46 11 64 11Z" fill="#FFFFFF" fill-opacity="0.24" stroke="#FFFFFF" stroke-width="3.4"/>
+  <!-- 6 периферийных яйцевых камер / коконов -->
+  <ellipse cx="64" cy="27" rx="11" ry="8.5" fill="#FFFFFF" fill-opacity="0.58" stroke="#FFFFFF" stroke-width="2.4"/>
+  <ellipse cx="96" cy="46" rx="11" ry="8.5" transform="rotate(60 96 46)" fill="#FFFFFF" fill-opacity="0.58" stroke="#FFFFFF" stroke-width="2.4"/>
+  <ellipse cx="96" cy="82" rx="11" ry="8.5" transform="rotate(120 96 82)" fill="#FFFFFF" fill-opacity="0.58" stroke="#FFFFFF" stroke-width="2.4"/>
+  <ellipse cx="64" cy="101" rx="11" ry="8.5" fill="#FFFFFF" fill-opacity="0.58" stroke="#FFFFFF" stroke-width="2.4"/>
+  <ellipse cx="32" cy="82" rx="11" ry="8.5" transform="rotate(60 32 82)" fill="#FFFFFF" fill-opacity="0.58" stroke="#FFFFFF" stroke-width="2.4"/>
+  <ellipse cx="32" cy="46" rx="11" ry="8.5" transform="rotate(120 32 46)" fill="#FFFFFF" fill-opacity="0.58" stroke="#FFFFFF" stroke-width="2.4"/>
+  <!-- Эмбрионы внутри камер -->
+  <circle cx="64" cy="27" r="3.5" fill="#FFFFFF"/>
+  <circle cx="96" cy="46" r="3.5" fill="#FFFFFF"/>
+  <circle cx="96" cy="82" r="3.5" fill="#FFFFFF"/>
+  <circle cx="64" cy="101" r="3.5" fill="#FFFFFF"/>
+  <circle cx="32" cy="82" r="3.5" fill="#FFFFFF"/>
+  <circle cx="32" cy="46" r="3.5" fill="#FFFFFF"/>
+  <!-- Маточное сердце гнезда -->
+  <circle cx="64" cy="64" r="21" fill="#FFFFFF" fill-opacity="0.4" stroke="#FFFFFF" stroke-width="3"/>
+  <circle cx="64" cy="64" r="11" fill="#FFFFFF"/>
+</svg>

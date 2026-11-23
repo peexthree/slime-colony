@@ -1,0 +1,33 @@
+<svg viewBox="0 0 256 256" width="256" height="256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="abyss-glow" cx="50%" cy="38%" r="52%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.72"/>
+      <stop offset="48%" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="128" cy="108" r="112" fill="url(#abyss-glow)"/>
+  <!-- Длинные дрейфующие биолюминесцентные нити -->
+  <path d="M84 114C64 148 82 184 58 228" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-opacity="0.62"/>
+  <path d="M106 122C94 162 114 198 98 242" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-opacity="0.78"/>
+  <path d="M128 124C122 168 138 202 128 248" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-opacity="0.9"/>
+  <path d="M150 122C162 162 142 198 158 242" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-opacity="0.78"/>
+  <path d="M172 114C192 148 174 184 198 228" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-opacity="0.62"/>
+  <!-- Светящиеся бусины-споры вдоль нитей -->
+  <circle cx="71" cy="172" r="4" fill="#FFFFFF" fill-opacity="0.8"/>
+  <circle cx="105" cy="192" r="4.5" fill="#FFFFFF"/>
+  <circle cx="131" cy="212" r="5" fill="#FFFFFF"/>
+  <circle cx="151" cy="186" r="4.5" fill="#FFFFFF"/>
+  <circle cx="185" cy="176" r="4" fill="#FFFFFF" fill-opacity="0.8"/>
+  <!-- Полупрозрачный купол-колокол глубоководной споры -->
+  <path d="M52 104C52 52 84 22 128 22C172 22 204 52 204 104C204 122 184 128 164 122C148 117 142 128 128 128C114 128 108 117 92 122C72 128 52 122 52 104Z" fill="#FFFFFF" fill-opacity="0.2" stroke="#FFFFFF" stroke-width="3"/>
+  <!-- Внутренний светящийся фонарь и лепестки -->
+  <path d="M128 28C104 48 92 78 90 116M128 28C152 48 164 78 166 116M128 28V122" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.58"/>
+  <ellipse cx="128" cy="78" rx="28" ry="34" fill="#FFFFFF" fill-opacity="0.26" stroke="#FFFFFF" stroke-width="2.4"/>
+  <circle cx="128" cy="76" r="12" fill="#FFFFFF"/>
+  <!-- Вокруг парящие микро-споры -->
+  <circle cx="42" cy="64" r="3.5" fill="#FFFFFF" fill-opacity="0.65"/>
+  <circle cx="216" cy="72" r="3.5" fill="#FFFFFF" fill-opacity="0.65"/>
+  <circle cx="38" cy="144" r="2.6" fill="#FFFFFF" fill-opacity="0.5"/>
+  <circle cx="220" cy="148" r="2.6" fill="#FFFFFF" fill-opacity="0.5"/>
+</svg>

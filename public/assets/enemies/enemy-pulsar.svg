@@ -1,0 +1,25 @@
+<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="pulsar-aura" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="35%" stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="75%" stop-color="#FFFFFF" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="58" fill="url(#pulsar-aura)"/>
+  <!-- 6 основных лучей-игл -->
+  <polygon points="64,6 71,36 64,44 57,36" fill="#FFFFFF" fill-opacity="0.88"/>
+  <polygon points="64,122 71,92 64,84 57,92" fill="#FFFFFF" fill-opacity="0.88"/>
+  <polygon points="114,35 92,56 81,54 85,44" fill="#FFFFFF" fill-opacity="0.88"/>
+  <polygon points="14,93 36,72 47,74 43,84" fill="#FFFFFF" fill-opacity="0.88"/>
+  <polygon points="14,35 43,44 47,54 36,56" fill="#FFFFFF" fill-opacity="0.88"/>
+  <polygon points="114,93 85,84 81,74 92,72" fill="#FFFFFF" fill-opacity="0.88"/>
+  <!-- 6 вторичных импульсных шипов -->
+  <path d="M64 64L96 18M64 64L32 18M64 64L96 110M64 64L32 110M64 64L118 64M64 64L10 64" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-opacity="0.5"/>
+  <!-- Гексагональный капсид -->
+  <polygon points="64,34 90,49 90,79 64,94 38,79 38,49" fill="#FFFFFF" fill-opacity="0.36" stroke="#FFFFFF" stroke-width="3.2" stroke-linejoin="round"/>
+  <!-- Ядро-реактор -->
+  <circle cx="64" cy="64" r="15" fill="#FFFFFF" fill-opacity="0.72"/>
+  <circle cx="64" cy="64" r="8" fill="#FFFFFF"/>
+</svg>

@@ -1,0 +1,28 @@
+<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="sting-bulb" cx="28%" cy="50%" r="36%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sting-blade" x1="8" y1="64" x2="112" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.62"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.34"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="42" cy="64" rx="38" ry="26" fill="url(#sting-bulb)"/>
+  <!-- Зазубренные плавники хвостового хлыста -->
+  <path d="M98 46C84 30 66 28 50 38C64 42 74 47 80 54" fill="#FFFFFF" fill-opacity="0.28" stroke="#FFFFFF" stroke-width="2.6" stroke-linejoin="round"/>
+  <path d="M98 82C84 98 66 100 50 90C64 86 74 81 80 74" fill="#FFFFFF" fill-opacity="0.28" stroke="#FFFFFF" stroke-width="2.6" stroke-linejoin="round"/>
+  <!-- Сустав крепления к последнему позвонку (+X) и сужающееся жало (-X) -->
+  <path d="M114 50L106 44H86L48 53L10 64L48 75L86 84H106L114 78C119 72 119 56 114 50Z" fill="url(#sting-blade)" stroke="#FFFFFF" stroke-width="2.8" stroke-linejoin="round"/>
+  <!-- Колючие боковые гарпуны жала -->
+  <path d="M38 56L52 46M38 72L52 82" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/>
+  <!-- Биолюминесцентная ампула на конце жала -->
+  <ellipse cx="52" cy="64" rx="14" ry="7" fill="#FFFFFF" fill-opacity="0.72" stroke="#FFFFFF" stroke-width="2"/>
+  <circle cx="48" cy="64" r="4.5" fill="#FFFFFF"/>
+  <!-- Светящийся кончик иглы -->
+  <circle cx="14" cy="64" r="3" fill="#FFFFFF"/>
+  <path d="M18 64H108" stroke="#FFFFFF" stroke-width="1.8" stroke-opacity="0.7"/>
+</svg>

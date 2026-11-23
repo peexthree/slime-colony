@@ -1,0 +1,21 @@
+<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="brute-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="52%" stop-color="#FFFFFF" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="58" fill="url(#brute-core)"/>
+  <!-- 6 внешних броневых сегментов панциря -->
+  <path d="M44 18C56 12 72 12 84 18L78 30C69 26 59 26 50 30L44 18Z" fill="#FFFFFF" fill-opacity="0.78" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M44 110C56 116 72 116 84 110L78 98C69 102 59 102 50 98L44 110Z" fill="#FFFFFF" fill-opacity="0.78" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M94 25C105 33 113 45 115 58L102 59C100 50 94 41 86 35L94 25Z" fill="#FFFFFF" fill-opacity="0.78" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M115 70C113 83 105 95 94 103L86 93C94 87 100 78 102 69L115 70Z" fill="#FFFFFF" fill-opacity="0.78" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M34 25C23 33 15 45 13 58L26 59C28 50 34 41 42 35L34 25Z" fill="#FFFFFF" fill-opacity="0.78" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M13 70C15 83 23 95 34 103L42 93C34 87 28 78 26 69L13 70Z" fill="#FFFFFF" fill-opacity="0.78" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Плотная внутренняя оболочка -->
+  <circle cx="64" cy="64" r="32" fill="#FFFFFF" fill-opacity="0.34" stroke="#FFFFFF" stroke-width="4"/>
+  <circle cx="64" cy="64" r="18" fill="#FFFFFF" fill-opacity="0.68" stroke="#FFFFFF" stroke-width="2.5"/>
+  <circle cx="64" cy="64" r="8" fill="#FFFFFF"/>
+</svg>

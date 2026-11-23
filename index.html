@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="ru" data-zcode-design>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LUMIVORE // THE LIVING FRACTAL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/biopunk-hud.css" />
+  <style>
+    :root {
+      --cyan: #66fcf1;
+      --cyan-dim: #0e6e6b;
+      --violet: #c084fc;
+      --red: #ff3b5c;
+      --ink: #020304;
+      --panel: rgba(2, 6, 8, 0.72);
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #e2e8f0;
+      --text-dim: #7c8ba1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    html, body { height: 100%; }
+    body {
+      background: radial-gradient(ellipse at 50% 40%, #05080d 0%, #020304 70%);
+      color: var(--text);
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    #stage {
+      position: relative;
+      width: min(98vw, 1440px);
+      aspect-ratio: 16 / 9;
+      border: 1px solid rgba(102, 252, 241, 0.22);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(102, 252, 241, 0.07), inset 0 0 80px rgba(0, 0, 0, 0.6);
+      background: #030507;
+    }
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #gpu-canvas { z-index: 1; }
+    /* Мягкий неоновый bloom: без пересвечивания */
+    #bloom-canvas {
+      z-index: 2;
+      mix-blend-mode: screen;
+      opacity: 0.15;
+      filter: blur(6px);
+      transform: scale(1.005);
+      pointer-events: none;
+    }
+    #pixi-canvas { z-index: 3; pointer-events: auto; cursor: crosshair; }
+
+    /* --- HUD --- */
+    .hud-top {
+      position: absolute;
+      z-index: 5;
+      top: 12px; left: 14px; right: 14px;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .panel {
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 12px;
+      display: flex; gap: 14px; align-items: center;
+      letter-spacing: 0.04em;
+    }
+    .panel .label { color: var(--text-dim); font-size: 10px; }
+    .cyan { color: var(--cyan); font-weight: 700; }
+    .violet { color: var(--violet); font-weight: 700; }
+
+    #hp-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 190px; }
+    #hp-row { display: flex; justify-content: space-between; align-items: baseline; }
+    #hp-bar {
+      width: 100%; height: 7px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    #hp-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #8f1226, #ff5570);
+      box-shadow: 0 0 10px rgba(255, 85, 112, 0.55);
+      border-radius: 4px;
+      transition: width 0.12s linear;
+    }
+
+    #xp-wrap {
+      position: absolute;
+      z-index: 5;
+      left: 0; right: 0; bottom: 0;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.05);
+      pointer-events: none;
+    }
+    #xp-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cyan-dim), var(--cyan));
+      box-shadow: 0 0 12px rgba(102, 252, 241, 0.6);
+      transition: width 0.12s linear;
+    }
+    #level-group {
+      position: absolute;
+      z-index: 5;
+      left: 14px; bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+    }
+    #level {
+      font-size: 11px;
+      color: var(--cyan);
+      border: 1px solid rgba(102, 252, 241, 0.4);
+      border-radius: 6px;
+      padding: 3px 9px;
+      background: rgba(2, 6, 8, 0.7);
+      letter-spacing: 0.08em;
+      pointer-events: none;
+      flex-shrink: 0;
+    }
+    #hurt {
+      position: absolute; inset: 0; z-index: 7;
+      box-shadow: inset 0 0 90px rgba(255, 30, 60, 0.55);
+      opacity: 0;
+      pointer-events: none;
+    }
+    #hurt.flash { animation: hurtflash 0.35s ease-out; }
+    @keyframes hurtflash {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* --- Хвост-ресурс и био-узлы --- */
+    #tail-row { display: flex; justify-content: space-between; align-items: baseline; }
+    #tail-bar {
+      width: 100%; height: 4px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    #tail-fill {
+      height: 100%; width: 100%;
+      background: linear-gradient(90deg, #0e6e6b, #66fcf1);
+      box-shadow: 0 0 8px rgba(102, 252, 241, 0.5);
+      border-radius: 3px;
+      transition: width 0.15s linear;
+    }
+    #hp-wrap[data-state="low"] #tail-fill {
+      background: linear-gradient(90deg, #8a6d1a, #ffd166);
+      box-shadow: 0 0 8px rgba(255, 209, 102, 0.55);
+    }
+    #hp-wrap[data-state="crit"] #tail-fill {
+      background: linear-gradient(90deg, #8f1226, #ff5c5c);
+      box-shadow: 0 0 8px rgba(255, 92, 92, 0.6);
+    }
+    #hp-wrap[data-state="crit"] #tail-bar { animation: tailpulse 0.7s ease-in-out infinite; }
+    @keyframes tailpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    #hp-wrap.hunger #tail-num { color: #ff5c5c; animation: tailblink 0.8s steps(2, jump-none) infinite; }
+    @keyframes tailblink { 50% { opacity: 0.2; } }
+    #nodes-chip { font-size: 13px; letter-spacing: 0.08em; }
+    #branch-chip {
+      font-size: 10px; padding: 2px 8px; border-radius: 5px;
+      border: 1px solid var(--line); color: var(--text-dim); letter-spacing: 0.08em;
+    }
+    #branch-chip[data-branch="vermis"] { color: var(--cyan); border-color: rgba(102, 252, 241, 0.5); }
+    #branch-chip[data-branch="chimera"] { color: #ff7b93; border-color: rgba(255, 123, 147, 0.5); }
+    #branch-chip[data-branch="mycelium"] { color: #a3ff6b; border-color: rgba(163, 255, 107, 0.5); }
+    #branch-chip[data-branch="symbiont"] { color: #ffd166; border-color: rgba(255, 209, 102, 0.5); }
+    #branch-chip[data-branch="hybrid"] { color: #ffffff; border-color: rgba(255, 255, 255, 0.6); }
+
+    /* --- ДНК-матрица: 4 генома (Spore-система) --- */
+    #dna-wrap {
+      position: absolute; z-index: 5;
+      left: 14px; top: 106px;
+      display: flex; flex-direction: column; gap: 4px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 12px;
+      pointer-events: none;
+      min-width: 170px;
+    }
+    .dna-row { display: flex; align-items: center; gap: 7px; font-size: 10px; }
+    .dna-row .dna-ico {
+      width: 16px; height: 16px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .dna-row .dna-ico svg {
+      width: 14px; height: 14px; display: block;
+      color: inherit;
+    }
+    .dna-row .dna-name { width: 64px; letter-spacing: 0.06em; color: var(--text-dim); }
+    .dna-row .dna-bar {
+      flex: 1; height: 4px; border-radius: 3px;
+      background: rgba(255, 255, 255, 0.07); overflow: hidden;
+    }
+    .dna-row .dna-fill { height: 100%; width: 0%; border-radius: 3px; transition: width 0.2s linear; }
+    .dna-row .dna-lvl { width: 22px; text-align: right; color: var(--text-dim); }
+    .dna-row[data-max="1"] .dna-name { color: var(--text); }
+    .dna-row[data-max="1"] .dna-lvl { color: #ffd166; }
+    #dna-vermis .dna-ico { color: #66fcf1; filter: drop-shadow(0 0 5px rgba(102, 252, 241, 0.7)); }
+    #dna-chimera .dna-ico { color: #ff7b93; filter: drop-shadow(0 0 5px rgba(255, 123, 147, 0.7)); }
+    #dna-mycelium .dna-ico { color: #a3ff6b; filter: drop-shadow(0 0 5px rgba(163, 255, 107, 0.7)); }
+    #dna-symbiont .dna-ico { color: #ffd166; filter: drop-shadow(0 0 5px rgba(255, 209, 102, 0.7)); }
+    #dna-vermis .dna-fill { background: #66fcf1; box-shadow: 0 0 6px rgba(102, 252, 241, 0.6); }
+    #dna-chimera .dna-fill { background: #ff7b93; box-shadow: 0 0 6px rgba(255, 123, 147, 0.6); }
+    #dna-mycelium .dna-fill { background: #a3ff6b; box-shadow: 0 0 6px rgba(163, 255, 107, 0.6); }
+    #dna-symbiont .dna-fill { background: #ffd166; box-shadow: 0 0 6px rgba(255, 209, 102, 0.6); }
+
+    /* --- Шкала бытия и биомасса метаморфоза --- */
+    #scale-hud {
+      position: absolute; z-index: 5;
+      top: 10px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      pointer-events: none;
+      width: min(340px, 42vw);
+    }
+    #scale-chip {
+      font-size: 10px; letter-spacing: 0.14em; color: #9df5ff;
+      text-shadow: 0 0 12px rgba(102, 252, 241, 0.5);
+    }
+    .scale-bar-row {
+      display: flex; align-items: center; width: 100%; gap: 3px;
+    }
+    .scale-bracket {
+      width: 8px; height: 14px; flex-shrink: 0; color: #9df5ff;
+      filter: drop-shadow(0 0 4px rgba(157, 245, 255, 0.5));
+    }
+    .scale-bracket.right { transform: scaleX(-1); }
+    #bio-bar {
+      flex: 1; height: 4px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 3px; overflow: hidden;
+      border: 1px solid rgba(157, 245, 255, 0.18);
+    }
+    #bio-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #23696e, #9df5ff);
+      box-shadow: 0 0 8px rgba(157, 245, 255, 0.6);
+      transition: width 0.25s linear;
+    }
+    #bio-fill.titan-ready {
+      background: linear-gradient(90deg, #8a6d1a, #ffd166);
+      animation: biopulse 0.8s ease-in-out infinite;
+    }
+    @keyframes biopulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+    /* --- HUD кулдаунов оружий (Этап 5.2) --- */
+    #weapon-hud {
+      position: absolute; z-index: 5;
+      left: 14px; bottom: 34px;
+      display: flex; gap: 7px;
+      pointer-events: none;
+    }
+    .wh {
+      position: relative;
+      width: 40px; height: 46px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .wh-ring {
+      position: relative;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: conic-gradient(rgba(255, 255, 255, 0.08) 0deg);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .wh-ring::after {
+      content: '';
+      position: absolute; inset: 3px;
+      border-radius: 50%;
+      background: rgba(2, 6, 8, 0.88);
+    }
+    .wh-ico {
+      position: absolute; z-index: 1;
+      width: 16px; height: 16px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--cyan);
+    }
+    .wh-ico svg {
+      width: 14px; height: 14px; display: block;
+      color: inherit;
+    }
+    .wh-lvl { font-size: 9px; color: var(--text-dim); letter-spacing: 0.04em; }
+    .wh.locked { opacity: 0.35; }
+    .wh.locked .wh-ico svg { filter: none; }
+    .wh.ready .wh-ico svg { filter: drop-shadow(0 0 6px rgba(102, 252, 241, 0.95)); }
+    .chip-ico {
+      width: 14px; height: 14px;
+      display: inline-block; vertical-align: -2px;
+      margin-right: 3px;
+    }
+    .chip-node-ico {
+      width: 13px; height: 13px;
+      display: inline-block; vertical-align: -2px;
+      margin: 0 1px; color: var(--cyan);
+      filter: drop-shadow(0 0 4px rgba(102, 252, 241, 0.6));
+    }
+    .up-card .b-ico { display: inline-block; vertical-align: -2px; margin-right: 4px; }
+    .inline-card-ico {
+      width: 15px; height: 15px;
+      display: inline-block; vertical-align: -2px;
+      color: inherit;
+      filter: drop-shadow(0 0 5px currentColor);
+    }
+    .up-card.branch-vermis { border-color: rgba(102, 252, 241, 0.45); }
+    .up-card.branch-chimera { border-color: rgba(255, 123, 147, 0.45); }
+    .up-card.branch-mycelium { border-color: rgba(163, 255, 107, 0.45); }
+    .up-card.branch-symbiont { border-color: rgba(255, 209, 102, 0.45); }
+    .up-card.hybrid {
+      border-color: rgba(255, 209, 102, 0.75);
+      box-shadow: 0 0 22px rgba(255, 209, 102, 0.18), inset 0 0 18px rgba(255, 209, 102, 0.05);
+    }
+    .up-card.hybrid h3 { color: #ffd166; }
+    .up-card.hybrid p { color: #ffe9b3; }
+    #tailwarn {
+      position: absolute; inset: 0; z-index: 7;
+      box-shadow: inset 0 0 90px rgba(255, 140, 30, 0.55);
+      opacity: 0;
+      pointer-events: none;
+    }
+    #tailwarn.flash { animation: tailwarnflash 0.55s ease-out; }
+    @keyframes tailwarnflash { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+    /* --- Модалка апгрейдов --- */
+    #upgrade {
+      position: absolute; inset: 0; z-index: 9;
+      background: rgba(2, 3, 4, 0.78);
+      backdrop-filter: blur(8px);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+    }
+    #upgrade.show { display: flex; }
+    #upgrade-title {
+      font-size: 17px; font-weight: 800; letter-spacing: 0.12em;
+      color: var(--cyan);
+      text-shadow: 0 0 18px rgba(102, 252, 241, 0.5);
+    }
+    #cards { display: flex; gap: 12px; }
+    .up-card {
+      width: 190px; min-height: 120px;
+      background: rgba(4, 10, 12, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      text-align: left;
+      font-family: inherit;
+      color: #b9c5d6;
+      cursor: pointer;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    }
+    .up-card:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 18px rgba(102, 252, 241, 0.2);
+      transform: translateY(-2px);
+    }
+    .up-card h3 { font-size: 13px; color: var(--cyan); letter-spacing: 0.06em; margin-bottom: 8px; }
+    .up-card p { font-size: 11px; line-height: 1.5; }
+
+    #help-btn {
+      pointer-events: auto;
+      width: 26px; height: 26px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--line);
+      color: var(--text-dim);
+      font-family: inherit; font-size: 12px; font-weight: 700;
+      cursor: pointer;
+    }
+    #help-btn:hover { color: var(--cyan); border-color: rgba(102, 252, 241, 0.45); }
+
+    #ai-chip { font-size: 10px; padding: 2px 8px; border-radius: 5px; border: 1px solid var(--line); color: var(--text-dim); }
+    #ai-chip.attack { color: var(--red); border-color: rgba(255, 59, 92, 0.5); }
+    #ai-chip.defend { color: var(--violet); border-color: rgba(192, 132, 252, 0.5); }
+
+    /* --- Инструменты --- */
+    .hud-bottom {
+      position: absolute;
+      z-index: 5;
+      bottom: 14px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 8px;
+      pointer-events: auto;
+    }
+    .tool-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--line);
+      color: #cbd5e1;
+      padding: 9px 14px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      letter-spacing: 0.03em;
+      transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+    }
+    .tool-btn svg { width: 15px; height: 15px; flex: none; }
+    .tool-btn .key {
+      color: var(--text-dim); font-size: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 4px; padding: 1px 5px;
+    }
+    .tool-btn .cost { color: var(--text-dim); font-size: 11px; }
+    .tool-btn:hover { border-color: rgba(102, 252, 241, 0.45); }
+    .tool-btn.active {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 14px rgba(102, 252, 241, 0.22), inset 0 0 12px rgba(102, 252, 241, 0.06);
+    }
+    .tool-btn.active .key { color: var(--cyan); border-color: rgba(102, 252, 241, 0.5); }
+    .tool-btn.active svg { stroke: var(--cyan); }
+
+    /* --- Декор --- */
+    .corner-deco {
+      position: absolute; z-index: 4;
+      width: 26px; height: 26px;
+      pointer-events: none;
+      color: var(--cyan);
+      opacity: 0.75;
+      filter: drop-shadow(0 0 5px rgba(102, 252, 241, 0.4));
+    }
+    .corner-deco svg { width: 100%; height: 100%; display: block; }
+    .corner-deco.tl { top: 6px; left: 6px; }
+    .corner-deco.tr { top: 6px; right: 6px; transform: scaleX(-1); }
+    .corner-deco.bl { bottom: 6px; left: 6px; transform: scaleY(-1); }
+    .corner-deco.br { bottom: 6px; right: 6px; transform: scale(-1); }
+
+    #scanlines {
+      position: absolute; inset: 0; z-index: 6;
+      background: repeating-linear-gradient(0deg, transparent 2px, rgba(0, 0, 0, 0.04) 4px);
+      pointer-events: none;
+    }
+    #vignette {
+      position: absolute; inset: 0; z-index: 6;
+      background: radial-gradient(ellipse, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+      pointer-events: none;
+    }
+
+    /* --- Toast --- */
+    #toast {
+      position: absolute; z-index: 8;
+      top: 62px; left: 50%; transform: translateX(-50%) translateY(-6px);
+      background: rgba(35, 6, 10, 0.9);
+      border: 1px solid rgba(255, 59, 92, 0.55);
+      color: #ffb3c0;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* --- Финальное модальное окно --- */
+    #modal {
+      position: absolute; inset: 0; z-index: 10;
+      background: rgba(2, 3, 4, 0.85);
+      backdrop-filter: blur(8px);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      text-align: center;
+    }
+    #modal.show { display: flex; }
+    #modal-title { font-size: 34px; font-weight: 800; letter-spacing: 0.12em; }
+    #modal-title.win { color: var(--cyan); text-shadow: 0 0 24px rgba(102, 252, 241, 0.6); }
+    #modal-title.lose { color: var(--violet); text-shadow: 0 0 24px rgba(192, 132, 252, 0.5); }
+    #modal-sub { color: var(--text-dim); font-size: 13px; letter-spacing: 0.08em; }
+    #restart-btn {
+      margin-top: 8px;
+      background: var(--cyan); color: var(--ink); border: none;
+      padding: 11px 28px; border-radius: 9px;
+      font-family: inherit; font-weight: 700; font-size: 13px;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(102, 252, 241, 0.35);
+    }
+    #restart-btn:hover { filter: brightness(1.12); }
+
+    /* --- Брифинг --- */
+    #intro {
+      position: absolute; inset: 0; z-index: 10;
+      background: rgba(2, 3, 4, 0.82);
+      backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center;
+    }
+    #intro.show { display: flex; }
+    .intro-card {
+      width: min(88%, 780px);
+      max-height: 92%;
+      overflow: auto;
+      background: rgba(4, 10, 12, 0.92);
+      border: 1px solid rgba(102, 252, 241, 0.25);
+      border-radius: 14px;
+      padding: 24px 28px;
+      box-shadow: 0 0 50px rgba(102, 252, 241, 0.08);
+    }
+    .intro-title {
+      font-size: 28px; font-weight: 800; letter-spacing: 0.14em;
+      color: var(--cyan);
+      text-shadow: 0 0 22px rgba(102, 252, 241, 0.5);
+    }
+    .intro-sub { color: var(--text-dim); font-size: 12px; margin-top: 4px; letter-spacing: 0.06em; }
+    .intro-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+      margin-top: 16px;
+    }
+    .intro-block {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .intro-block h3 { font-size: 11px; color: var(--cyan); letter-spacing: 0.1em; margin-bottom: 5px; }
+    .intro-block p { font-size: 11.5px; line-height: 1.55; color: #b9c5d6; }
+    .intro-block b { color: var(--text); }
+    #intro-start {
+      margin-top: 16px;
+      background: var(--cyan); color: var(--ink); border: none;
+      padding: 11px 30px; border-radius: 9px;
+      font-family: inherit; font-weight: 700; font-size: 13px;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(102, 252, 241, 0.35);
+    }
+    #intro-start:hover { filter: brightness(1.12); }
+    .intro-actions { margin-top: 16px; display: flex; gap: 10px; justify-content: center; }
+    .intro-actions #intro-start { margin-top: 0; }
+    #help-btn {
+      pointer-events: auto;
+      width: 26px; height: 26px;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--line);
+      color: var(--text-dim);
+      font-family: inherit; font-size: 12px; font-weight: 700;
+      cursor: pointer;
+    }
+    #help-btn:hover { color: var(--cyan); border-color: rgba(102, 252, 241, 0.45); }
+
+    #status { color: var(--text-dim); font-size: 11px; }
+
+    /* --- Экран смерти с геномом (Этап 5.5) --- */
+    #death-stats {
+      display: flex; flex-wrap: wrap; gap: 8px 18px;
+      justify-content: center;
+      font-size: 12px; color: var(--text); letter-spacing: 0.04em;
+    }
+    #death-stats span { white-space: nowrap; }
+    #portrait-canvas {
+      position: static;
+      width: min(90vw, 760px); height: auto;
+      border: 1px solid rgba(102, 252, 241, 0.25);
+      border-radius: 10px;
+    }
+    #death-actions { display: flex; gap: 10px; }
+    .ghost-btn {
+      background: rgba(102, 252, 241, 0.08); color: var(--cyan);
+      border: 1px solid rgba(102, 252, 241, 0.4);
+      padding: 11px 20px; border-radius: 9px;
+      font-family: inherit; font-weight: 700; font-size: 13px;
+      letter-spacing: 0.08em; cursor: pointer;
+    }
+    .ghost-btn:hover { background: rgba(102, 252, 241, 0.16); }
+
+    /* --- Биолаб (Этап 6.1) --- */
+    #biolab {
+      position: absolute; inset: 0; z-index: 11;
+      background: rgba(2, 3, 4, 0.88);
+      backdrop-filter: blur(10px);
+      display: none; align-items: center; justify-content: center;
+    }
+    #biolab.show { display: flex; }
+    .biolab-card {
+      width: min(92%, 720px); max-height: 92%; overflow: auto;
+      background: rgba(4, 10, 12, 0.94);
+      border: 1px solid rgba(102, 252, 241, 0.25);
+      border-radius: 14px;
+      padding: 22px 26px;
+      text-align: center;
+    }
+    #biolab-points { color: var(--cyan); font-size: 13px; margin-top: 10px; letter-spacing: 0.06em; }
+    #biolab-list {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 9px;
+      margin-top: 14px; text-align: left;
+    }
+    .bl-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-family: inherit; color: #b9c5d6;
+      cursor: pointer; text-align: left;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .bl-card:hover { border-color: rgba(102, 252, 241, 0.5); }
+    .bl-card.afford { border-color: rgba(102, 252, 241, 0.55); box-shadow: 0 0 12px rgba(102, 252, 241, 0.12); }
+    .bl-card.owned { opacity: 0.55; cursor: default; border-color: rgba(163, 255, 107, 0.4); }
+    .bl-card.owned .bl-cost { color: #a3ff6b; }
+    .bl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .bl-head h3 { font-size: 12px; color: var(--cyan); letter-spacing: 0.05em; }
+    .bl-cost { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+    .bl-card p { font-size: 10.5px; line-height: 1.5; margin-top: 5px; }
+    #biolab-close {
+      margin-top: 14px;
+      background: transparent; color: var(--cyan);
+      border: 1px solid rgba(102, 252, 241, 0.4);
+      padding: 10px 26px; border-radius: 9px;
+      font-family: inherit; font-weight: 700; font-size: 12px;
+      letter-spacing: 0.08em; cursor: pointer;
+    }
+    #biolab-close:hover { background: rgba(102, 252, 241, 0.1); }
+    #biolab-open {
+      margin-top: 10px;
+      background: transparent; color: var(--violet);
+      border: 1px solid rgba(192, 132, 252, 0.45);
+      padding: 10px 24px; border-radius: 9px;
+      font-family: inherit; font-weight: 700; font-size: 12px;
+      letter-spacing: 0.08em; cursor: pointer;
+    }
+    #biolab-open:hover { background: rgba(192, 132, 252, 0.12); }
+  </style>
+</head>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ico-vermis" viewBox="0 0 32 32" fill="none">
+    <path d="M8.5 5C12 9.5 12 16 7.5 26M23.5 5C20 9.5 20 16 24.5 26" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M8.5 5L11.5 7.5M23.5 5L20.5 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      <path d="M16 4V28" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
+      <path d="M12.5 9.5L16 12L19.5 9.5M12 15.5L16 18L20 15.5M13 21.5L16 24L19 21.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <polygon points="16,12.5 18.2,15 16,17.5 13.8,15" fill="currentColor"/>
+  </symbol>
+
+  <symbol id="ico-chimera" viewBox="0 0 32 32" fill="none">
+    <path d="M14.8 3.5L7 13.5L10.5 24.5L14.5 28L13.5 18L15.4 11.5L14.8 3.5Z" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M18.2 5L25 13.5L21.5 24.5L17.5 28.5L18.5 18L16.6 12L18.2 5Z" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M16 10.5L14.8 16L17.2 16L16 22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="16" r="1.7" fill="currentColor"/>
+  </symbol>
+
+  <symbol id="ico-mycelium" viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="11" r="4.2" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="11" r="1.6" fill="currentColor"/>
+      <path d="M16 15.2V28M16 19.5C12.2 20.5 9.2 23.2 6.5 27M16 18.5C19.8 19.8 22.8 22.8 25.5 27M11.5 22.5C11.2 24.8 11.8 26.8 12.6 28.2M20.5 22C20.8 24.5 20.2 26.6 19.4 28.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M11.8 9.8C8.8 9 6.8 7 5.5 5M20.2 9.8C23.2 9 25.2 7 26.5 5M16 6.8V3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      <circle cx="5.5" cy="5" r="1.2" fill="currentColor"/>
+      <circle cx="26.5" cy="5" r="1.2" fill="currentColor"/>
+      <circle cx="16" cy="3.5" r="1.2" fill="currentColor"/>
+  </symbol>
+
+  <symbol id="ico-symbiont" viewBox="0 0 32 32" fill="none">
+    <ellipse cx="16" cy="16" rx="12" ry="4.8" transform="rotate(45 16 16)" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+      <ellipse cx="16" cy="16" rx="12" ry="4.8" transform="rotate(-45 16 16)" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+      <path d="M16 10.5V21.5M10.5 16H21.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="16" r="2.6" fill="currentColor"/>
+      <circle cx="7.8" cy="7.8" r="1.5" fill="currentColor"/>
+      <circle cx="24.2" cy="24.2" r="1.5" fill="currentColor"/>
+  </symbol>
+
+  <symbol id="ico-weapon-spikes" viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="3.6" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="16" r="1.4" fill="currentColor"/>
+      <path d="M16 2.8L17.8 9.2L16 10.8L14.2 9.2L16 2.8Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M16 29.2L17.8 22.8L16 21.2L14.2 22.8L16 29.2Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M29.2 16L22.8 17.8L21.2 16L22.8 14.2L29.2 16Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M2.8 16L9.2 17.8L10.8 16L9.2 14.2L2.8 16Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M6.8 6.8L11.8 11.8M25.2 6.8L20.2 11.8M6.8 25.2L11.8 20.2M25.2 25.2L20.2 20.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+  </symbol>
+
+  <symbol id="ico-weapon-orbs" viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="10.2" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6.5 4.2" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="16" r="2.2" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.6" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="5.8" r="2.9" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="5.8" r="1.1" fill="currentColor"/>
+      <circle cx="24.8" cy="21.1" r="2.9" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
+      <circle cx="24.8" cy="21.1" r="1.1" fill="currentColor"/>
+      <circle cx="7.2" cy="21.1" r="2.9" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
+      <circle cx="7.2" cy="21.1" r="1.1" fill="currentColor"/>
+  </symbol>
+
+  <symbol id="ico-weapon-nova" viewBox="0 0 32 32" fill="none">
+    <path d="M11 4.6A12.4 12.4 0 0 1 25 7.4M27.8 12.5A12.4 12.4 0 0 1 21 27.4M16 28.4A12.4 12.4 0 0 1 4.6 20.8M4.2 13.5A12.4 12.4 0 0 1 8 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      <path d="M16 8.2A7.8 7.8 0 0 1 23.4 13.5M23.5 18.2A7.8 7.8 0 0 1 13.8 23.5M8.5 18.2A7.8 7.8 0 0 1 12.5 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.85" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="16" r="3" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="16" r="1.2" fill="currentColor"/>
+      <path d="M16 3V6M29 16H26M16 29V26M3 16H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+  </symbol>
+
+  <symbol id="ico-weapon-aura" viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="12.2" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3.8 3.2" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="16" r="8.2" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+      <circle cx="13.2" cy="17.8" r="2.6" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+      <circle cx="19.2" cy="13.8" r="2" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+      <circle cx="14.2" cy="11.2" r="1.3" fill="currentColor"/>
+      <circle cx="19.8" cy="19.8" r="1.4" fill="currentColor"/>
+      <path d="M10.5 7.5C10.5 5.8 11.8 5.2 11.8 3.8M22 8.5C22 6.8 23.2 6.2 23.2 4.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+  </symbol>
+
+  <symbol id="ico-skill-call" viewBox="0 0 32 32" fill="none">
+    <path d="M16 14.5V27.5M11.5 27.5L16 21.5L20.5 27.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="13.5" r="2.5" fill="currentColor"/>
+      <path d="M11.5 17.5C9.5 15.3 9.5 11.7 11.5 9.5M20.5 17.5C22.5 15.3 22.5 11.7 20.5 9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      <path d="M8.2 20.5C4.8 16.6 4.8 10.4 8.2 6.5M23.8 20.5C27.2 16.6 27.2 10.4 23.8 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="5.2" r="1.3" fill="currentColor"/>
+      <circle cx="11" cy="6.2" r="1" fill="currentColor" fill-opacity="0.8"/>
+      <circle cx="21" cy="6.2" r="1" fill="currentColor" fill-opacity="0.8"/>
+  </symbol>
+
+  <symbol id="ico-node-gen" viewBox="0 0 32 32" fill="none">
+    <rect x="9.5" y="7.5" width="13" height="20" rx="4.5" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
+      <path d="M13 7.5V5.2C13 4.5 13.5 4 14.2 4H17.8C18.5 4 19 4.5 19 5.2V7.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M12.5 22.5H19.5M12.5 18H19.5M12.5 13.5H19.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      <path d="M6.5 13.5V21.5M25.5 13.5V21.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.6" vector-effect="non-scaling-stroke"/>
+  </symbol>
+
+  <symbol id="ico-node-amp" viewBox="0 0 32 32" fill="none">
+    <path d="M8.5 7.5C4.8 11.8 4.8 20.2 8.5 24.5M23.5 7.5C27.2 11.8 27.2 20.2 23.5 24.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
+      <path d="M17.8 4.5L11.2 16.5H16.2L14.2 27.5L20.8 15.5H15.8L17.8 4.5Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <circle cx="8.5" cy="7.5" r="1.2" fill="currentColor"/>
+      <circle cx="23.5" cy="24.5" r="1.2" fill="currentColor"/>
+  </symbol>
+
+  <symbol id="ico-node-magnet" viewBox="0 0 32 32" fill="none">
+    <circle cx="16" cy="16" r="3.4" fill="currentColor" fill-opacity="0.24" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="16" r="1.3" fill="currentColor"/>
+      <path d="M6 6C9.5 7.5 11.5 9.5 12.8 12.8M26 6C22.5 7.5 20.5 9.5 19.2 12.8M6 26C9.5 24.5 11.5 22.5 12.8 19.2M26 26C22.5 24.5 20.5 22.5 19.2 19.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      <path d="M10.2 12.4L12.9 12.9L12.4 10.2M21.8 12.4L19.1 12.9L19.6 10.2M10.2 19.6L12.9 19.1L12.4 21.8M21.8 19.6L19.1 19.1L19.6 21.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="16" r="12.2" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 4.5" stroke-opacity="0.55" vector-effect="non-scaling-stroke"/>
+  </symbol>
+
+  <symbol id="ico-node-mutagen" viewBox="0 0 32 32" fill="none">
+    <polygon points="16,3.5 22.8,7.4 22.8,15.2 16,19.1 9.2,15.2 9.2,7.4" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M16 7.5V15.2M12.5 11.3H19.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
+      <path d="M16 19.1V25.5M13.8 21.8H18.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      <path d="M16 24.5L9.5 28.5M16 24.5L22.5 28.5M14.5 23L7 25.2M17.5 23L25 25.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  </symbol>
+
+  <symbol id="ico-node-incubator" viewBox="0 0 32 32" fill="none">
+    <path d="M16 4C21.8 4 25 10.2 25 17C25 23.2 21.2 28 16 28C10.8 28 7 23.2 7 17C7 10.2 10.2 4 16 4Z" fill="currentColor" fill-opacity="0.14" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
+      <path d="M8.5 13.5C11.5 15.2 20.5 15.2 23.5 13.5M8.2 20.5C11.8 22.2 20.2 22.2 23.8 20.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="17.2" r="3.4" fill="currentColor" fill-opacity="0.28" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+      <circle cx="16" cy="17.2" r="1.4" fill="currentColor"/>
+      <path d="M16 4V8.5M16 28V24.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
+  </symbol>
+
+  <symbol id="ico-corner-frame" viewBox="0 0 48 48" fill="none">
+    <path d="M4 44V15L15 4H44" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M9 34V17L17 9H34" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.55" vector-effect="non-scaling-stroke"/>
+      <circle cx="15" cy="4" r="2" fill="currentColor"/>
+      <circle cx="4" cy="15" r="2" fill="currentColor"/>
+      <path d="M24 4V8M31 4V7M4 24H8M4 31H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
+  </symbol>
+
+  <symbol id="ico-scale-bracket" viewBox="0 0 24 48" fill="none">
+    <path d="M20 4H11L4 12V36L11 44H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M9.5 14V34" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.55" vector-effect="non-scaling-stroke"/>
+      <path d="M13 24H19L16 21M19 24L16 27" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      <path d="M4 18H7.5M4 30H7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+      <circle cx="20" cy="4" r="1.6" fill="currentColor"/>
+      <circle cx="20" cy="44" r="1.6" fill="currentColor"/>
+  </symbol>
+
+  <use href="#ico-hybrid-plasma-leviathan"/>
+<symbol id="ico-hp-vial-frame" viewBox="0 0 320 56" fill="none">
+    <!-- Левый и правый металлические био-зажимы колбы -->
+    <path d="M4 16L12 8H28V48H12L4 40V16Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M316 16L308 8H292V48H308L316 40V16Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="M14 14V42M21 14V42M299 14V42M306 14V42" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
+    <!-- Стеклянный цилиндр ампулы -->
+    <rect x="24" y="12" width="272" height="32" rx="14" fill="currentColor" fill-opacity="0.06" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/>
+    <!-- Верхний стеклянный блик на колбе -->
+    <path d="M40 17.5H280" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.42"/>
+    <path d="M44 39.5H120M200 39.5H276" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.35"/>
+    <!-- Мерные деления микроскопа (10 секций) -->
+    <g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.78" vector-effect="non-scaling-stroke">
+      <path d="M56 12V20M82 12V18M108 12V20M134 12V18M160 12V23M186 12V18M212 12V20M238 12V18M264 12V20"/>
+      <path d="M56 44V38M108 44V38M160 44V36M212 44V38M264 44V38"/>
+    </g>
+    <!-- Клапанные болты на скобах -->
+    <circle cx="11" cy="28" r="2.2" fill="currentColor"/>
+    <circle cx="309" cy="28" r="2.2" fill="currentColor"/>
+  </symbol>
+
+  <symbol id="ico-xp-conduit" viewBox="0 0 320 44" fill="none">
+    <!-- Левый нагнетательный био-насос -->
+    <polygon points="4,22 14,7 36,7 42,22 36,37 14,37" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <circle cx="23" cy="22" r="5.5" fill="currentColor" fill-opacity="0.28" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+    <circle cx="23" cy="22" r="2" fill="currentColor"/>
+    <!-- Правый приёмный узел метаморфоза -->
+    <polygon points="316,22 306,7 284,7 278,22 284,37 306,37" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <polygon points="297,15 304,22 297,29 290,22" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+    <!-- Питательная трубка-кондуит -->
+    <rect x="38" y="13" width="244" height="18" rx="9" fill="currentColor" fill-opacity="0.06" stroke="currentColor" stroke-width="1.9" vector-effect="non-scaling-stroke"/>
+    <!-- Кольцевые манжеты давления по длине трубки -->
+    <path d="M96 10V34M160 9V35M224 10V34" stroke="currentColor" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    <!-- Шевроны направления потока биомассы -->
+    <path d="M64 18L69 22L64 26M126 18L131 22L126 26M190 18L195 22L190 26M252 18L257 22L252 26" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
+    <!-- Стеклянный блик -->
+    <path d="M48 16.5H272" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.36"/>
+  </symbol>
+
+  <symbol id="ico-petri-radar" viewBox="0 0 160 160" fill="none">
+    <!-- Внешний обод чашки Петри -->
+    <circle cx="80" cy="80" r="74" fill="currentColor" fill-opacity="0.06" stroke="currentColor" stroke-width="2.2" vector-effect="non-scaling-stroke"/>
+    <circle cx="80" cy="80" r="67" stroke="currentColor" stroke-width="1.4" stroke-dasharray="14 6 3 6" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
+    <!-- Кольца дальности сканера -->
+    <circle cx="80" cy="80" r="48" stroke="currentColor" stroke-width="1.2" stroke-opacity="0.38" vector-effect="non-scaling-stroke"/>
+    <circle cx="80" cy="80" r="26" stroke="currentColor" stroke-width="1.2" stroke-dasharray="4 4" stroke-opacity="0.45" vector-effect="non-scaling-stroke"/>
+    <!-- Координатное перекрестие -->
+    <path d="M80 12V148M12 80H148" stroke="currentColor" stroke-width="1.1" stroke-opacity="0.3" vector-effect="non-scaling-stroke"/>
+    <!-- 4 угловых зажима предметного столика микроскопа -->
+    <path d="M80 2V11M80 149V158M2 80H11M149 80H158" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    <path d="M25 25L32 32M135 25L128 32M135 135L128 128M25 135L32 128" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.72" vector-effect="non-scaling-stroke"/>
+    <!-- Градусные микро-риски по кругу -->
+    <path d="M104 10L101 16M130 28L125 33M150 56L144 59M150 104L144 101M130 132L125 127M104 150L101 144M56 150L59 144M30 132L35 127M10 104L16 101M10 56L16 59M30 28L35 33M56 10L59 16" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-opacity="0.55" vector-effect="non-scaling-stroke"/>
+    <!-- Центральная метка Светляка -->
+    <circle cx="80" cy="80" r="4" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+    <circle cx="80" cy="80" r="1.6" fill="currentColor"/>
+  </symbol>
+
+  <symbol id="ico-petri-radar-sweep" viewBox="0 0 160 160" fill="none">
+    <defs>
+      <linearGradient id="sweep-grad" x1="80" y1="14" x2="136" y2="62" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="currentColor" stop-opacity="0.52"/>
+        <stop offset="55%" stop-color="currentColor" stop-opacity="0.16"/>
+        <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <!-- Сектор затухающего эха радара (65 градусов) -->
+    <path d="M80 80V13A67 67 0 0 1 140.5 51.5L80 80Z" fill="url(#sweep-grad)"/>
+    <!-- Передняя яркая линия сканирующего луча -->
+    <path d="M80 80V13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    <!-- Светящийся фронт на кромке -->
+    <circle cx="80" cy="13" r="3" fill="currentColor"/>
+  </symbol>
+
+</svg>
+  <div id="stage">
+    <canvas id="gpu-canvas"></canvas>
+    <canvas id="bloom-canvas" width="960" height="540"></canvas>
+    <canvas id="pixi-canvas"></canvas>
+
+    <div class="hud-top">
+      <div class="panel">
+        <div id="hp-wrap">
+          <div id="hp-row">
+            <span class="label">ЗДОРОВЬЕ</span>
+            <span id="hp-num" class="cyan">100/100</span>
+          </div>
+          <div id="hp-bar" class="bio-hp-vial" style="width: 100%; height: 22px; margin: 2px 0;">
+            <div class="vial-track"><div id="hp-fill" class="vial-fill" style="width: 100%;"></div></div>
+            <svg class="vial-frame" viewBox="0 0 320 56"><use href="#ico-hp-vial-frame"/></svg>
+          </div>
+          <div id="tail-row">
+            <span class="label">ХВОСТ</span>
+            <span id="tail-num" class="cyan">14/16</span>
+          </div>
+          <div id="tail-bar"><div id="tail-fill"></div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <span id="wave">ВОЛНА 1</span>
+        <span id="timer" class="label">00:00</span>
+        <span id="kills" class="violet">x0</span>
+        <span id="nodes-chip" title="Захваченные био-узлы">·</span>
+        <span id="branch-chip" title="Геном организма">ОСОБЬ</span>
+        <button id="help-btn" title="Как играть">?</button>
+      </div>
+    </div>
+
+    <div id="scale-hud">
+      <span id="scale-chip">ШКАЛА 1 - ПЕРВИЧНАЯ КАПЛЯ</span>
+      <div class="scale-bar-row">
+        <svg class="scale-bracket left" viewBox="0 0 24 48"><use href="#ico-scale-bracket"/>  </svg>
+        <div id="bio-bar"><div id="bio-fill"></div></div>
+        <svg class="scale-bracket right" viewBox="0 0 24 48"><use href="#ico-scale-bracket"/>  </svg>
+      </div>
+    </div>
+
+    <div id="dna-wrap">
+      <div class="dna-row" id="dna-vermis"><span class="dna-ico"><svg viewBox="0 0 32 32"><use href="#ico-vermis"/>  </svg></span><span class="dna-name">ВЕРМИС</span><div class="dna-bar"><div class="dna-fill"></div></div><span class="dna-lvl">0</span></div>
+      <div class="dna-row" id="dna-chimera"><span class="dna-ico"><svg viewBox="0 0 32 32"><use href="#ico-chimera"/>  </svg></span><span class="dna-name">ХИМЕРА</span><div class="dna-bar"><div class="dna-fill"></div></div><span class="dna-lvl">0</span></div>
+      <div class="dna-row" id="dna-mycelium"><span class="dna-ico"><svg viewBox="0 0 32 32"><use href="#ico-mycelium"/>  </svg></span><span class="dna-name">МИЦЕЛИЙ</span><div class="dna-bar"><div class="dna-fill"></div></div><span class="dna-lvl">0</span></div>
+      <div class="dna-row" id="dna-symbiont"><span class="dna-ico"><svg viewBox="0 0 32 32"><use href="#ico-symbiont"/>  </svg></span><span class="dna-name">СИМБИОНТ</span><div class="dna-bar"><div class="dna-fill"></div></div><span class="dna-lvl">0</span></div>
+    </div>
+
+    <div id="toast"></div>
+
+    <div id="upgrade">
+      <h2 id="upgrade-title">УРОВЕНЬ 2 - ВЫБЕРИТЕ УЛУЧШЕНИЕ</h2>
+      <div id="cards"></div>
+    </div>
+
+    <div id="modal">
+      <h1 id="modal-title"></h1>
+      <p id="modal-sub"></p>
+      <div id="death-stats"></div>
+      <canvas id="portrait-canvas" width="1280" height="720"></canvas>
+      <div id="death-actions">
+        <button id="restart-btn">НОВЫЙ ЗАБЕГ</button>
+        <button id="save-portrait" class="ghost-btn"><svg viewBox="0 0 32 32"><use href="#ico-camera-dna"/>  </svg> <span>ПОРТРЕТ PNG</span></button>
+        <button id="biolab-btn" class="ghost-btn"><svg viewBox="0 0 32 32" class="bio-emerald"><use href="#ico-biolab"/>  </svg> <span>БИОЛАБ</span></button>
+      </div>
+    </div>
+
+    <div id="biolab">
+      <div class="biolab-card">
+        <svg class="corner tl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
+        <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
+        <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
+        <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
+        <h1 class="intro-title">БИОЛАБ</h1>
+        <p class="intro-sub">Постоянные улучшения между забегами. Очки копятся за выживание и убийства.</p>
+        <p id="biolab-points"><svg class="bio-icon bio-violet" viewBox="0 0 32 32"><use href="#ico-node-incubator"/>  </svg> 0 ОЧКОВ</p>
+        <div id="biolab-list"></div>
+        <button id="biolab-close">ЗАКРЫТЬ</button>
+      </div>
+    </div>
+
+    <div id="intro" class="show">
+      <div class="intro-card">
+        <svg class="corner tl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
+        <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
+        <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
+        <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
+        <h1 class="intro-title">LUMIVORE</h1>
+        <p class="intro-sub">THE LIVING FRACTAL - ты не выживаешь в этом мире. Ты поглощаешь его, чтобы стать им.</p>
+        <div class="intro-grid">
+          <div class="intro-block">
+            <h3>УПРАВЛЕНИЕ</h3>
+            <p>Веди <span class="cyan">живой организм</span> мышью (или WASD). Оружие стреляет само - твоя задача поглощать.</p>
+          </div>
+          <div class="intro-block">
+            <h3>МЕТАМОРФОЗ</h3>
+            <p>Заполни шкалу <b>биомассы</b> сверху - из глубин выйдет <b>Титан масштаба</b>. Убей его: камера отдалится, и ты увидишь свой прежний мир как точку внутри нового тела. 5 шкал - от Капли до Фрактала.</p>
+          </div>
+          <div class="intro-block">
+            <h3>ДНК-МАТРИЦА</h3>
+            <p>Душа врага несёт цвет своего генома: <svg class="bio-icon bio-cyan"><use href="#ico-vermis"/>  </svg> <b>ВЕРМИС</b>, <svg class="bio-icon bio-magenta"><use href="#ico-chimera"/>  </svg> <b>ХИМЕРА</b>, <svg class="bio-icon bio-lime"><use href="#ico-mycelium"/>  </svg> <b>МИЦЕЛИЙ</b>, <svg class="bio-icon bio-amber"><use href="#ico-symbiont"/>  </svg> <b>СИМБИОНТ</b>. Корми геномы душами - открываются гены и гибриды.</p>
+          </div>
+          <div class="intro-block">
+            <h3>ГИБРИДИЗАЦИЯ</h3>
+            <p>3 ДНК-уровня в двух геномах открывают <b>Великий Гибрид</b>: <svg class="bio-icon bio-orange"><use href="#ico-hybrid-plasma-leviathan"/>  </svg> <b>Левиафан</b>, <svg class="bio-icon bio-emerald"><use href="#ico-hybrid-ouroboros"/>  </svg> <b>Уроборос</b>, <svg class="bio-icon bio-cyan"><use href="#ico-hybrid-phase-serpent"/>  </svg> <b>Фазовый Змей</b>, <svg class="bio-icon bio-lime"><use href="#ico-hybrid-spore-reactor"/>  </svg> <b>Споровый Реактор</b>, <svg class="bio-icon bio-amber"><use href="#ico-hybrid-ion-colossus"/>  </svg> <b>Ионный Колосс</b>, <svg class="bio-icon bio-violet"><use href="#ico-hybrid-psi-web"/>  </svg> <b>Пси-Сеть</b>. Каждый меняет правила боя.</p>
+          </div>
+          <div class="intro-block">
+            <h3>КОЛЬЦО СМЕРТИ</h3>
+            <p>Замкни траекторию хвоста вокруг толпы - полигон <b>схлопнется</b> и выжжет всё внутри. Чем длиннее хвост, тем страшнее кольцо.</p>
+          </div>
+          <div class="intro-block">
+            <h3>ШТАММЫ PHYSARUM</h3>
+            <p>Твоё движение сеет <span class="cyan">циановый штамм</span>. На своём поле ты на <b>+25% быстрее</b> и хвост регенерирует. Фиолетовое поле врага <b>растворяет хвост</b> - наступай и выжигай его спорами.</p>
+          </div>
+          <div class="intro-block">
+            <h3>ХВОСТ И ДУШИ</h3>
+            <p>Хвост = тело и оружие одновременно. Души кормят его и дают уровни. Без охоты он истаёт - <b>голод</b> мигает кончиком.</p>
+          </div>
+          <div class="intro-block">
+            <h3>ТЕРРИТОРИЯ</h3>
+            <p><span class="cyan">7 био-узлов</span> (<svg class="bio-icon bio-lime"><use href="#ico-node-gen"/>  </svg> <svg class="bio-icon bio-cyan"><use href="#ico-node-amp"/>  </svg> <svg class="bio-icon bio-amber"><use href="#ico-node-magnet"/>  </svg> <svg class="bio-icon bio-magenta"><use href="#ico-node-mutagen"/>  </svg> <svg class="bio-icon bio-violet"><use href="#ico-node-incubator"/>  </svg>) захватываются плотностью штамма. Держи узлы - они дают бонусы. Гибрид <b>Пси-Сеть</b> бьёт с узлов лазерами.</p>
+          </div>
+          <div class="intro-block">
+            <h3>ФЕРОМОН-ЗОВ</h3>
+            <p><b>Пробел</b> - токсин-маяк в точке курсора: толпа разбегает, чужое поле выжигается. Перезарядка 15 с.</p>
+          </div>
+          <div class="intro-block">
+            <h3>ЭКОСИСТЕМА</h3>
+            <p>Плеватели плюют ядом, целители лечат рой, пульсары бьют кольцами, матки плодят выводок. Элиты приходят с золотым ореолом каждые 45 с.</p>
+          </div>
+        </div>
+        <div class="intro-actions">
+          <button id="intro-start">НАЧАТЬ ЗАБЕГ</button>
+          <button id="biolab-open"><svg viewBox="0 0 32 32" class="bio-emerald"><use href="#ico-biolab"/>  </svg> <span>БИОЛАБ</span></button>
+        </div>
+      </div>
+    </div>
+
+    <div id="xp-wrap"><div id="xp-fill"></div></div>
+    <div id="level-group">
+      <div id="level">УР. 1</div>
+      <div id="xp-conduit-hud" class="bio-xp-conduit" style="width: 170px; height: 24px;">
+        <div class="conduit-track"><div id="xp-conduit-fill" class="conduit-fill" style="width: 0%;"></div></div>
+        <svg class="conduit-frame" viewBox="0 0 320 44"><use href="#ico-xp-conduit"/></svg>
+      </div>
+    </div>
+    <div id="petri-radar-hud" class="petri-radar" style="position: absolute; right: 18px; bottom: 18px; z-index: 5; pointer-events: none; width: 110px; height: 110px;">
+      <svg class="radar-frame" viewBox="0 0 160 160"><use href="#ico-petri-radar"/></svg>
+      <svg class="radar-sweep" viewBox="0 0 160 160"><use href="#ico-petri-radar-sweep"/></svg>
+    </div>
+    <div id="weapon-hud">
+      <div class="wh" id="wh-spikes"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-weapon-spikes"/>  </svg></span></div><span class="wh-lvl">ур.1</span></div>
+      <div class="wh" id="wh-orbs"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-weapon-orbs"/>  </svg></span></div><span class="wh-lvl">нет</span></div>
+      <div class="wh" id="wh-nova"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-weapon-nova"/>  </svg></span></div><span class="wh-lvl">нет</span></div>
+      <div class="wh" id="wh-aura"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-weapon-aura"/>  </svg></span></div><span class="wh-lvl">нет</span></div>
+      <div class="wh" id="wh-call"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-skill-call"/>  </svg></span></div><span class="wh-lvl">зов</span></div>
+    </div>
+    <div id="hurt"></div>
+    <div id="tailwarn"></div>
+
+    <div class="corner-deco tl"><svg viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg></div>
+    <div class="corner-deco tr"><svg viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg></div>
+    <div class="corner-deco bl"><svg viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg></div>
+    <div class="corner-deco br"><svg viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg></div>
+    <div id="scanlines"></div>
+    <div id="vignette"></div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

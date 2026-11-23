@@ -1,0 +1,287 @@
+/* biopunk-hud.css — Готовые стили свечения, рамок и шкал для PHYSARUM HUD */
+:root {
+  --bio-cyan: #66fcf1;
+  --bio-lime: #39ff14;
+  --bio-magenta: #ff2a85;
+  --bio-amber: #ffb800;
+  --bio-violet: #b55cff;
+  --bio-crimson: #ff3b4e;
+}
+
+/* 1. Базовая иконка из ui-sprite.svg (<svg class="bio-icon"><use href="#ico-vermis"/></svg>) */
+.bio-icon {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  color: var(--bio-cyan);
+  filter: drop-shadow(0 0 6px currentColor);
+  flex-shrink: 0;
+}
+
+/* Тематические классы веток ДНК и состояний */
+.bio-cyan    { color: var(--bio-cyan); }
+.bio-lime    { color: var(--bio-lime); }
+.bio-magenta { color: var(--bio-magenta); }
+.bio-amber   { color: var(--bio-amber); }
+.bio-violet  { color: var(--bio-violet); }
+
+/* 2. Карточка апгрейда / брифинга с 4 био-уголками (corner-frame.svg) */
+.bio-card {
+  position: relative;
+  padding: 20px;
+  background: linear-gradient(145deg, rgba(16, 27, 42, 0.92), rgba(7, 11, 18, 0.98));
+  border: 1px solid rgba(102, 252, 241, 0.2);
+}
+
+.bio-card .corner,
+.intro-card .corner,
+.biolab-card .corner,
+.up-card .corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  color: var(--bio-cyan);
+  filter: drop-shadow(0 0 5px currentColor);
+  pointer-events: none;
+  opacity: 0.75;
+}
+.up-card .corner {
+  width: 15px;
+  height: 15px;
+  opacity: 0.5;
+}
+.up-card:hover .corner {
+  opacity: 0.95;
+}
+.bio-card .corner.tl, .intro-card .corner.tl, .biolab-card .corner.tl, .up-card .corner.tl { top: -1px; left: -1px; }
+.bio-card .corner.tr, .intro-card .corner.tr, .biolab-card .corner.tr, .up-card .corner.tr { top: -1px; right: -1px; transform: scaleX(-1); }
+.bio-card .corner.bl, .intro-card .corner.bl, .biolab-card .corner.bl, .up-card .corner.bl { bottom: -1px; left: -1px; transform: scaleY(-1); }
+.bio-card .corner.br, .intro-card .corner.br, .biolab-card .corner.br, .up-card .corner.br { bottom: -1px; right: -1px; transform: scale(-1, -1); }
+
+/* 3. Шкала Биомассы / HP со скобками (scale-bracket.svg) */
+.bio-meter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bio-meter .bracket {
+  width: 18px;
+  height: 36px;
+  color: var(--bio-cyan);
+  filter: drop-shadow(0 0 6px currentColor);
+  flex-shrink: 0;
+}
+
+.bio-meter .bracket.right {
+  transform: scaleX(-1);
+}
+
+.bio-meter .track {
+  flex: 1;
+  height: 22px;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 3px;
+  padding: 3px;
+  background: rgba(102, 252, 241, 0.06);
+  border-top: 1px solid rgba(102, 252, 241, 0.25);
+  border-bottom: 1px solid rgba(102, 252, 241, 0.25);
+}
+
+.bio-meter .seg {
+  background: rgba(102, 252, 241, 0.1);
+  border-radius: 2px;
+}
+
+.bio-meter .seg.filled {
+  background: linear-gradient(180deg, #9bfff7, #34d8ce);
+  box-shadow: 0 0 8px rgba(102, 252, 241, 0.65);
+}
+
+/* ================== BIOPUNK HUD V2 EXPANSION ================== */
+.bio-emerald { color: #00ff9d !important; }
+.bio-orange  { color: #ff6b2b !important; }
+.bio-crimson { color: #ff3b4e !important; }
+.bio-lime    { color: #39ff14 !important; }
+.bio-magenta { color: #ff2a85 !important; }
+.bio-amber   { color: #ffb800 !important; }
+.bio-violet  { color: #b55cff !important; }
+.bio-cyan    { color: #66fcf1 !important; }
+
+/* 1. Герб Высшего Гибрида (viewBox 0 0 48 48) */
+.hybrid-crest {
+  width: 52px;
+  height: 52px;
+  display: inline-block;
+  filter: drop-shadow(0 0 9px currentColor) drop-shadow(0 0 20px rgba(255, 255, 255, 0.12));
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.up-card:hover .hybrid-crest,
+.hybrid-card:hover .hybrid-crest {
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 14px currentColor);
+}
+
+/* 2. Системная кнопка HUD (Биолаб, Портрет PNG, Звук, Пауза, Фуллскрин) */
+.hud-ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  background: rgba(10, 18, 28, 0.88);
+  border: 1px solid rgba(102, 252, 241, 0.28);
+  color: #d9f2f0;
+  cursor: pointer;
+  transition: border-color 0.16s, box-shadow 0.16s;
+}
+
+.hud-ctrl-btn:hover {
+  border-color: #66fcf1;
+  box-shadow: 0 0 12px rgba(102, 252, 241, 0.25);
+}
+
+.hud-ctrl-btn svg,
+.ghost-btn svg,
+#biolab-open svg {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+/* 3. Строка статистики экрана Game Over / Victory */
+.stat-metric-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(13, 21, 34, 0.85);
+  border: 1px solid rgba(102, 252, 241, 0.14);
+}
+
+.stat-metric-row svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+/* 4. Бегущая строка событий волн */
+.wave-event-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-left: 3px solid currentColor;
+  background: linear-gradient(90deg, rgba(13, 21, 34, 0.94), rgba(13, 21, 34, 0.4));
+  text-shadow: 0 0 10px currentColor;
+}
+
+.wave-event-banner svg {
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 0 7px currentColor);
+}
+/* biopunk-hud-v3.css — Стили для Ампулы HP, Кондуита XP и Мини-радара «Чашка Петри» */
+
+/* 1. Ампула здоровья (hp-vial-frame.svg, 320x56) */
+.bio-hp-vial {
+  position: relative;
+  width: 280px;
+  aspect-ratio: 320 / 56;
+  color: #ff3b4e;
+}
+
+.bio-hp-vial .vial-track {
+  position: absolute;
+  left: 7.5%;
+  right: 7.5%;
+  top: 25%;
+  bottom: 25%;
+  border-radius: 99px;
+  background: rgba(255, 59, 78, 0.14);
+  overflow: hidden;
+}
+
+.bio-hp-vial .vial-fill {
+  height: 100%;
+  width: var(--hp-pct, 100%);
+  background: linear-gradient(90deg, #99102a, #ff3b4e 68%, #ff99a8);
+  box-shadow: 0 0 14px rgba(255, 59, 78, 0.85);
+  transition: width 0.16s ease-out;
+}
+
+.bio-hp-vial .vial-frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 6px rgba(255, 59, 78, 0.55));
+}
+
+/* 2. Кондуит эволюции (xp-conduit.svg, 320x44) */
+.bio-xp-conduit {
+  position: relative;
+  width: 280px;
+  aspect-ratio: 320 / 44;
+  color: #66fcf1;
+}
+
+.bio-xp-conduit .conduit-track {
+  position: absolute;
+  left: 11.8%;
+  right: 11.8%;
+  top: 34%;
+  bottom: 34%;
+  border-radius: 99px;
+  background: rgba(102, 252, 241, 0.1);
+  overflow: hidden;
+}
+
+.bio-xp-conduit .conduit-fill {
+  height: 100%;
+  width: var(--xp-pct, 0%);
+  background: linear-gradient(90deg, #0ea5a4, #66fcf1 72%, #ffffff);
+  box-shadow: 0 0 12px rgba(102, 252, 241, 0.85);
+  transition: width 0.2s ease-out;
+}
+
+.bio-xp-conduit .conduit-frame {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 5px rgba(102, 252, 241, 0.55));
+}
+
+/* 3. Мини-радар «Чашка Петри» (petri-radar.svg + petri-radar-sweep.svg) */
+.petri-radar {
+  position: relative;
+  width: 148px;
+  height: 148px;
+  color: #00ff9d;
+}
+
+.petri-radar .radar-frame,
+.petri-radar .radar-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.petri-radar .radar-frame {
+  filter: drop-shadow(0 0 6px rgba(0, 255, 157, 0.45));
+}
+
+.petri-radar .radar-sweep {
+  transform-origin: center center;
+  animation: petriRadarSpin 3.4s linear infinite;
+  filter: drop-shadow(0 0 8px rgba(0, 255, 157, 0.75));
+}
+
+@keyframes petriRadarSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}

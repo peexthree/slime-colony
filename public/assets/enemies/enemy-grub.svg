@@ -1,0 +1,27 @@
+<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="grub-aura" cx="54%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.45"/>
+      <stop offset="65%" stop-color="#FFFFFF" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="grub-body" x1="16" y1="64" x2="112" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.28"/>
+      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.62"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.92"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="64" cy="64" rx="56" ry="38" fill="url(#grub-aura)"/>
+  <!-- Предротовые жвала -->
+  <path d="M101 52C110 47 117 49 121 56M101 76C110 81 117 79 121 72" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- Тело личинки -->
+  <path d="M20 64C20 45 42 35 72 37C95 38.5 108 49 108 64C108 79 95 89.5 72 91C42 93 20 83 20 64Z" fill="url(#grub-body)" stroke="#FFFFFF" stroke-width="3"/>
+  <!-- 4 сегментные насечки -->
+  <path d="M40 42C45 52 45 76 40 86" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-opacity="0.85"/>
+  <path d="M58 38C64 50 64 78 58 90" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-opacity="0.9"/>
+  <path d="M76 38C82 50 82 78 76 90" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round"/>
+  <path d="M92 43C96 52 96 76 92 85" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"/>
+  <!-- Внутренний био-канал и ядро -->
+  <ellipse cx="68" cy="64" rx="22" ry="9" fill="#FFFFFF" fill-opacity="0.35"/>
+  <circle cx="84" cy="64" r="6.5" fill="#FFFFFF"/>
+</svg>

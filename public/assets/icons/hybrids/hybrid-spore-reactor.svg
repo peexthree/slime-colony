@@ -1,0 +1,15 @@
+<svg viewBox="0 0 48 48" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Внешнее кольцо сдерживания -->
+  <circle cx="24" cy="24" r="19" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
+  <!-- 3 споровых сектора реактора -->
+  <path d="M24 19.2L17.2 8.8A16.5 16.5 0 0 1 30.8 8.8L24 19.2Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  <path d="M28.2 26.4L40.5 25.8A16.5 16.5 0 0 1 33.8 37.5L28.2 26.4Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  <path d="M19.8 26.4L14.2 37.5A16.5 16.5 0 0 1 7.5 25.8L19.8 26.4Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  <!-- Споровые пустулы в межсекторных зонах -->
+  <circle cx="11.5" cy="17.5" r="2.4" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+  <circle cx="36.5" cy="17.5" r="2.4" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+  <circle cx="24" cy="39" r="2.4" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+  <!-- Центральная активная зона -->
+  <circle cx="24" cy="24" r="5" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.9" vector-effect="non-scaling-stroke"/>
+  <circle cx="24" cy="24" r="2" fill="currentColor"/>
+</svg>

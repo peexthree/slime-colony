@@ -1,0 +1,37 @@
+<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="nuc-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="32%" stop-color="#FFFFFF" stop-opacity="0.45"/>
+      <stop offset="72%" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="64" cy="64" r="62" fill="url(#nuc-glow)"/>
+  <!-- Внешняя полупроницаемая липидная мембрана -->
+  <circle cx="64" cy="64" r="50" fill="#FFFFFF" fill-opacity="0.14" stroke="#FFFFFF" stroke-width="3.2"/>
+  <circle cx="64" cy="64" r="44" stroke="#FFFFFF" stroke-width="1.6" stroke-dasharray="8 6" stroke-opacity="0.65"/>
+  <!-- Органелла 1: Митохондрия (верх-лево) с внутренними кристами -->
+  <g transform="rotate(-35 41 42)">
+    <rect x="28" y="35" width="26" height="13" rx="6.5" fill="#FFFFFF" fill-opacity="0.34" stroke="#FFFFFF" stroke-width="2"/>
+    <path d="M32 41.5C34 38 36 45 38.5 41.5C41 38 43 45 45.5 41.5C47.5 38.5 49 43 50.5 41.5" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+  </g>
+  <!-- Органелла 2: Митохондрия (низ-право) -->
+  <g transform="rotate(142 87 86)">
+    <rect x="74" y="79" width="26" height="13" rx="6.5" fill="#FFFFFF" fill-opacity="0.34" stroke="#FFFFFF" stroke-width="2"/>
+    <path d="M78 85.5C80 82 82 89 84.5 85.5C87 82 89 89 91.5 85.5C93.5 82.5 95 87 96.5 85.5" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+  </g>
+  <!-- Органелла 3: Аппарат Гольджи (дуги справа-сверху и слева-снизу) -->
+  <path d="M84 36C91 41 94 49 92 56M79 41C85 45 87 51 86 56" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.78"/>
+  <path d="M44 92C37 87 34 79 36 72M49 87C43 83 41 77 42 72" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.78"/>
+  <!-- Рибосомы / везикулы -->
+  <circle cx="96" cy="64" r="3" fill="#FFFFFF" fill-opacity="0.85"/>
+  <circle cx="32" cy="64" r="2.8" fill="#FFFFFF" fill-opacity="0.85"/>
+  <circle cx="64" cy="28" r="3" fill="#FFFFFF" fill-opacity="0.85"/>
+  <circle cx="64" cy="100" r="2.8" fill="#FFFFFF" fill-opacity="0.85"/>
+  <!-- Ядерная оболочка и скрещённые хромосомы -->
+  <circle cx="64" cy="64" r="22" fill="#FFFFFF" fill-opacity="0.32" stroke="#FFFFFF" stroke-width="2.6"/>
+  <path d="M55 54C59 59 69 69 73 74M73 54C69 59 59 69 55 74" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-opacity="0.9"/>
+  <!-- Центральное светящееся ядрышко -->
+  <circle cx="64" cy="64" r="8.5" fill="#FFFFFF"/>
+</svg>

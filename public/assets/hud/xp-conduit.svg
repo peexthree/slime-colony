@@ -1,0 +1,17 @@
+<svg viewBox="0 0 320 44" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Левый нагнетательный био-насос -->
+  <polygon points="4,22 14,7 36,7 42,22 36,37 14,37" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  <circle cx="23" cy="22" r="5.5" fill="currentColor" fill-opacity="0.28" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+  <circle cx="23" cy="22" r="2" fill="currentColor"/>
+  <!-- Правый приёмный узел метаморфоза -->
+  <polygon points="316,22 306,7 284,7 278,22 284,37 306,37" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+  <polygon points="297,15 304,22 297,29 290,22" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+  <!-- Питательная трубка-кондуит -->
+  <rect x="38" y="13" width="244" height="18" rx="9" fill="currentColor" fill-opacity="0.06" stroke="currentColor" stroke-width="1.9" vector-effect="non-scaling-stroke"/>
+  <!-- Кольцевые манжеты давления по длине трубки -->
+  <path d="M96 10V34M160 9V35M224 10V34" stroke="currentColor" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+  <!-- Шевроны направления потока биомассы -->
+  <path d="M64 18L69 22L64 26M126 18L131 22L126 26M190 18L195 22L190 26M252 18L257 22L252 26" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
+  <!-- Стеклянный блик -->
+  <path d="M48 16.5H272" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.36"/>
+</svg>
