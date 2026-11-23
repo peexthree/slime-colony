@@ -16,9 +16,9 @@ struct SimParams {
   aiIntensity: f32,
   evaporation: f32,
   scaleId: f32,  // 1..5: масштаб бытия, переключает палитру поля
+  camDeltaX: f32, // смещение камеры в пикселях симулятора
+  camDeltaY: f32, // смещение камеры в пикселях симулятора
   pad0: f32,
-  pad1: f32,
-  pad2: f32,
 };
 
 struct Agent {
@@ -81,6 +81,9 @@ fn hash21(p: vec2<f32>) -> f32 {
 fn sampleTrailBilinear(x: f32, y: f32) -> vec4<f32> {
   let w = i32(params.width);
   let h = i32(params.height);
+  if (x < 0.0 || x >= f32(w) || y < 0.0 || y >= f32(h)) {
+    return vec4<f32>(0.0);
+  }
   let fx = clamp(x, 0.0, f32(w - 1));
   let fy = clamp(y, 0.0, f32(h - 1));
   let x0 = i32(floor(fx));
@@ -185,7 +188,16 @@ fn updateAgents(@builtin(global_invocation_id) id: vec3<u32>) {
   a.x += cos(a.angle) * speed;
   a.y += sin(a.angle) * speed;
 
-  // Отражение от границ поля со случайным шумом
+  // Отражение от границ поля со случайным шумом и сдвиг по камере (мировой якорь)
+  a.x = a.x - params.camDeltaX;
+  a.y = a.y - params.camDeltaY;
+  let wF = params.width;
+  let hF = params.height;
+  if (a.x < 1.0) { a.x = a.x + wF - 2.0; }
+  if (a.x >= wF - 1.0) { a.x = a.x - wF + 2.0; }
+  if (a.y < 1.0) { a.y = a.y + hF - 2.0; }
+  if (a.y >= hF - 1.0) { a.y = a.y - hF + 2.0; }
+
   let noise = (rnd2 - 0.5) * 1.2;
   if (a.x < 2.0 || a.x >= params.width - 2.0) {
     a.x = clamp(a.x, 2.0, params.width - 2.0);
@@ -224,11 +236,13 @@ fn diffuse(@builtin(global_invocation_id) id: vec3<u32>) {
   if (x >= w || y >= h) { return; }
   let pos = vec2<f32>(f32(x), f32(y));
 
-  // 3x3 box blur с билинейной выборкой
+  // 3x3 box blur с билинейной выборкой и скроллом камеры (мировой якорь)
   var sum = vec2<f32>(0.0);
+  let sx = f32(x) + params.camDeltaX;
+  let sy = f32(y) + params.camDeltaY;
   for (var dy = -1; dy <= 1; dy++) {
     for (var dx = -1; dx <= 1; dx++) {
-      sum += sampleTrailBilinear(f32(x) + f32(dx) * 0.8, f32(y) + f32(dy) * 0.8).rg;
+      sum += sampleTrailBilinear(sx + f32(dx) * 0.8, sy + f32(dy) * 0.8).rg;
     }
   }
   var blurred = (sum / 9.0) * params.evaporation;

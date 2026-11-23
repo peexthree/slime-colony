@@ -194,6 +194,8 @@ async function bootstrap() {
   let playerDirY = 0;
   let camX = player.x;
   let camY = player.y;
+  let prevCamX = player.x;
+  let prevCamY = player.y;
   let camZoom = SCALES[0].zoom;
   const toSimX = (wx: number) => {
     const halfViewW = (SIM_WIDTH / 2) / camZoom;
@@ -1176,6 +1178,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     player.y = curWorldH / 2;
     camX = player.x;
     camY = player.y;
+    prevCamX = camX;
+    prevCamY = camY;
     camZoom = SCALES[0].zoom;
     playerDirX = 1;
     playerDirY = 0;
@@ -2799,6 +2803,12 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       strainProbe.y = toSimY(player.y);
       simNodes.push(strainProbe);
 
+      // Смещение камеры в системе координат симуляции (для удержания штаммов в мировом пространстве)
+      const simDeltaX = (camX - prevCamX) * camZoom;
+      const simDeltaY = (camY - prevCamY) * camZoom;
+      prevCamX = camX;
+      prevCamY = camY;
+
       // Адаптивное испарение (Этап 5.4): поздняя игра - меньше следов, читаемость
       const evap = 0.955 - Math.min(gameTime / 600, 1) * 0.025;
       sim.step(
@@ -2810,6 +2820,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         0.5 + Math.min(gameTime / 240, 1) * 0.5,
         evap,
         SCALES[scaleIdx].id,
+        simDeltaX,
+        simDeltaY,
         onNodeStatsCb
       );
 
@@ -2904,9 +2916,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         }
       }
     } else {
+      prevCamX = camX;
+      prevCamY = camY;
       // До старта / на паузе / после конца: пыль дрейфует без маяков
       sfx.setTailDrone(false);
-      sim.step(t, dt, [], [], { x: -500, y: -500 }, -0.75, 0.90, SCALES[scaleIdx].id, () => {});
+      sim.step(t, dt, [], [], { x: -500, y: -500 }, -0.75, 0.90, SCALES[scaleIdx].id, 0, 0, () => {});
     }
 
     // Био-радар чашки Петри: обновление миникарты и направлений

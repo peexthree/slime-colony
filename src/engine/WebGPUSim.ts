@@ -207,6 +207,8 @@ export class WebGPUSim {
     aiIntensity: number,
     evaporation: number,
     scaleId: number,
+    camDeltaX: number,
+    camDeltaY: number,
     onNodeStats: (stats: NodeStat[]) => void
   ): void {
     // 1. Uniform: 64 байта = 12 x f32/u32 + scaleId + pad
@@ -225,6 +227,9 @@ export class WebGPUSim {
     f32[10] = aiIntensity;
     f32[11] = evaporation;
     f32[12] = scaleId;
+    f32[13] = camDeltaX;
+    f32[14] = camDeltaY;
+    f32[15] = 0;
     this.device.queue.writeBuffer(this.paramsBuffer, 0, this.paramScratch);
     this.frame++;
 
