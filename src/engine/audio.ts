@@ -159,6 +159,13 @@ export class Sfx {
     this.tone('sawtooth', 55, 41, 0.9, 0.18, 0.12);
   }
 
+  /** Упругий био-отскок от мембраны чашки Петри */
+  membraneBounce(): void {
+    if (!this.gate('membrane', 90)) return;
+    this.tone('sine', 160, 50, 0.12, 0.08);
+    this.burst(0.06, 0.05, 380, 0.8);
+  }
+
   /** Низкий пульс при критическом хвосте: включается/выключается состоянием */
   setTailDrone(on: boolean): void {
     if (!this.ctx) return;

@@ -1343,8 +1343,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     let x = 0;
     let y = 0;
     if (atX !== undefined && atY !== undefined) {
-      x = atX;
-      y = atY;
+      x = Math.max(16, Math.min(curWorldW - 16, atX));
+      y = Math.max(16, Math.min(curWorldH - 16, atY));
     } else {
       const halfViewW = (SIM_WIDTH / 2) / camZoom;
       const halfViewH = (SIM_HEIGHT / 2) / camZoom;
@@ -2006,17 +2006,117 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         if (e.type !== 'pulsar') {
           // Пульсар стоит на месте и контролирует зону
           const dirSign = keepDist > 0 && d < keepDist ? -1 : 1;
-          e.vx += ((dx / d) * eSpeed * dirSign - e.vx) * steer;
-          e.vy += ((dy / d) * eSpeed * dirSign - e.vy) * steer;
+          let desiredVx = (dx / d) * eSpeed * dirSign;
+          let desiredVy = (dy / d) * eSpeed * dirSign;
+
+          // Умное отступление: если враг пытается держать дистанцию, но прижат к кромке чашки Петри,
+          // он не бьётся головой об стенку наружу, а смещается по касательной вдоль мембраны
+          if (keepDist > 0 && d < keepDist) {
+            const wallMargin = 85;
+            if (e.x < wallMargin && desiredVx < 0) {
+              desiredVx = 0;
+              desiredVy = (dy >= 0 ? 1 : -1) * eSpeed;
+            } else if (e.x > curWorldW - wallMargin && desiredVx > 0) {
+              desiredVx = 0;
+              desiredVy = (dy >= 0 ? 1 : -1) * eSpeed;
+            }
+            if (e.y < wallMargin && desiredVy < 0) {
+              desiredVy = 0;
+              desiredVx = (dx >= 0 ? 1 : -1) * eSpeed;
+            } else if (e.y > curWorldH - wallMargin && desiredVy > 0) {
+              desiredVy = 0;
+              desiredVx = (dx >= 0 ? 1 : -1) * eSpeed;
+            }
+          }
+
+          e.vx += (desiredVx - e.vx) * steer;
+          e.vy += (desiredVy - e.vy) * steer;
         } else {
           e.vx *= Math.max(0, 1 - dt * 8);
           e.vy *= Math.max(0, 1 - dt * 8);
         }
+
+        // Затухание импульса отброса по ОБЕИМ осям (X и Y)
         e.kbx *= Math.max(0, 1 - dt * 6);
+        e.kby *= Math.max(0, 1 - dt * 6);
+
+        // Мягкое поле отталкивания био-мембраны по периметру чашки Петри (36px зона)
+        const bMargin = 36;
+        if (e.x < bMargin) {
+          const p = (bMargin - e.x) / bMargin;
+          e.vx += p * 340 * dt;
+        } else if (e.x > curWorldW - bMargin) {
+          const p = (e.x - (curWorldW - bMargin)) / bMargin;
+          e.vx -= p * 340 * dt;
+        }
+        if (e.y < bMargin) {
+          const p = (bMargin - e.y) / bMargin;
+          e.vy += p * 340 * dt;
+        } else if (e.y > curWorldH - bMargin) {
+          const p = (e.y - (curWorldH - bMargin)) / bMargin;
+          e.vy -= p * 340 * dt;
+        }
+
         e.x += (e.vx + e.kbx) * dt;
         e.y += (e.vy + e.kby) * dt;
-        e.x = Math.max(4, Math.min(curWorldW - 4, e.x));
-        e.y = Math.max(4, Math.min(curWorldH - 4, e.y));
+
+        // Физика упругого отскока от мембраны чашки Петри при сильном ударе/отбросе
+        const pad = Math.max(8, e.radius);
+        if (e.x <= pad) {
+          e.x = pad;
+          if (e.vx < 0) {
+            if (Math.abs(e.vx) + Math.abs(e.kbx) > 60) {
+              overlay.spawnPulse(e.x, e.y, 0x66fcf1, e.radius + 12);
+              sfx.membraneBounce();
+            }
+            e.vx = Math.abs(e.vx) * 0.45;
+            e.kbx = 0;
+          }
+        } else if (e.x >= curWorldW - pad) {
+          e.x = curWorldW - pad;
+          if (e.vx > 0) {
+            if (Math.abs(e.vx) + Math.abs(e.kbx) > 60) {
+              overlay.spawnPulse(e.x, e.y, 0x66fcf1, e.radius + 12);
+              sfx.membraneBounce();
+            }
+            e.vx = -Math.abs(e.vx) * 0.45;
+            e.kbx = 0;
+          }
+        }
+        if (e.y <= pad) {
+          e.y = pad;
+          if (e.vy < 0) {
+            if (Math.abs(e.vy) + Math.abs(e.kby) > 60) {
+              overlay.spawnPulse(e.x, e.y, 0x66fcf1, e.radius + 12);
+              sfx.membraneBounce();
+            }
+            e.vy = Math.abs(e.vy) * 0.45;
+            e.kby = 0;
+          }
+        } else if (e.y >= curWorldH - pad) {
+          e.y = curWorldH - pad;
+          if (e.vy > 0) {
+            if (Math.abs(e.vy) + Math.abs(e.kby) > 60) {
+              overlay.spawnPulse(e.x, e.y, 0x66fcf1, e.radius + 12);
+              sfx.membraneBounce();
+            }
+            e.vy = -Math.abs(e.vy) * 0.45;
+            e.kby = 0;
+          }
+        }
+
+        // Аварийный возврат, если сущность каким-либо образом оказалась за пределами карты
+        if (e.x < 0 || e.x > curWorldW || e.y < 0 || e.y > curWorldH) {
+          const toCenterX = (curWorldW / 2) - e.x;
+          const toCenterY = (curWorldH / 2) - e.y;
+          const cDist = Math.hypot(toCenterX, toCenterY) || 1;
+          e.vx = (toCenterX / cDist) * Math.max(eSpeed, 180);
+          e.vy = (toCenterY / cDist) * Math.max(eSpeed, 180);
+          e.kbx = 0;
+          e.kby = 0;
+          e.x = Math.max(pad, Math.min(curWorldW - pad, e.x));
+          e.y = Math.max(pad, Math.min(curWorldH - pad, e.y));
+        }
 
         // Особые навыки организмов
         e.skillCd -= dt;
@@ -2108,6 +2208,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
               e.y += (oy / od) * push;
             }
           }
+          e.x = Math.max(pad, Math.min(curWorldW - pad, e.x));
+          e.y = Math.max(pad, Math.min(curWorldH - pad, e.y));
         }
 
         const touchD = Math.hypot(player.x - e.x, player.y - e.y);
@@ -2353,7 +2455,12 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           applyDamageToPlayer(p.dmg);
           p.life = 0;
         }
-        if (p.life <= 0 || p.x < -100 || p.x > curWorldW + 100 || p.y < -100 || p.y > curWorldH + 100) eprojs.splice(i, 1);
+        if (p.life <= 0 || p.x < 0 || p.x > curWorldW || p.y < 0 || p.y > curWorldH) {
+          if (p.x < 0 || p.x > curWorldW || p.y < 0 || p.y > curWorldH) {
+            overlay.spawnPulse(Math.max(4, Math.min(curWorldW - 4, p.x)), Math.max(4, Math.min(curWorldH - 4, p.y)), 0xff3b5c, 14);
+          }
+          eprojs.splice(i, 1);
+        }
       }
 
       // Молния-орбиты (+ Резонанс: шире и больнее)
@@ -2607,6 +2714,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         }
         o.x += o.vx * dt;
         o.y += o.vy * dt;
+        o.x = Math.max(10, Math.min(curWorldW - 10, o.x));
+        o.y = Math.max(10, Math.min(curWorldH - 10, o.y));
         if (d < 12) {
           // Душа съедена: опыт + энергия хвоста + ДНК её генома + биомасса шкалы
           xp += o.value * xpMul;
@@ -2930,6 +3039,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         { x: player.x, y: player.y, dirX: playerDirX, dirY: playerDirY },
         enemies,
         bioNodes,
+        curWorldW,
+        curWorldH,
         Math.max(650, 850 / camZoom)
       );
     }

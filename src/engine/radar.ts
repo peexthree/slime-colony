@@ -36,6 +36,8 @@ export class PetriRadar {
     player: { x: number; y: number; dirX: number; dirY: number },
     enemies: RadarEnemy[],
     nodes: RadarNode[],
+    worldW?: number,
+    worldH?: number,
     scanRange = 850
   ): void {
     if (!this.canvas || !this.ctx) return;
@@ -63,6 +65,50 @@ export class PetriRadar {
     ctx.fillStyle = bgGrad;
     ctx.fill();
     ctx.clip(); // Всё рисование остаётся строго внутри чашки Петри
+
+    // 1.5. Отображение видимых границ чашки Петри (био-мембрана периметра)
+    if (worldW && worldH) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(102, 252, 241, 0.55)';
+      ctx.lineWidth = 1.8;
+      ctx.shadowColor = '#66fcf1';
+      ctx.shadowBlur = 8;
+      ctx.setLineDash([5, 4]);
+
+      // Левая граница
+      const leftDist = 0 - player.x;
+      if (Math.abs(leftDist) <= scanRange) {
+        const lx = cx + (leftDist / scanRange) * (radarR - 8);
+        ctx.beginPath();
+        ctx.moveTo(lx, 0); ctx.lineTo(lx, h);
+        ctx.stroke();
+      }
+      // Правая граница
+      const rightDist = worldW - player.x;
+      if (Math.abs(rightDist) <= scanRange) {
+        const rx = cx + (rightDist / scanRange) * (radarR - 8);
+        ctx.beginPath();
+        ctx.moveTo(rx, 0); ctx.lineTo(rx, h);
+        ctx.stroke();
+      }
+      // Верхняя граница
+      const topDist = 0 - player.y;
+      if (Math.abs(topDist) <= scanRange) {
+        const ty = cy + (topDist / scanRange) * (radarR - 8);
+        ctx.beginPath();
+        ctx.moveTo(0, ty); ctx.lineTo(w, ty);
+        ctx.stroke();
+      }
+      // Нижняя граница
+      const bottomDist = worldH - player.y;
+      if (Math.abs(bottomDist) <= scanRange) {
+        const by = cy + (bottomDist / scanRange) * (radarR - 8);
+        ctx.beginPath();
+        ctx.moveTo(0, by); ctx.lineTo(w, by);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
 
     // 2. Концентрические дальномерные кольца и координатные риски
     ctx.strokeStyle = 'rgba(0, 255, 157, 0.14)';
