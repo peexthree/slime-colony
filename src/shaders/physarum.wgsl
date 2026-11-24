@@ -128,8 +128,12 @@ fn sense(a: Agent, angleOffset: f32, biasX: f32, biasY: f32, biasStrength: f32) 
 
 @compute @workgroup_size(64)
 fn updateAgents(@builtin(global_invocation_id) id: vec3<u32>) {
-  let idx = id.x;
-  if (idx >= params.agentCount) { return; }
+  let gid = id.x;
+  if (gid >= params.agentCount) { return; }
+  // При снижении качества оба штамма (0..half-1 и half..total-1) масштабируются пропорционально 50/50
+  let totalHalf = arrayLength(&agents) / 2u;
+  let activeHalf = max(1u, params.agentCount / 2u);
+  let idx = select(totalHalf + (gid - activeHalf), gid, gid < activeHalf);
 
   var a = agents[idx];
   let seed = idx ^ (u32(params.time * 60.0) * 73856093u);

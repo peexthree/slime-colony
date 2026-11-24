@@ -8,5 +8,8 @@
   "settings": "НАСТРОЙКИ",
   "no_nodes": "нет узлов",
   "quality_label": "Качество WebGPU",
-  "lang_label": "Язык / Language"
+  "lang_label": "Язык / Language",
+  "reroll_btn": "ПЕРЕРОЛЛ",
+  "restart_btn": "НОВЫЙ ЗАБЕГ",
+  "save_portrait": "ПОРТРЕТ PNG"
 }

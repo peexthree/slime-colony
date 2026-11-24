@@ -40,6 +40,8 @@ export class WebGPUSim {
   private nodeScratch = new Float32Array(MAX_NODES * 4);
   private beaconScratch = new Float32Array(MAX_BEACONS * 8);
   private sporeScratch = new Float32Array(0);
+  private deviceLost = false;
+  onDeviceLost?: (reason: string) => void;
   readonly agentCount = AGENT_COUNT;
   private activeAgentCount = AGENT_COUNT;
 
@@ -64,6 +66,11 @@ export class WebGPUSim {
       },
     });
     this.device.onuncapturederror = (e) => console.error('WebGPU:', e.error.message);
+    void this.device.lost.then((info) => {
+      this.deviceLost = true;
+      console.warn('WebGPU device lost:', info.reason, info.message);
+      this.onDeviceLost?.(info.message || info.reason || 'GPU device lost');
+    });
 
     this.context = canvas.getContext('webgpu')!;
     const format = navigator.gpu.getPreferredCanvasFormat();
@@ -185,9 +192,10 @@ export class WebGPUSim {
     this.device.queue.writeBuffer(this.agentsBuffer, 0, data);
   }
 
-  /** Вброс свежих агентов игрока: кольцевой курсор по первой половине буфера */
+  /** Вброс свежих агентов игрока: кольцевой курсор по активной первой половине буфера */
   spawnPlayerSpores(x: number, y: number, count = 4000): void {
-    const half = this.agentCount / 2;
+    if (this.deviceLost) return;
+    const half = Math.max(1, Math.floor(this.activeAgentCount / 2));
     const batch = Math.min(count, half);
     const data = this.sporeScratch;
     for (let i = 0; i < batch; i++) {
@@ -218,6 +226,7 @@ export class WebGPUSim {
     camDeltaY: number,
     onNodeStats: (stats: NodeStat[]) => void
   ): void {
+    if (this.deviceLost) return;
     // 1. Uniform: 64 байта = 12 x f32/u32 + scaleId + pad
     const f32 = this.paramF32;
     const u32 = this.paramU32;
@@ -240,27 +249,31 @@ export class WebGPUSim {
     this.device.queue.writeBuffer(this.paramsBuffer, 0, this.paramScratch);
     this.frame++;
 
-    // 2. Узлы и маяки
+    // 2. Узлы и маяки (без аллокаций на горячем пути)
     const nData = this.nodeScratch;
     nData.fill(0);
-    nodes.slice(0, MAX_NODES).forEach((n, i) => {
+    const nCount = Math.min(nodes.length, MAX_NODES);
+    for (let i = 0; i < nCount; i++) {
+      const n = nodes[i];
       nData[i * 4] = n.x;
       nData[i * 4 + 1] = n.y;
       nData[i * 4 + 2] = n.radius;
       nData[i * 4 + 3] = n.owner;
-    });
+    }
     this.device.queue.writeBuffer(this.nodesBuffer, 0, nData);
 
     const bData = this.beaconScratch;
     bData.fill(0);
-    beacons.slice(0, MAX_BEACONS).forEach((b, i) => {
+    const bCount = Math.min(beacons.length, MAX_BEACONS);
+    for (let i = 0; i < bCount; i++) {
+      const b = beacons[i];
       const o = i * 8;
       bData[o] = b.x;
       bData[o + 1] = b.y;
       bData[o + 2] = b.radius;
       bData[o + 3] = b.kind;
       bData[o + 4] = b.maxTtl > 0 ? Math.max(0, Math.min(1, b.ttl / b.maxTtl)) : 1;
-    });
+    }
     this.device.queue.writeBuffer(this.beaconsBuffer, 0, bData);
 
     // 3. Compute + render

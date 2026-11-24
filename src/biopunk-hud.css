@@ -1045,3 +1045,17 @@
     height: 104px !important;
   }
 }
+
+/* Retro Oscilloscope 1984 (Konami easter egg) & Upgrade Reroll */
+body.retro-oscilloscope #stage {
+  filter: sepia(1) hue-rotate(82deg) saturate(2.5) contrast(1.16);
+}
+#reroll-btn {
+  padding: 7px 16px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+#reroll-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

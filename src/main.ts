@@ -15,6 +15,8 @@ import { checkAchievements } from './engine/achievements';
 import { recordLeaderboardEntry } from './engine/leaderboard';
 import { getDailyChallenge } from './engine/challenge';
 import { getLocale, setLocale, t } from './i18n';
+import { inPoly, polyArea, segIsect } from './game/ringOfDeath';
+import { SpatialHashGrid } from './game/spatialHash';
 import { ENEMY_SPRITES, ENEMY_SPRITES_V2 } from './engine/svgAssets';
 import {
   AURA, Beacon, BioNode, BOSS_EVERY, BOSS_FIRST_AT, CALL, CYSTS, DASH, DNA_COLORS, DNA_LEVELS,
@@ -108,10 +110,12 @@ async function bootstrap() {
   const upgradeModal = document.getElementById('upgrade')!;
   const upgradeTitle = document.getElementById('upgrade-title')!;
   const cardsEl = document.getElementById('cards')!;
+  const rerollBtn = document.getElementById('reroll-btn') as HTMLButtonElement | null;
   const modal = document.getElementById('modal')!;
   const modalTitle = document.getElementById('modal-title')!;
   const modalSub = document.getElementById('modal-sub')!;
   const restartBtn = document.getElementById('restart-btn')!;
+  const endlessBtn = document.getElementById('endless-btn') as HTMLButtonElement | null;
   const branchChipEl = document.getElementById('branch-chip')!;
   const savePortraitBtn = document.getElementById('save-portrait')!;
   const biolabBtn = document.getElementById('biolab-btn')!;
@@ -881,6 +885,22 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     return u.desc;
   }
 
+  let rerollsLeft = 2;
+  let emptyRingsCount = 0;
+  let overdriveTier = 0;
+  let dmgTail = 0;
+  let dmgRing = 0;
+  let spikesFired = 0;
+  let pacifistShown = false;
+  let scale5NoNodeTime = 0;
+  let watcherSpawned = false;
+
+  function syncRerollBtn(): void {
+    if (!rerollBtn) return;
+    rerollBtn.textContent = `${t('reroll_btn')} (${rerollsLeft})`;
+    rerollBtn.disabled = rerollsLeft <= 0;
+  }
+
   function openUpgrades(): void {
     const avail = UPGRADES.filter((u) => u.avail());
     // Все улучшения выкачаны: пустое окно замкнуло бы игру в вечную паузу
@@ -941,7 +961,17 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     }
     paused = true;
     sfx.setTailDrone(false);
+    syncRerollBtn();
     upgradeModal.classList.add('show');
+  }
+
+  if (rerollBtn) {
+    rerollBtn.addEventListener('click', () => {
+      if (rerollsLeft <= 0 || !upgradeModal.classList.contains('show')) return;
+      rerollsLeft--;
+      sfx.upgradeSelect();
+      openUpgrades();
+    });
   }
 
   cardsEl.addEventListener('click', (e) => {
@@ -1300,6 +1330,12 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       const sp = settingsOpenBtn.querySelector('span');
       if (sp) sp.textContent = t('settings');
     }
+    if (restartBtn) restartBtn.textContent = t('restart_btn');
+    if (savePortraitBtn) {
+      const sp = savePortraitBtn.querySelector('span');
+      if (sp) sp.textContent = t('save_portrait');
+    }
+    syncRerollBtn();
   }
   applyI18n();
 
@@ -1465,6 +1501,15 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     tailTick = 0;
     tailLen = TAIL.startLen as number;
     kills = 0;
+    rerollsLeft = 2;
+    emptyRingsCount = 0;
+    overdriveTier = 0;
+    dmgTail = 0;
+    dmgRing = 0;
+    spikesFired = 0;
+    pacifistShown = false;
+    scale5NoNodeTime = 0;
+    watcherSpawned = false;
     level = 1;
     xp = 0;
     xpNext = 6;
@@ -1664,6 +1709,10 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     if (e.dead) return;
     const def = ENEMIES[e.type];
     kills++;
+    if (kills === 314) {
+      overlay.spawnPulse(player.x, player.y, 0xffd166, 220);
+      showToast('РЕЗОНАНС π (3.14): ФРАКТАЛЬНАЯ СИММЕТРИЯ ДОСТИГНУТА');
+    }
     sfx.kill();
     if (unlockCodexEntry(e.titan ? 'titan' : e.type)) refreshCodexBonuses();
     const tip = e.tail.length > 0 ? e.tail[e.tail.length - 1] : e;
@@ -1784,6 +1833,16 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   // ---------- Метаморфоз: переход между шкалами бытия ----------
   function startMetamorphosis(): void {
     if (scaleIdx >= SCALES.length - 1) {
+      if (overdriveTier > 0) {
+        overdriveTier++;
+        biomass = 0;
+        player.hp = Math.min(maxHp, player.hp + maxHp * 0.3);
+        sfx.metamorph();
+        showToast(`OVERDRIVE TIER ${overdriveTier}: ФРАКТАЛ РАСШИРЯЕТСЯ`);
+        overlay.spawnPulse(player.x, player.y, 0xffd166, 300);
+        updateScaleHud();
+        return;
+      }
       finishRun(true);
       return;
     }
@@ -1865,15 +1924,20 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     modalSub.textContent = win
       ? 'Ты стал мозгом Макро-Левиафана. Левиафан — лишь молекула в реакторе «ЕвроКорп-3». Каждый новый забег — новая вселенная.'
       : `${genomeLabel} · +${blAfter.points - bl.points} ОЧКОВ БИОЛАБА`;
+    const dmgOther = Math.max(0, Math.round(damageDealt - dmgTail - dmgRing));
     deathStatsEl.innerHTML =
       `<span class="stat-metric-row"><svg class="bio-icon bio-cyan" viewBox="0 0 32 32"><use href="#ico-timer"/></svg> ${fmtTime(gameTime)}${genome.record ? ' <svg class="bio-icon bio-amber" viewBox="0 0 32 32"><use href="#ico-record-badge"/></svg> РЕКОРД' : ''}</span>` +
       `<span class="stat-metric-row"><svg class="bio-icon bio-crimson" viewBox="0 0 32 32"><use href="#ico-skull-hazard"/></svg> ${kills} УБИТО</span>` +
       `<span class="stat-metric-row"><svg class="bio-icon bio-amber" viewBox="0 0 32 32"><use href="#ico-weapon-spikes"/></svg> УР.${level}</span>` +
       `<span class="stat-metric-row"><svg class="bio-icon bio-lime" viewBox="0 0 32 32"><use href="#ico-tail-length"/></svg> ХВОСТ ${Math.round(tailMaxReached)}</span>` +
       `<span class="stat-metric-row"><svg class="bio-icon bio-amber" viewBox="0 0 32 32"><use href="#ico-node-dominance"/></svg> УЗЛЫ ${nodesHeldMax}/${bioNodes.length}</span>` +
-      `<span class="stat-metric-row"><svg class="bio-icon bio-violet" viewBox="0 0 32 32"><use href="#ico-macro-scale"/></svg> ШКАЛА ${scaleMaxReached}/5</span>` +
+      `<span class="stat-metric-row"><svg class="bio-icon bio-violet" viewBox="0 0 32 32"><use href="#ico-macro-scale"/></svg> ШКАЛА ${scaleMaxReached}/5${overdriveTier > 0 ? ` · OD+${overdriveTier}` : ''}</span>` +
       `<span class="stat-metric-row"><svg class="bio-icon bio-orange" viewBox="0 0 32 32"><use href="#ico-damage-nova"/></svg> УРОН ${Math.round(damageDealt).toLocaleString('ru')}</span>` +
+      `<span class="stat-metric-row" style="font-size:10px;opacity:0.8;">Хвост ${Math.round(dmgTail)} · Кольцо ${Math.round(dmgRing)} · Оружие ${dmgOther}</span>` +
       (topStr ? `<span class="stat-metric-row" style="color:var(--cyan);">ТОП (${mainGenome}): ${topStr}</span>` : '');
+    if (endlessBtn) {
+      endlessBtn.style.display = win ? '' : 'none';
+    }
     // Портрет организма: процедурный фон + асинхронный readback physarum-поля
     const drawPortrait = (bg: HTMLCanvasElement | null): void => {
       const p = renderPortrait(bg, {
@@ -1902,42 +1966,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   }
 
   // ---------- Кольцо Смерти: замыкание траектории хвоста ----------
-
-  /** Пересечение отрезков: точка или null */
-  function segIsect(ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number): { x: number; y: number } | null {
-    const rx = bx - ax;
-    const ry = by - ay;
-    const sx = dx - cx;
-    const sy = dy - cy;
-    const denom = rx * sy - ry * sx;
-    if (Math.abs(denom) < 1e-9) return null;
-    const t = ((cx - ax) * sy - (cy - ay) * sx) / denom;
-    const u = ((cx - ax) * ry - (cy - ay) * rx) / denom;
-    if (t < 0 || t > 1 || u < 0 || u > 1) return null;
-    return { x: ax + t * rx, y: ay + t * ry };
-  }
-
-  /** Площадь полигона (формула шнурков) */
-  function polyArea(poly: { x: number; y: number }[]): number {
-    let s = 0;
-    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      s += poly[j].x * poly[i].y - poly[i].x * poly[j].y;
-    }
-    return Math.abs(s) / 2;
-  }
-
-  /** Точка внутри полигона (луч в +x) */
-  function inPoly(px: number, py: number, poly: { x: number; y: number }[]): boolean {
-    let inside = false;
-    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-      const yi = poly[i].y;
-      const yj = poly[j].y;
-      const xi = poly[i].x;
-      const xj = poly[j].x;
-      if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
-    }
-    return inside;
-  }
+  // (геометрия вынесена в src/game/ringOfDeath.ts)
 
   /**
    * Детектор Кольца Смерти: ищем самопересечение последнего сегмента движения
@@ -1986,16 +2015,19 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     sfx.ring();
     // Цели: враги в охвате полигона, точный тест - лучом
     let maxR = 0;
+    let ringHits = 0;
     for (const p of poly) maxR = Math.max(maxR, Math.hypot(p.x - cx, p.y - cy));
     for (const e of nearby(cx, cy, maxR + 40)) {
       if (e.hp <= 0) continue;
       if (!inPoly(e.x, e.y, poly)) continue;
+      ringHits++;
       const inDmg = dmg * enemyDmgBonus(e);
       e.hp -= inDmg;
       e.flash = 0.12;
       e.tailCd = Math.max(e.tailCd, 0.3);
       overlay.pushDamage(e.x, e.y - e.radius - 6, inDmg, color);
       damageDealt += inDmg;
+      dmgRing += inDmg;
       // Огненный Удав: всё не-элитное внутри кольца аннигилирует
       if (plasma && !e.elite && e.type !== 'boss') e.hp = 0;
     }
@@ -2013,6 +2045,17 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     }
     // Маленькая плата за кольцо: хвост тратится на замыкание
     tailLen = Math.max(TAIL.minLen, tailLen - 1.5);
+    // Пасхалка «Пакт Уробороса»: 3 пустых кольца подряд дают +5 HP
+    if (ringHits === 0) {
+      emptyRingsCount++;
+      if (emptyRingsCount === 3) {
+        emptyRingsCount = 0;
+        player.hp = Math.min(maxHp, player.hp + 5);
+        showToast('ПАКТ УРОБОРОСА: Самопознание — это тоже форма голода (+5 HP)');
+      }
+    } else {
+      emptyRingsCount = 0;
+    }
   }
 
   function destroyCocoon(idx: number): void {
@@ -2162,6 +2205,23 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
 
     if (started && !paused && !gameOver) {
       gameTime += dt;
+      if (!pacifistShown && gameTime >= 60 && spikesFired === 0) {
+        pacifistShown = true;
+        showToast('СКРЫТЫЙ ТИТУЛ «СИМБИОНТ МИРА»: 60с без агрессии шипов');
+      }
+      if (!watcherSpawned && scaleIdx >= 4) {
+        const owned = bioNodes.filter((n) => n.owner === 0).length;
+        if (owned === 0) {
+          scale5NoNodeTime += dt;
+          if (scale5NoNodeTime >= 60) {
+            watcherSpawned = true;
+            spawnEnemy('boss');
+            showToast('ОБРАЗЕЦ ОТКАЗЫВАЕТСЯ ОТ СИМБИОЗА: НАБЛЮДАТЕЛЬ');
+          }
+        } else {
+          scale5NoNodeTime = 0;
+        }
+      }
 
       // Движение игрока: мышь как цель, WASD и мобильный джойстик как альтернатива
       // Gamepad controller polling
@@ -2799,6 +2859,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
                 e.tailCd = TAIL.cd;
                 overlay.pushDamage(e.x, e.y - e.radius - 6, inDmg, 0x66fcf1);
                 damageDealt += inDmg;
+                dmgTail += inDmg;
                 // «Отражение» элиты: часть урона возвращается бойцу вблизи
                 if (e.elite === 'mirrored' && Math.hypot(e.x - player.x, e.y - player.y) < 200 && player.iframe <= 0) {
                   applyDamageToPlayer(inDmg * 0.15);
@@ -2844,6 +2905,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       // Оружие: шипы
       spikesCd -= dt;
       if (wlvl.spikes > 0 && spikesCd <= 0 && enemies.length > 0) {
+        spikesFired++;
         const safeSpikesIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.spikes - 1));
         spikesCd = SPIKES.cd[safeSpikesIdx] / effAtkSpd();
         const count = SPIKES.count[safeSpikesIdx];
@@ -3654,77 +3716,61 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (radarMarkers.length > 6) radarMarkers.length = 6;
     }
 
-    overlay.render(
-      {
-        player: { x: player.x, y: player.y, r: playerRadius(), tail: visibleTail() },
-        tailState,
-        tailHunger: sinceSoul > 3,
-        cam: { x: camX, y: camY, zoom: camZoom, worldW: curWorldW, worldH: curWorldH },
-        morph: {
-          dirX: playerDirX,
-          dirY: playerDirY,
-          vermis: dnaLvl('vermis'),
-          chimera: dnaLvl('chimera'),
-          mycelium: dnaLvl('mycelium'),
-          symbiont: dnaLvl('symbiont'),
-          hybrid: ([...hybridsTaken].pop() ?? null),
-          scaleId: SCALES[scaleIdx].id,
-          worldW: curWorldW,
-          worldH: curWorldH,
+    if (!paused || !started) {
+      overlay.render(
+        {
+          player: { x: player.x, y: player.y, r: playerRadius(), tail: visibleTail() },
+          tailState,
+          tailHunger: sinceSoul > 3,
+          cam: { x: camX, y: camY, zoom: camZoom, worldW: curWorldW, worldH: curWorldH },
+          morph: {
+            dirX: playerDirX,
+            dirY: playerDirY,
+            vermis: dnaLvl('vermis'),
+            chimera: dnaLvl('chimera'),
+            mycelium: dnaLvl('mycelium'),
+            symbiont: dnaLvl('symbiont'),
+            hybrid: ([...hybridsTaken].pop() ?? null),
+            scaleId: SCALES[scaleIdx].id,
+            worldW: curWorldW,
+            worldH: curWorldH,
+          },
+          enemies,
+          projs,
+          eprojs,
+          xpOrbs: orbs,
+          nodes: bioNodes,
+          orbit: wlvl.orbs > 0
+            ? {
+                count: ORBS.count[Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.orbs - 1))],
+                cx: player.x,
+                cy: player.y,
+                radius: ORBS.radius[Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.orbs - 1))] * orbRadiusMul(),
+                angle: orbAngle,
+              }
+            : null,
+          aura: wlvl.aura > 0 ? { x: player.x, y: player.y, r: AURA.radius[Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.aura - 1))] } : null,
+          arcs: frameArcs,
+          lasers: frameLasers,
+          cysts: liveCysts,
+          mandibleSwipes,
+          radarMarkers,
+          anomalies,
+          neuralLinkActive,
+          settings: {
+            parallax: gameSettings.microParallax,
+            subtleShake: gameSettings.cameraShake === 'subtle',
+            softFlashes: gameSettings.screenFlashes === 'soft',
+          },
         },
-        enemies,
-        projs,
-        eprojs,
-        xpOrbs: orbs,
-        nodes: bioNodes.map((n) => ({ x: n.x, y: n.y, radius: n.radius, owner: n.owner, capture: n.capture, kind: n.kind })),
-        orbit: wlvl.orbs > 0
-          ? {
-              count: ORBS.count[Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.orbs - 1))],
-              cx: player.x,
-              cy: player.y,
-              radius: ORBS.radius[Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.orbs - 1))] * orbRadiusMul(),
-              angle: orbAngle,
-            }
-          : null,
-        aura: wlvl.aura > 0 ? { x: player.x, y: player.y, r: AURA.radius[Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.aura - 1))] } : null,
-        arcs: frameArcs,
-        lasers: frameLasers,
-        cysts: liveCysts,
-        mandibleSwipes,
-        radarMarkers,
-        anomalies,
-        neuralLinkActive,
-        settings: {
-          parallax: gameSettings.microParallax,
-          subtleShake: gameSettings.cameraShake === 'subtle',
-          softFlashes: gameSettings.screenFlashes === 'soft',
-        },
-      },
-      t,
-      dt
-    );
+        t,
+        dt
+      );
+    }
     frameArcs.length = 0;
     frameLasers.length = 0;
 
-    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  }
-  let gpUpgradeFocus = 0;
-  window.setInterval(() => {
-    if (!upgradeModal.classList.contains('show')) return;
-    const gp = gamepad.poll();
-    if (!gp.connected) return;
-    const cards = Array.from(cardsEl.children) as HTMLButtonElement[];
-    if (cards.length === 0) return;
-    if (gp.navLeft) gpUpgradeFocus = (gpUpgradeFocus - 1 + cards.length) % cards.length;
-    if (gp.navRight) gpUpgradeFocus = (gpUpgradeFocus + 1) % cards.length;
-    cards.forEach((c, idx) => c.classList.toggle('gp-focus', idx === gpUpgradeFocus));
-    if (gp.confirmPressed && cards[gpUpgradeFocus]) {
-      cards[gpUpgradeFocus].click();
-    }
-  }, 80);
-
-  requestAnimationFrame(loop);
+    requestAnimationFrame(loop);
   }
 
   // Первый запуск: стартовые бонусы Биолаба, чип генома, ДНК и шкалы
@@ -3738,28 +3784,106 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   updateWeaponHud();
   showModal('intro');
 
-  // Отладочные хуки для тест-цикла браузером (не влияют на баланс игры)
-  const debugApi = {
-    addBio: (n: number) => { biomass = Math.max(0, biomass + n); updateScaleHud(); },
-    dna: (b: DnaBranch, n: number) => { dnaXp[b] += n; updateDnaHud(); refreshMainGenome(); updateBranchChip(); },
-    xpDump: () => { xp += 60; },
-    spawnTitan: () => { biomass = SCALES[scaleIdx].biomassGoal; },
-    killTitan: () => { const t = enemies.find((e) => e.titan); if (t) t.hp = 0; },
-    metamorph: () => startMetamorphosis(),
-    die: () => { player.hp = 0; },
-    info: () => ({
-      scale: SCALES[scaleIdx].id, biomass, goal: SCALES[scaleIdx].biomassGoal,
-      camZoom, dna: { ...dnaXp }, dnaLvl: {
-        vermis: dnaLvl('vermis'), chimera: dnaLvl('chimera'),
-        mycelium: dnaLvl('mycelium'), symbiont: dnaLvl('symbiont'),
-      },
-      hybrids: [...hybridsTaken], genes: [...genes], tailLen, level, kills,
-    }),
-  };
-  (window as unknown as Record<string, unknown>).__lumivore = debugApi;
+  // Отладочные хуки только для dev-сборки
+  if (import.meta.env.DEV) {
+    const debugApi = {
+      addBio: (n: number) => { biomass = Math.max(0, biomass + n); updateScaleHud(); },
+      dna: (b: DnaBranch, n: number) => { dnaXp[b] += n; updateDnaHud(); refreshMainGenome(); updateBranchChip(); },
+      xpDump: () => { xp += 60; },
+      spawnTitan: () => { biomass = SCALES[scaleIdx].biomassGoal; },
+      killTitan: () => { const t = enemies.find((e) => e.titan); if (t) t.hp = 0; },
+      metamorph: () => startMetamorphosis(),
+      die: () => { player.hp = 0; },
+      info: () => ({
+        scale: SCALES[scaleIdx].id, biomass, goal: SCALES[scaleIdx].biomassGoal,
+        camZoom, dna: { ...dnaXp }, dnaLvl: {
+          vermis: dnaLvl('vermis'), chimera: dnaLvl('chimera'),
+          mycelium: dnaLvl('mycelium'), symbiont: dnaLvl('symbiont'),
+        },
+        hybrids: [...hybridsTaken], genes: [...genes], tailLen, level, kills,
+      }),
+    };
+    (window as unknown as Record<string, unknown>).__lumivore = debugApi;
+  }
+
+  // Авто-пауза при сворачивании/переключении вкладки
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && started && !paused && !gameOver) {
+      paused = true;
+      sfx.setTailDrone(false);
+      sfx.stopBgm();
+      showModal('intro');
+    }
+  });
+
+  // Пасхалка 1: Код Контаминации (Konami Code: ↑↑↓↓←→←→BA) -> режим ретро-осциллографа
+  const konamiSeq = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+  let konamiIdx = 0;
+  window.addEventListener('keydown', (e) => {
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k === konamiSeq[konamiIdx]) {
+      konamiIdx++;
+      if (konamiIdx === konamiSeq.length) {
+        konamiIdx = 0;
+        const active = document.body.classList.toggle('retro-oscilloscope');
+        showToast(active ? 'ПРОТОКОЛ 1984: ОСЦИЛЛОГРАФ АКТИВЕН' : 'ПРОТОКОЛ 1984: ОТКЛЮЧЕН');
+      }
+    } else {
+      konamiIdx = k === konamiSeq[0] ? 1 : 0;
+    }
+  });
+
+  // Пасхалка 2: Ночная смена в реакторе (00:00-04:00)
+  const localHour = new Date().getHours();
+  if (localHour >= 0 && localHour < 4) {
+    showToast('НОЧНАЯ СМЕНА ЕВРОКОРП-3: УЛЬТРАФИОЛЕТОВЫЙ ПРОТОКОЛ');
+  }
+
+  // Пасхалка 3: 10 кликов по заголовку меню вызывают «чих» спор
+  const menuTitleEl = document.querySelector('#intro h1');
+  if (menuTitleEl) {
+    let titleClicks = 0;
+    menuTitleEl.addEventListener('click', () => {
+      titleClicks++;
+      if (titleClicks >= 10) {
+        titleClicks = 0;
+        sim.spawnPlayerSpores(SIM_WIDTH / 2, SIM_HEIGHT / 2, 4000);
+        overlay.spawnPulse(player.x, player.y, 0x66fcf1, 180);
+        showToast('ОБРАЗЕЦ ЧИХНУЛ СПОРАМИ!');
+      }
+    });
+  }
+
+  // Пасхалка 4: 7 кликов по заголовку Биолаба -> секретное досье 0xDEAD_SLIME
+  const biolabTitleEl = document.querySelector('#biolab h1');
+  if (biolabTitleEl) {
+    let blClicks = 0;
+    biolabTitleEl.addEventListener('click', () => {
+      blClicks++;
+      if (blClicks >= 7) {
+        blClicks = 0;
+        showToast('ДОСЬЕ 0xDEAD_SLIME: Проект-0 сбежал из реактора в 2024 г.');
+      }
+    });
+  }
+
+  // Бесконечный режим Overdrive после победы над 5-м Титаном
+  if (endlessBtn) {
+    endlessBtn.addEventListener('click', () => {
+      overdriveTier++;
+      gameOver = false;
+      paused = false;
+      biomass = 0;
+      player.hp = maxHp;
+      modal.classList.remove('show');
+      sfx.startBgm();
+      updateScaleHud();
+      showToast(`OVERDRIVE TIER ${overdriveTier}: БЕСКОНЕЧНЫЙ ФРАКТАЛ АКТИВЕН`);
+    });
+  }
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
   let gpUpgradeFocus = 0;
   window.setInterval(() => {

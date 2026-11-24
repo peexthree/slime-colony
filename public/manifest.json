@@ -1,14 +1,14 @@
 {
   "name": "LUMIVORE // THE LIVING FRACTAL",
   "short_name": "LUMIVORE",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#020304",
   "theme_color": "#020304",
   "description": "Bio-Evolutive WebGPU Roguelite: Physarum slime simulation meets Vampire Survivors.",
   "icons": [
     {
-      "src": "/vite.svg",
+      "src": "./assets/player/player-nucleus.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     }
