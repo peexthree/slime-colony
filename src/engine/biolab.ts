@@ -42,16 +42,16 @@ export interface BiolabUnlock {
 }
 
 export const BIOLAB_UNLOCKS: BiolabUnlock[] = [
-  { id: 'start_orbs', cost: 50, name: '«ГРОЗА»', effect: 'Старт с молния-орбитами вместо шипов' },
-  { id: 'start_aura', cost: 60, name: '«ЧУМА»', effect: 'Старт с токсин-аурой, но -20 макс. HP' },
-  { id: 'start_tail_xl', cost: 70, name: '«ЛЕВИАФАН»', effect: 'Старт с хвостом вдвое длиннее' },
-  { id: 'start_nova2', cost: 90, name: '«ВЗРЫВ»', effect: 'Нова ур.2 сразу, но +2 сек кулдаун' },
-  { id: 'perm_regen', cost: 40, name: 'Регенерация', effect: '+0.3 HP/сек всегда' },
-  { id: 'perm_magnet', cost: 35, name: 'Магнетизм', effect: '+25% радиус подбора душ навсегда' },
-  { id: 'unlock_vermis', cost: 60, name: 'Синтез «ВЕРМИС»', effect: 'Старт забега с 1 ДНК-уровнем Вермиса' },
-  { id: 'unlock_chimera', cost: 60, name: 'Синтез «ХИМЕРА»', effect: 'Старт забега с 1 ДНК-уровнем Химеры' },
-  { id: 'unlock_mycelium', cost: 60, name: 'Синтез «МИЦЕЛИЙ»', effect: 'Старт забега с 1 ДНК-уровнем Мицелия' },
-  { id: 'unlock_symbiont', cost: 60, name: 'Синтез «СИМБИОНТ»', effect: 'Старт забега с 1 ДНК-уровнем Симбионта' },
+  { id: 'start_orbs', cost: 50, name: '«ГРОЗА»', effect: 'Старт с электроорбитами вместо стартовых шипов' },
+  { id: 'start_aura', cost: 60, name: '«ЧУМА»', effect: 'Старт с токсичной аурой, но -20 макс. HP' },
+  { id: 'start_tail_xl', cost: 70, name: '«МАКРОХВОСТ»', effect: 'Старт с хвостом вдвое длиннее' },
+  { id: 'start_nova2', cost: 90, name: '«ВЗРЫВ»', effect: 'Старт с Нова-импульсом 2-го уровня' },
+  { id: 'perm_regen', cost: 40, name: 'Регенерация', effect: '+0.3 HP/с всегда' },
+  { id: 'perm_magnet', cost: 35, name: 'Магнетизм', effect: '+25% к радиусу сбора сфер ДНК навсегда' },
+  { id: 'unlock_vermis', cost: 60, name: 'Синтез «ВЕРМИС»', effect: 'Старт забега с 1-м уровнем ДНК Вермиса' },
+  { id: 'unlock_chimera', cost: 60, name: 'Синтез «ХИМЕРА»', effect: 'Старт забега с 1-м уровнем ДНК Химеры' },
+  { id: 'unlock_mycelium', cost: 60, name: 'Синтез «МИЦЕЛИЙ»', effect: 'Старт забега с 1-м уровнем ДНК Мицелия' },
+  { id: 'unlock_symbiont', cost: 60, name: 'Синтез «СИМБИОНТ»', effect: 'Старт забега с 1-м уровнем ДНК Симбионта' },
 ];
 
 const STORAGE_KEY = 'lumivore-biolab-v1';

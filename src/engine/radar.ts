@@ -309,12 +309,12 @@ export class PetriRadar {
     // 7. Обновление бейджа радара
     if (this.badge) {
       if (hasTitan) {
-        this.badge.textContent = '⚠️ ТИТАН В СЕКТОРЕ';
+        this.badge.textContent = 'ТИТАН В СЕКТОРЕ';
         this.badge.style.color = '#ffd700';
         this.badge.style.borderColor = 'rgba(255, 215, 0, 0.6)';
         this.badge.style.textShadow = '0 0 8px rgba(255, 215, 0, 0.8)';
       } else if (hasBoss) {
-        this.badge.textContent = '⚠️ БОСС ОБНАРУЖЕН';
+        this.badge.textContent = 'СТРАЖ ЦИКЛА';
         this.badge.style.color = '#ff3b4e';
         this.badge.style.borderColor = 'rgba(255, 59, 78, 0.6)';
         this.badge.style.textShadow = '0 0 8px rgba(255, 59, 78, 0.8)';

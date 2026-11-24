@@ -397,10 +397,6 @@
     }
     #help-btn:hover { color: var(--cyan); border-color: rgba(102, 252, 241, 0.45); }
 
-    #ai-chip { font-size: 10px; padding: 2px 8px; border-radius: 5px; border: 1px solid var(--line); color: var(--text-dim); }
-    #ai-chip.attack { color: var(--red); border-color: rgba(255, 59, 92, 0.5); }
-    #ai-chip.defend { color: var(--violet); border-color: rgba(192, 132, 252, 0.5); }
-
     /* --- Инструменты --- */
     .hud-bottom {
       position: absolute;
@@ -555,17 +551,6 @@
     #intro-start:hover { filter: brightness(1.12); }
     .intro-actions { margin-top: 16px; display: flex; gap: 10px; justify-content: center; }
     .intro-actions #intro-start { margin-top: 0; }
-    #help-btn {
-      pointer-events: auto;
-      width: 26px; height: 26px;
-      border-radius: 7px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--line);
-      color: var(--text-dim);
-      font-family: inherit; font-size: 12px; font-weight: 700;
-      cursor: pointer;
-    }
-    #help-btn:hover { color: var(--cyan); border-color: rgba(102, 252, 241, 0.45); }
 
     #status { color: var(--text-dim); font-size: 11px; }
 
@@ -1087,17 +1072,17 @@
         </div>
       </div>
       <div class="panel">
-        <span id="wave">ВОЛНА 1</span>
+        <span id="wave">ЦИКЛ 1</span>
         <span id="timer" class="label">00:00</span>
         <span id="kills" class="violet">x0</span>
         <span id="nodes-chip" title="Захваченные био-узлы">·</span>
-        <span id="branch-chip" title="Геном организма">ОСОБЬ</span>
-        <button id="help-btn" title="Как играть">?</button>
+        <span id="branch-chip" title="Геном особи">ОСОБЬ</span>
+        <button id="help-btn" title="Руководство особи">?</button>
       </div>
     </div>
 
     <div id="scale-hud">
-      <span id="scale-chip">ШКАЛА 1 - ПЕРВИЧНАЯ КАПЛЯ</span>
+      <span id="scale-chip">ШКАЛА 1 — ПЕРВИЧНАЯ КАПЛЯ</span>
       <div class="scale-bar-row">
         <svg class="scale-bracket left" viewBox="0 0 24 48"><use href="#ico-scale-bracket"/>  </svg>
         <div id="bio-bar"><div id="bio-fill"></div></div>
@@ -1114,7 +1099,7 @@
 
     <div id="resonance-hud" class="resonance-hud">
       <div class="resonance-top">
-        <span class="res-glow">⚡</span>
+        <svg class="res-glow inline-card-ico" viewBox="0 0 32 32"><use href="#ico-symbiont"/></svg>
         <span id="res-mult" class="res-mult">x1.0</span>
         <span class="res-label">РЕЗОНАНС</span>
         <span id="res-streak" class="res-streak">0</span>
@@ -1127,7 +1112,7 @@
     <div id="toast"></div>
 
     <div id="upgrade">
-      <h2 id="upgrade-title">УРОВЕНЬ 2 - ВЫБЕРИТЕ УЛУЧШЕНИЕ</h2>
+      <h2 id="upgrade-title">УРОВЕНЬ 2 — ВЫБЕРИТЕ МУТАЦИЮ</h2>
       <div id="cards"></div>
     </div>
 
@@ -1150,8 +1135,8 @@
         <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
         <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
         <h1 class="intro-title">БИОЛАБ</h1>
-        <p class="intro-sub">Постоянные улучшения между забегами. Очки копятся за выживание и убийства.</p>
-        <p id="biolab-points"><svg class="bio-icon bio-violet" viewBox="0 0 32 32"><use href="#ico-node-incubator"/>  </svg> 0 ОЧКОВ</p>
+        <p class="intro-sub">Постоянные мутации между забегами. Очки Биолаба начисляются за выживание и уничтожение роя.</p>
+        <p id="biolab-points"><svg class="bio-icon bio-violet" viewBox="0 0 32 32"><use href="#ico-node-incubator"/>  </svg> 0 ОЧКОВ БИОЛАБА</p>
         <div id="biolab-list"></div>
         <button id="biolab-close">ЗАКРЫТЬ</button>
       </div>
@@ -1165,10 +1150,10 @@
         <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
         
         <div class="menu-header">
-          <div class="menu-brand-badge">WEBGPU PHYSARUM ENGINE · 120 000 АГЕНТОВ</div>
+          <div class="menu-brand-badge">РЕАКТОР «ЕВРОКОРП-3» · СИМУЛЯЦИЯ PHYSARUM</div>
           <h1 class="intro-title menu-logo">LUMIVORE</h1>
-          <p class="intro-sub menu-tagline">THE LIVING FRACTAL — БИО-ЭВОЛЮТИВНЫЙ РОГАЛИК</p>
-          <div id="menu-record-badge" class="menu-record">РЕКОРД: 00:00 · ШКАЛА 1</div>
+          <p class="intro-sub menu-tagline">THE LIVING FRACTAL — БИОЭВОЛЮЦИОННЫЙ РОГАЛИК</p>
+          <div id="menu-record-badge" class="menu-record">РЕКОРД: 00:00 · ЗАБЕГОВ 0 · ОЧКИ: 0</div>
         </div>
 
         <div class="menu-btn-group">
@@ -1198,6 +1183,7 @@
         </div>
 
         <div class="menu-controls-strip">
+          <div class="ctrl-chip"><span class="key">МЫШЬ</span> <span class="action">НАВЕДЕНИЕ</span></div>
           <div class="ctrl-chip"><span class="key">WASD</span> <span class="action">ДВИЖЕНИЕ</span></div>
           <div class="ctrl-chip"><span class="key">SHIFT / ПКМ</span> <span class="action">РЫВОК</span></div>
           <div class="ctrl-chip"><span class="key">ПРОБЕЛ</span> <span class="action">ЗОВ</span></div>
@@ -1216,14 +1202,14 @@
         <div class="codex-header">
           <div>
             <h2 class="codex-title">БЕСТИАРИЙ И КОДЕКС ГИБРИДОВ</h2>
-            <p class="intro-sub">Каталог открытых организмов роя, штаммов ДНК и Великих Гибридов ЕвроКорп-3.</p>
+            <p class="intro-sub">Каталог организмов роя, штаммов ДНК и Великих Гибридов реактора «ЕвроКорп-3».</p>
           </div>
-          <div id="codex-stats" class="codex-stats-pill">ОТКРЫТО: 0 / 20</div>
+          <div id="codex-stats" class="codex-stats-pill">ОТКРЫТО: 0 / 22</div>
         </div>
 
         <div class="codex-filter-tabs">
-          <button class="codex-tab active" data-cat="all">ВСЕ (20)</button>
-          <button class="codex-tab" data-cat="enemy">ВРАГИ РОЯ (10)</button>
+          <button class="codex-tab active" data-cat="all">ВСЕ (22)</button>
+          <button class="codex-tab" data-cat="enemy">ВРАГИ РОЯ (12)</button>
           <button class="codex-tab" data-cat="hybrid">ВЕЛИКИЕ ГИБРИДЫ (6)</button>
           <button class="codex-tab" data-cat="branch">ШТАММЫ ДНК (4)</button>
         </div>
@@ -1261,19 +1247,19 @@
           <div class="help-grid">
             <div class="help-box">
               <h3>ХВОСТ-ОРУЖИЕ</h3>
-              <p>Хвост — это ваше тело, биомасса и урон. Движение сжигает сегменты, добытые души восстанавливают длину. Не стойте без дела: метаболический голод сжигает HP.</p>
+              <p>Хвост — ваше тело, биомасса и оружие. Движение сжигает сегменты, сферы ДНК восстанавливают длину. Если хвост истощится при полной неподвижности, голод начнёт сжигать HP.</p>
             </div>
             <div class="help-box">
               <h3>КОЛЬЦО СМЕРТИ</h3>
-              <p>Замкните траекторию хвоста вокруг толпы. Замкнутый контур мгновенно схлопывается и аннигилирует всё внутри. Чем длиннее хвост, тем шире кольцо.</p>
+              <p>Замкните траекторию хвоста вокруг толпы. Контур мгновенно схлопывается и поражает всё внутри, включая Гнёзда спор. Чем длиннее хвост, тем выше урон.</p>
             </div>
             <div class="help-box">
               <h3>ФАЗОВЫЙ РЫВОК</h3>
               <p><b>Shift</b> или <b>ПКМ</b> — мгновенное скольжение сквозь врагов. Дарует кратковременную неуязвимость и сеет за собой плотный споровый след.</p>
             </div>
             <div class="help-box">
-              <h3>ФЕРОМОН-ЗОВ</h3>
-              <p><b>Пробел</b> — токсин-маяк в точке курсора. Враги разбегаются в ужасе, вражеский штамм выжигается. Перезарядка 15 с.</p>
+              <h3>ФЕРОМОННЫЙ ЗОВ</h3>
+              <p><b>Пробел</b> — токсин-маяк в точке курсора. Рой разбегается в ужасе, вражеский штамм выжигается. Перезарядка 15 с. Доступно 6 видов оружия, включая жвала и цисты.</p>
             </div>
           </div>
         </div>
@@ -1282,19 +1268,19 @@
           <div class="help-grid">
             <div class="help-box">
               <h3>4 ГЕНОМА ДНК</h3>
-              <p><span class="bio-cyan">Вермис</span> (длина и мощь хлыста), <span class="bio-magenta">Химера</span> (взрывы и урон), <span class="bio-lime">Мицелий</span> (споры и зомбирование), <span class="bio-amber">Симбионт</span> (фаза и резонанс).</p>
+              <p><span class="bio-cyan">Вермис</span> (хлыст и длина хвоста), <span class="bio-magenta">Химера</span> (плазма и взрывы), <span class="bio-lime">Мицелий</span> (споры и нейрозахват), <span class="bio-amber">Симбионт</span> (магнетизм и скорость).</p>
             </div>
             <div class="help-box">
               <h3>ВЕЛИКИЕ ГИБРИДЫ</h3>
-              <p>3+3 ДНК-уровня в двух ветках открывают карту слияния: Левиафан, Уроборос, Фазовый Змей, Споровый Реактор, Ионный Колосс, Пси-Сеть. Каждый кардинально меняет геймплей.</p>
+              <p>3+3 уровня ДНК в двух ветках открывают карту слияния: Плазменный Левиафан, Уроборос-Паразит, Фазовый Змей, Споровый Реактор, Ионный Колосс, Пси-Сеть.</p>
             </div>
             <div class="help-box">
-              <h3>МЕТАМОРФОЗ</h3>
-              <p>Заполняйте шкалу биомассы вверху экрана. При 100% пробуждается Титан шкалы. Победите его для перехода на следующий масштаб бытия.</p>
+              <h3>МЕТАМОРФОЗ И ШКАЛЫ</h3>
+              <p>Заполните шкалу биомассы до 100% и победите Титана масштаба. Мир физически расширится, палитра сменится, а урон хлыста навсегда вырастет на +35%.</p>
             </div>
             <div class="help-box">
-              <h3>ПРОКЛЯТЫЕ МУТАЦИИ</h3>
-              <p>Особые карточки с алой каймой: даруют колоссальный всплеск боевой мощи ценой суровых штрафов к выживанию.</p>
+              <h3>ПАТОЛОГИИ И ОРГАНЕЛЛЫ</h3>
+              <p><b>Патологии</b> (с алой каймой) дают огромную мощь ценой суровых штрафов. <b>Прото-органеллы</b> наделяют особь автономными защитными системами.</p>
             </div>
           </div>
         </div>
@@ -1303,19 +1289,19 @@
           <div class="help-grid">
             <div class="help-box">
               <h3>ПОЛЕ PHYSARUM</h3>
-              <p>Циановый штамм — ваша колония (+25% скорости, регенерация хвоста). Фиолетовый штамм врага растворяет хвост в 2 раза быстрее.</p>
+              <p>Ваш штамм ускоряет особь (+25%) и регенерирует хвост. Вражеский штамм ускоряет таяние хвоста в 1.8 раза. На каждой Шкале бытия палитра полей меняется.</p>
             </div>
             <div class="help-box">
-              <h3>7 БИО-УЗЛОВ</h3>
-              <p>Захватывайте узлы плотностью своего штамма: Генератор (+HP), Усилитель (хвост не тает), Магнит (радиус душ), Мутаген (+карты), Инкубатор (+XP).</p>
+              <h3>БИО-УЗЛЫ И НЕЙРОСЕТЬ</h3>
+              <p>Узлы захватываются плотностью штамма (7 на старте, +4 за каждый масштаб): Генератор (+HP / ускоряет врагов), Усилитель (хвост не тает / -20% урона), Магнит (сбор / кража сфер), Мутаген (±1 карта), Инкубатор (+XP / выводок). 2+ ваших узла образуют регенерирующую нейросеть.</p>
             </div>
             <div class="help-box">
-              <h3>ТАКТИЧЕСКИЙ РАДАР</h3>
-              <p>В правом нижнем углу — чашка Петри: отслеживает рой, элит с золотым ореолом, спящих боссов и био-узлы в реальном времени.</p>
+              <h3>РАДАР И АНОМАЛИИ</h3>
+              <p>Чашка Петри в углу отслеживает рой, элитных особей, стражей цикла, Титанов, узлы и аномалии: Кислотный прилив, Гнездо спор и Вспышку митоза.</p>
             </div>
             <div class="help-box">
-              <h3>БИОЛАБ</h3>
-              <p>Очки, заработанные за выживание, сохраняются навсегда. Тратьте их в Биолабе на постоянные мутации Светляка между забегами.</p>
+              <h3>РЕЗОНАНС И БИОЛАБ</h3>
+              <p>Быстрый сбор сфер ДНК разгоняет <b>Симбиотический Резонанс</b> до x3.0 опыта и биомассы. Очки Биолаба и бонусы Кодекса сохраняются между забегами.</p>
             </div>
           </div>
         </div>
@@ -1343,7 +1329,7 @@
           <div class="settings-row">
             <div class="settings-info">
               <span class="settings-name">ВСПЫШКИ ЭКРАНА</span>
-              <span class="settings-hint">Отключает резкие световые импульсы и стробоскоп при уроне</span>
+              <span class="settings-hint">Смягчает или отключает световые импульсы при уроне</span>
             </div>
             <div class="settings-options" id="opt-flashes">
               <button class="settings-btn active" data-val="soft">МЯГКИЕ</button>
@@ -1354,7 +1340,7 @@
           <div class="settings-row">
             <div class="settings-info">
               <span class="settings-name">ТРЯСКА КАМЕРЫ</span>
-              <span class="settings-hint">Микро-толчки микроскопа при взрывах и получении урона</span>
+              <span class="settings-hint">Микро-толчки камеры при взрывах и получении урона</span>
             </div>
             <div class="settings-options" id="opt-shake">
               <button class="settings-btn active" data-val="subtle">СЛАБАЯ</button>
@@ -1406,7 +1392,7 @@
     <div id="petri-radar-hud" class="petri-radar" style="position: absolute; right: 18px; bottom: 18px; z-index: 5; pointer-events: none; width: 124px; height: 124px;">
       <canvas id="radar-canvas" width="248" height="248" style="position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%;"></canvas>
       <svg class="radar-frame" viewBox="0 0 160 160"><use href="#ico-petri-radar"/></svg>
-      <div id="radar-badge" style="position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: 0.1em; color: #00ff9d; background: rgba(2,6,10,0.88); border: 1px solid rgba(0,255,157,0.3); padding: 1px 6px; border-radius: 4px; white-space: nowrap; text-shadow: 0 0 6px rgba(0,255,157,0.6);">СКАНЕР: 0</div>
+      <div id="radar-badge" style="position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: 0.1em; color: #00ff9d; background: rgba(2,6,10,0.88); border: 1px solid rgba(0,255,157,0.3); padding: 1px 6px; border-radius: 4px; white-space: nowrap; text-shadow: 0 0 6px rgba(0,255,157,0.6);">УГРОЗЫ: 0</div>
     </div>
     <div id="weapon-hud">
       <div class="wh" id="wh-spikes"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-weapon-spikes"/>  </svg></span></div><span class="wh-lvl">ур.1</span></div>

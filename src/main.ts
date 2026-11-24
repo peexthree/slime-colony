@@ -10,9 +10,10 @@ import { BIOLAB_UNLOCKS, DnaBranch, RunGenome, isUnlocked, loadBiolab, pointsEar
 import { downloadPortrait, renderPortrait } from './engine/portrait';
 import { createJoystick } from './engine/joystick';
 import { GamepadController } from './engine/gamepad';
-import { CODEX_ENTRIES, loadCodex, unlockCodexEntry } from './engine/codex';
+import { CODEX_ENTRIES, getCodexBonuses, loadCodex, unlockCodexEntry } from './engine/codex';
+import { ENEMY_SPRITES, ENEMY_SPRITES_V2 } from './engine/svgAssets';
 import {
-  AURA, Beacon, BioNode, BOSS_EVERY, BOSS_FIRST_AT, CALL, CYSTS, DASH, DNA_COLORS, DNA_ICONS, DNA_LEVELS,
+  AURA, Beacon, BioNode, BOSS_EVERY, BOSS_FIRST_AT, CALL, CYSTS, DASH, DNA_COLORS, DNA_LEVELS,
   DNA_NAMES, ELITE, ENEMIES, ENEMY_CAP, EnemyType, GROWTH, HybridId, HYBRIDS, IFRAME, MANDIBLES,
   METAMORPH, NOVA, NodeKind, ORBS, PLAYER, PROJ_LIFE, PROJ_RADIUS, PROJ_SPEED, RING,
   SCALES, SIM_HEIGHT, SIM_WIDTH, SPAWN_TABLE, SPIKES, STAT_MAX_STACKS, STRAIN, TAIL,
@@ -330,8 +331,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   const NODE_NAMES: Record<NodeKind, string> = {
     gen: 'ГЕНЕРАТОР', amp: 'УСИЛИТЕЛЬ', magnet: 'МАГНИТ', mutagen: 'МУТАГЕН', incubator: 'ИНКУБАТОР',
   };
-  const NODE_ICONS: Record<NodeKind, string> = {
-    gen: '🔋', amp: '⚡', magnet: '🧲', mutagen: '🧬', incubator: '💜',
+  const NODE_POS_EFFECTS: Record<NodeKind, string> = {
+    gen: '+2 HP/с', amp: 'хвост не тает', magnet: 'сбор x2.5', mutagen: '+1 карта', incubator: '+50% XP',
+  };
+  const NODE_NEG_EFFECTS: Record<NodeKind, string> = {
+    gen: 'враги быстрее', amp: '-20% урона', magnet: 'кража сфер', mutagen: '-1 карта', incubator: 'выводок роя',
   };
   const bioNodes: BioNode[] = [];
   function spawnNodesForScale(sIdx: number): void {
@@ -395,11 +399,15 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   let tailState: 'ok' | 'low' | 'crit' = 'ok';
   let frameN = 0;
 
-  // Хвост светляка - ресурс: растёт от душ, тает от движения
+  let codexBonuses = getCodexBonuses();
+  const refreshCodexBonuses = () => { codexBonuses = getCodexBonuses(); };
+  const enemyDmgBonus = (e: Enemy) => codexBonuses.enemyDmgMul[e.titan ? 'titan' : e.type] ?? 1;
+
+  // Хвост особи — ресурс: растёт от сфер ДНК, тает от движения
   let tailLen: number = TAIL.startLen;
   const pathHistory: { x: number; y: number }[] = [];
   let tailTick = 0;
-  const maxTail = () => TAIL.baseMax + level * TAIL.maxPerLvl + tailCapBonus;
+  const maxTail = () => Math.round((TAIL.baseMax + level * TAIL.maxPerLvl + tailCapBonus) * codexBonuses.tailCapMul);
   const tailDps = () => (TAIL.dpsBase + tailLen * TAIL.dpsPerSeg) * tailDpsMul;
   // Компактный размер: организм не раздувается на весь экран, сохраняет ловкость и изящество
   const playerRadius = () => {
@@ -614,10 +622,10 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   /** Смена владельца узла: тост, вспышка, мутаген-эффект (Этап 2.1) */
   function onNodeCaptured(n: BioNode): void {
     if (n.owner === 1) {
-      showToast(`УЗЕЛ ЗАХВАЧЕН: ${NODE_NAMES[n.kind]}`);
+      showToast(`УЗЕЛ ЗАХВАЧЕН: ${NODE_NAMES[n.kind]} (${NODE_POS_EFFECTS[n.kind]})`);
       if (n.kind === 'mutagen') nextPickDelta = 1;
     } else if (n.owner === -1) {
-      showToast(`УЗЕЛ ПОТЕРЯН: ${NODE_NAMES[n.kind]}`);
+      showToast(`УЗЕЛ ПОТЕРЯН: ${NODE_NAMES[n.kind]} (${NODE_NEG_EFFECTS[n.kind]})`);
       if (n.kind === 'mutagen') nextPickDelta = -1;
     } else {
       showToast(`УЗЕЛ НЕЙТРАЛЕН: ${NODE_NAMES[n.kind]}`);
@@ -656,7 +664,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   /** Взятие гибрида: флавор-бонус + механика включается через hybridsTaken */
   function applyHybrid(id: HybridId): void {
     hybridsTaken.add(id);
-    unlockCodexEntry(id);
+    if (unlockCodexEntry(id)) refreshCodexBonuses();
     sfx.hybrid();
     const def = HYBRIDS.find((h) => h.id === id)!;
     showToast(`ГИБРИДИЗАЦИЯ: ${def.name}`);
@@ -671,104 +679,113 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   }
 
   const UPGRADES: UpgradeDef[] = [
-    { id: 'spikes+', title: 'Шипы', desc: 'Больше шипов и урона в залпе', avail: () => wlvl.spikes > 0 && wlvl.spikes < WEAPON_MAX_LVL, apply: () => wlvl.spikes++ },
-    { id: 'orbits0', title: 'Молния-орбиты', desc: 'Сферы вращаются вокруг вас и жгут всё рядом', avail: () => wlvl.orbs === 0, apply: () => (wlvl.orbs = 1) },
-    { id: 'orbits+', title: 'Молния-орбиты', desc: 'Ещё сферы и урон', avail: () => wlvl.orbs > 0 && wlvl.orbs < WEAPON_MAX_LVL, apply: () => wlvl.orbs++ },
+    { id: 'spikes0', title: 'Шипы', desc: 'Автоматические иглы: поражают ближайших врагов', avail: () => wlvl.spikes === 0, apply: () => (wlvl.spikes = 1) },
+    { id: 'spikes+', title: 'Шипы', desc: 'Больше урона, шипов и выше скорострельность', avail: () => wlvl.spikes > 0 && wlvl.spikes < WEAPON_MAX_LVL, apply: () => wlvl.spikes++ },
+    { id: 'orbits0', title: 'Электроорбиты', desc: 'Сферы вращаются вокруг вас и жгут врагов рядом', avail: () => wlvl.orbs === 0, apply: () => (wlvl.orbs = 1) },
+    { id: 'orbits+', title: 'Электроорбиты', desc: '+1 сфера и повышение урона', avail: () => wlvl.orbs > 0 && wlvl.orbs < WEAPON_MAX_LVL, apply: () => wlvl.orbs++ },
     { id: 'nova0', title: 'Нова-импульс', desc: 'Взрывное кольцо: урон и отброс толпы', avail: () => wlvl.nova === 0, apply: () => (wlvl.nova = 1) },
-    { id: 'nova+', title: 'Нова-импульс', desc: 'Больше радиус и урон, короче перезарядка', avail: () => wlvl.nova > 0 && wlvl.nova < WEAPON_MAX_LVL, apply: () => wlvl.nova++ },
-    { id: 'aura0', title: 'Токсин-аура', desc: 'Ваши вены отравляют всё вокруг', avail: () => wlvl.aura === 0, apply: () => (wlvl.aura = 1) },
-    { id: 'aura+', title: 'Токсин-аура', desc: 'Больше радиус и урон в секунду', avail: () => wlvl.aura > 0 && wlvl.aura < WEAPON_MAX_LVL, apply: () => wlvl.aura++ },
+    { id: 'nova+', title: 'Нова-импульс', desc: 'Больше радиус и урон, быстрее перезарядка', avail: () => wlvl.nova > 0 && wlvl.nova < WEAPON_MAX_LVL, apply: () => wlvl.nova++ },
+    { id: 'aura0', title: 'Токсичная аура', desc: 'Едкое поле отравляет всех врагов вокруг', avail: () => wlvl.aura === 0, apply: () => (wlvl.aura = 1) },
+    { id: 'aura+', title: 'Токсичная аура', desc: 'Больше радиус и урон в секунду', avail: () => wlvl.aura > 0 && wlvl.aura < WEAPON_MAX_LVL, apply: () => wlvl.aura++ },
     { id: 'mandibles0', title: 'Хищные жвала', desc: 'Фронтальный конус урона: разрывает врагов перед вами', avail: () => wlvl.mandibles === 0, apply: () => (wlvl.mandibles = 1) },
     { id: 'mandibles+', title: 'Хищные жвала', desc: 'Больше радиус, угол рассечения и урон', avail: () => wlvl.mandibles > 0 && wlvl.mandibles < WEAPON_MAX_LVL, apply: () => wlvl.mandibles++ },
     { id: 'cysts0', title: 'Споровые цисты', desc: 'Органические мины: сбрасываются позади и взрываются при контакте', avail: () => wlvl.cysts === 0, apply: () => (wlvl.cysts = 1) },
     { id: 'cysts+', title: 'Споровые цисты', desc: 'Больше цист в кладке, выше радиус и урон детонации', avail: () => wlvl.cysts > 0 && wlvl.cysts < WEAPON_MAX_LVL, apply: () => wlvl.cysts++ },
-    // --- Проклятые мутации: сверхсила с расплатой ---
+    // --- Критические мутации (патологии): сверхсила с расплатой ---
     {
       id: 'curse_predator',
       title: 'СВЕРХХИЩНИК',
-      desc: 'Урон x2.2 и вампиризм +4 HP при убийстве элит, но хвост тает в 3 раза быстрее',
+      desc: 'Урон x2.2 и лечение +4 HP за элит и боссов, но хвост тает в 3 раза быстрее',
       curse: true,
       avail: () => !cursePredator,
-      apply: () => { cursePredator = true; dmgMul *= 2.2; showToast('ПРОКЛЯТИЕ: СВЕРХХИЩНИК'); },
+      apply: () => { cursePredator = true; dmgMul *= 2.2; showToast('ПАТОЛОГИЯ: СВЕРХХИЩНИК'); },
     },
     {
       id: 'curse_chitin',
       title: 'ТИТАНОВЫЙ ХИТИН',
-      desc: 'Макс. HP +120 и неуязвимость +1.5 сек, но скорость бега снижена на 30%',
+      desc: 'Макс. HP +120 и неуязвимость +1.5 с, но скорость движения снижена на 30%',
       curse: true,
       avail: () => !curseChitin,
-      apply: () => { curseChitin = true; maxHp += 120; player.hp += 120; moveSpeed *= 0.70; showToast('ПРОКЛЯТИЕ: ТИТАНОВЫЙ ХИТИН'); },
+      apply: () => { curseChitin = true; maxHp += 120; player.hp += 120; moveSpeed *= 0.70; showToast('ПАТОЛОГИЯ: ТИТАНОВЫЙ ХИТИН'); },
     },
     {
       id: 'curse_hunger',
       title: 'ВЕЧНЫЙ ГОЛОД',
-      desc: 'Радиус сбора x2 и скорость атаки +40%, но при голоде организм теряет 3 HP/сек',
+      desc: 'Радиус сбора x2 и скорость атаки +40%, но при голоде (>3 с без сфер) теряет 3 HP/с (не смертельно)',
       curse: true,
       avail: () => !curseHunger,
-      apply: () => { curseHunger = true; magnetR *= 2; atkSpdMul += 0.40; showToast('ПРОКЛЯТИЕ: ВЕЧНЫЙ ГОЛОД'); },
+      apply: () => { curseHunger = true; magnetR *= 2; atkSpdMul += 0.40; showToast('ПАТОЛОГИЯ: ВЕЧНЫЙ ГОЛОД'); },
     },
-    // --- Реликвии органелл (Wave 3.5) ---
+    // --- Прото-органеллы ---
     {
       id: 'relic_galvanic',
       title: 'БИО-ГАЛЬВАНИКА',
-      desc: 'Хвост генерирует статику: цепная микро-молния поражает 3 врагов каждые 4 сек',
+      desc: 'Организм накапливает статику: цепная микро-молния поражает 3 врагов каждые 4 с',
       avail: () => !relicGalvanic,
-      apply: () => { relicGalvanic = true; showToast('РЕЛИКВИЯ: БИО-ГАЛЬВАНИКА'); },
+      apply: () => { relicGalvanic = true; showToast('ОРГАНЕЛЛА: БИО-ГАЛЬВАНИКА'); },
     },
     {
       id: 'relic_abyssal',
       title: 'АБИССАЛЬНЫЙ ЛЮМИНОФОР',
-      desc: 'Радиус сбора душ +50%, а мерцающий био-фонарь каждые 6 сек ослепляет врагов в радиусе 180px',
+      desc: 'Радиус сбора сфер +50%, а био-фонарь каждые 6 с ослепляет врагов вокруг вас',
       avail: () => !relicAbyssal,
-      apply: () => { relicAbyssal = true; magnetR *= 1.5; showToast('РЕЛИКВИЯ: АБИССАЛЬНЫЙ ЛЮМИНОФОР'); },
+      apply: () => { relicAbyssal = true; magnetR *= 1.5; showToast('ОРГАНЕЛЛА: АБИССАЛЬНЫЙ ЛЮМИНОФОР'); },
     },
     {
       id: 'relic_carapace',
       title: 'ЖИВОЙ КАРАПАКС',
-      desc: 'Каждые 18 сек формирует живой барьер, полностью поглощающий следующий удар врага',
+      desc: 'Каждые 18 с формирует живой барьер, полностью поглощающий следующий удар',
       avail: () => !relicCarapace,
-      apply: () => { relicCarapace = true; carapaceShieldReady = true; showToast('РЕЛИКВИЯ: ЖИВОЙ КАРАПАКС'); },
+      apply: () => { relicCarapace = true; carapaceShieldReady = true; showToast('ОРГАНЕЛЛА: ЖИВОЙ КАРАПАКС'); },
     },
     { id: 'dmg', title: 'Острота', desc: '+15% ко всему урону', avail: () => stack('dmg'), apply: () => { dmgMul += 0.15; bump('dmg'); } },
-    { id: 'aspd', title: 'Рефлексы', desc: '+12% скорости атаки', avail: () => stack('aspd'), apply: () => { atkSpdMul += 0.12; bump('aspd'); } },
-    { id: 'move', title: 'Скользство', desc: '+8% скорости бега', avail: () => stack('move'), apply: () => { moveSpeed *= 1.08; bump('move'); } },
-    { id: 'hp', title: 'Биомасса', desc: '+20 макс. HP и лечение', avail: () => stack('hp'), apply: () => { maxHp += 20; player.hp += 20; bump('hp'); } },
-    { id: 'magnet', title: 'Магнетизм', desc: '+30% радиус подбора опыта', avail: () => stack('magnet'), apply: () => { magnetR *= 1.3; bump('magnet'); } },
-    { id: 'regen', title: 'Регенерация', desc: '+1 HP в секунду', avail: () => stack('regen'), apply: () => { regen += 1; bump('regen'); } },
-    // --- Геномы ДНК-матрицы: специализация через вложенные души ---
+    { id: 'aspd', title: 'Рефлексы', desc: '+12% к скорости атаки', avail: () => stack('aspd'), apply: () => { atkSpdMul += 0.12; bump('aspd'); } },
+    { id: 'move', title: 'Обтекаемость', desc: '+8% к скорости движения', avail: () => stack('move'), apply: () => { moveSpeed *= 1.08; bump('move'); } },
+    { id: 'hp', title: 'Биомасса', desc: '+20 к макс. HP и лечение', avail: () => stack('hp'), apply: () => { maxHp += 20; player.hp += 20; bump('hp'); } },
+    { id: 'magnet', title: 'Магнетизм', desc: '+30% к радиусу сбора сфер ДНК', avail: () => stack('magnet'), apply: () => { magnetR *= 1.3; bump('magnet'); } },
+    { id: 'regen', title: 'Регенерация', desc: '+1 HP/с восстановления', avail: () => stack('regen'), apply: () => { regen += 1; bump('regen'); } },
+    // --- Геномы ДНК-матрицы: специализация через вложенные сферы ДНК ---
     { id: 'ver_cap', branch: 'vermis', title: 'Хвост длиннее', desc: '+6 к ёмкости хвоста: тело-оружие растёт', avail: () => tailCapBonus < 30, apply: () => { tailCapBonus += 6; } },
     { id: 'ver_dps', branch: 'vermis', title: 'Мощь хлыста', desc: 'Урон хвоста x1.3', avail: () => tailDpsMul < 3.2, apply: () => { tailDpsMul *= 1.3; } },
     { id: 'chi_dmg', branch: 'chimera', title: 'Мутация урона', desc: '+25% ко всему урону', avail: () => stack('chi_dmg'), apply: () => { dmgMul += 0.25; bump('chi_dmg'); } },
-    { id: 'chi_lvl', branch: 'chimera', title: 'Радикал', desc: 'Случайное оружие +1 уровень', avail: () => (wlvl.orbs < WEAPON_MAX_LVL || wlvl.nova < WEAPON_MAX_LVL || wlvl.aura < WEAPON_MAX_LVL), apply: () => { const ids: WeaponId[] = (['orbs', 'nova', 'aura'] as WeaponId[]).filter((w) => wlvl[w] < WEAPON_MAX_LVL); if (ids.length > 0) { const pick = ids[Math.floor(Math.random() * ids.length)]; wlvl[pick]++; } } },
-    { id: 'my_regen', branch: 'mycelium', title: 'Симбиоз', desc: '+1.5 HP в секунду', avail: () => stack('my_regen'), apply: () => { regen += 1.5; bump('my_regen'); } },
-    { id: 'my_aura', branch: 'mycelium', title: 'Спороносность', desc: 'Токсин-аура +1 уровень (если открыта)', avail: () => wlvl.aura > 0 && wlvl.aura < WEAPON_MAX_LVL, apply: () => { wlvl.aura++; } },
-    { id: 'si_magnet', branch: 'symbiont', title: 'Феромонный магнит', desc: '+35% радиус подбора душ', avail: () => stack('si_magnet'), apply: () => { magnetR *= 1.35; bump('si_magnet'); } },
-    { id: 'si_aspd', branch: 'symbiont', title: 'Фазовые рефлексы', desc: '+15% скорости атаки', avail: () => stack('si_aspd'), apply: () => { atkSpdMul += 0.15; bump('si_aspd'); } },
-    { id: 'si_move', branch: 'symbiont', title: 'Фазовый скольз', desc: '+10% скорости бега', avail: () => stack('si_move'), apply: () => { moveSpeed *= 1.10; bump('si_move'); } },
-    // --- Эксклюзивные гены геномов: 3 ДНК-уровня ветки открывают ---
-    { id: 'absorb', branch: 'vermis', title: 'Поглощение', desc: 'Убитый хвостом отдаёт сегменты: хвост растёт', avail: () => geneAvail('vermis', 'absorb'), apply: () => genes.add('absorb') },
-    { id: 'whip2', branch: 'vermis', title: 'Змея-хлыст', desc: 'Хвост бьёт второй точкой - кончиком', avail: () => geneAvail('vermis', 'whip2'), apply: () => genes.add('whip2') },
-    { id: 'scales', branch: 'vermis', title: 'Броня чешуёй', desc: 'Каждые 10 сегментов гасят 1 входящего урона', avail: () => geneAvail('vermis', 'scales'), apply: () => genes.add('scales') },
-    { id: 'unstable', branch: 'chimera', title: 'Нестабильный геном', desc: 'Урон x1.8, но каждые 20 сек случайный дебаф', avail: () => geneAvail('chimera', 'unstable'), apply: () => genes.add('unstable') },
-    { id: 'supercharge', branch: 'chimera', title: 'Суперзаряд', desc: 'Нова: дольше кулдаун, но x4 урон и x2 радиус', avail: () => geneAvail('chimera', 'supercharge'), apply: () => genes.add('supercharge') },
+    {
+      id: 'chi_lvl',
+      branch: 'chimera',
+      title: 'Радикал',
+      desc: 'Случайное оружие +1 уровень',
+      avail: () => (['spikes', 'orbs', 'nova', 'aura', 'mandibles', 'cysts'] as WeaponId[]).some((w) => wlvl[w] < WEAPON_MAX_LVL),
+      apply: () => {
+        const ids = (['spikes', 'orbs', 'nova', 'aura', 'mandibles', 'cysts'] as WeaponId[]).filter((w) => wlvl[w] < WEAPON_MAX_LVL);
+        if (ids.length > 0) wlvl[ids[Math.floor(Math.random() * ids.length)]]++;
+      },
+    },
+    { id: 'my_regen', branch: 'mycelium', title: 'Симбиоз', desc: '+1.5 HP/с восстановления', avail: () => stack('my_regen'), apply: () => { regen += 1.5; bump('my_regen'); } },
+    { id: 'my_aura', branch: 'mycelium', title: 'Спороносность', desc: 'Токсичная аура +1 уровень', avail: () => wlvl.aura > 0 && wlvl.aura < WEAPON_MAX_LVL, apply: () => { wlvl.aura++; } },
+    { id: 'si_magnet', branch: 'symbiont', title: 'Феромонный магнит', desc: '+35% к радиусу сбора сфер ДНК', avail: () => stack('si_magnet'), apply: () => { magnetR *= 1.35; bump('si_magnet'); } },
+    { id: 'si_aspd', branch: 'symbiont', title: 'Фазовые рефлексы', desc: '+15% к скорости атаки', avail: () => stack('si_aspd'), apply: () => { atkSpdMul += 0.15; bump('si_aspd'); } },
+    { id: 'si_move', branch: 'symbiont', title: 'Фазовое скольжение', desc: '+10% к скорости движения', avail: () => stack('si_move'), apply: () => { moveSpeed *= 1.10; bump('si_move'); } },
+    // --- Эксклюзивные гены геномов: 3-й уровень ДНК ветки ---
+    { id: 'absorb', branch: 'vermis', title: 'Поглощение', desc: 'Убитые хвостом враги удлиняют его', avail: () => geneAvail('vermis', 'absorb'), apply: () => genes.add('absorb') },
+    { id: 'whip2', branch: 'vermis', title: 'Змея-хлыст', desc: 'Кончик хвоста наносит дополнительный точечный удар', avail: () => geneAvail('vermis', 'whip2'), apply: () => genes.add('whip2') },
+    { id: 'scales', branch: 'vermis', title: 'Броня чешуёй', desc: 'Каждые 20 сегментов гасят 1 контактного урона (до 50%)', avail: () => geneAvail('vermis', 'scales'), apply: () => genes.add('scales') },
+    { id: 'unstable', branch: 'chimera', title: 'Нестабильный геном', desc: 'Урон x1.8, но каждые 20 с случайное ослабление на 5 с', avail: () => geneAvail('chimera', 'unstable'), apply: () => genes.add('unstable') },
+    { id: 'supercharge', branch: 'chimera', title: 'Суперзаряд', desc: 'Нова: перезарядка дольше, но урон x4 и радиус x2', avail: () => geneAvail('chimera', 'supercharge'), apply: () => genes.add('supercharge') },
     { id: 'chain', branch: 'chimera', title: 'Цепная реакция', desc: 'Снаряд отскакивает к ближайшему врагу (до 4 раз)', avail: () => geneAvail('chimera', 'chain'), apply: () => genes.add('chain') },
-    { id: 'infection', branch: 'mycelium', title: 'Инфицирование', desc: 'Убитые враги иногда переходят на вашу сторону', avail: () => geneAvail('mycelium', 'infection'), apply: () => genes.add('infection') },
-    { id: 'puddles', branch: 'mycelium', title: 'Споры', desc: 'Хвост оставляет ядовитые лужи', avail: () => geneAvail('mycelium', 'puddles'), apply: () => genes.add('puddles') },
-    { id: 'charm', branch: 'mycelium', title: 'Феромон-раб', desc: 'Убитые иногда становятся слугами на 30 сек', avail: () => geneAvail('mycelium', 'charm'), apply: () => genes.add('charm') },
+    { id: 'infection', branch: 'mycelium', title: 'Инфицирование', desc: 'Обычные враги при гибели с шансом 35% переходят на вашу сторону на 8 с', avail: () => geneAvail('mycelium', 'infection'), apply: () => genes.add('infection') },
+    { id: 'puddles', branch: 'mycelium', title: 'Споры', desc: 'Хвост оставляет ядовитые следы-лужи', avail: () => geneAvail('mycelium', 'puddles'), apply: () => genes.add('puddles') },
+    { id: 'charm', branch: 'mycelium', title: 'Феромон-раб', desc: 'Обычные враги при гибели с шансом 25% служат вам 30 с', avail: () => geneAvail('mycelium', 'charm'), apply: () => genes.add('charm') },
     { id: 'phantom', branch: 'symbiont', title: 'Фазовый сдвиг', desc: 'Неуязвимость после урона длится вдвое дольше', avail: () => geneAvail('symbiont', 'phantom'), apply: () => genes.add('phantom') },
-    { id: 'overload', branch: 'symbiont', title: 'Перегрузка', desc: 'Кулдаун новы -25%', avail: () => geneAvail('symbiont', 'overload'), apply: () => genes.add('overload') },
-    { id: 'resonance', branch: 'symbiont', title: 'Резонанс', desc: 'Орбиты: +25% радиус и +20% урон', avail: () => geneAvail('symbiont', 'resonance'), apply: () => genes.add('resonance') },
+    { id: 'overload', branch: 'symbiont', title: 'Перегрузка', desc: 'Перезарядка Новы -25%', avail: () => geneAvail('symbiont', 'overload'), apply: () => genes.add('overload') },
+    { id: 'resonance', branch: 'symbiont', title: 'Гармоника орбит', desc: 'Электроорбиты: +25% к радиусу и +20% к урону', avail: () => geneAvail('symbiont', 'resonance'), apply: () => genes.add('resonance') },
     // --- 6 Великих Гибридов: золотые карты слияния двух геномов на 3+3 ---
-    { id: 'hy_plasma_leviathan', hybrid: 'plasma_leviathan', title: 'ПЛАЗМЕННЫЙ ЛЕВИАФАН', desc: 'Огненный Удав: Кольцо Смерти аннигилирует всё внутри, урон x4', avail: () => hybridAvail('plasma_leviathan'), apply: () => applyHybrid('plasma_leviathan') },
-    { id: 'hy_ouroboros', hybrid: 'ouroboros', title: 'УРОБОРОС-ПАРАЗИТ', desc: 'Живой Инкубатор: жертвы хвоста прирастают живыми сегментами', avail: () => hybridAvail('ouroboros'), apply: () => applyHybrid('ouroboros') },
-    { id: 'hy_phase_serpent', hybrid: 'phase_serpent', title: 'ФАЗОВЫЙ ЗМЕЙ', desc: 'Грави-Хлыст: хвост перехватывает вражеские снаряды и швыряет их обратно', avail: () => hybridAvail('phase_serpent'), apply: () => applyHybrid('phase_serpent') },
-    { id: 'hy_spore_reactor', hybrid: 'spore_reactor', title: 'СПОРОВЫЙ РЕАКТОР', desc: 'Чумная Сверхновая: нова заражает спорами - трупы детонируют цепью', avail: () => hybridAvail('spore_reactor'), apply: () => applyHybrid('spore_reactor') },
-    { id: 'hy_ion_colossus', hybrid: 'ion_colossus', title: 'ИОННЫЙ КОЛОСС', desc: 'Тесла-Сеть: орбиты бьют дугами, разрезая толпу световой паутиной', avail: () => hybridAvail('ion_colossus'), apply: () => applyHybrid('ion_colossus') },
-    { id: 'hy_psi_web', hybrid: 'psi_web', title: 'ПСИ-СЕТЬ', desc: 'Сверхразум: узлы захватываются быстрее, захваченные бьют лазерами', avail: () => hybridAvail('psi_web'), apply: () => applyHybrid('psi_web') },
+    { id: 'hy_plasma_leviathan', hybrid: 'plasma_leviathan', title: 'ПЛАЗМЕННЫЙ ЛЕВИАФАН', desc: HYBRIDS.find((h) => h.id === 'plasma_leviathan')!.desc, avail: () => hybridAvail('plasma_leviathan'), apply: () => applyHybrid('plasma_leviathan') },
+    { id: 'hy_ouroboros', hybrid: 'ouroboros', title: 'УРОБОРОС-ПАРАЗИТ', desc: HYBRIDS.find((h) => h.id === 'ouroboros')!.desc, avail: () => hybridAvail('ouroboros'), apply: () => applyHybrid('ouroboros') },
+    { id: 'hy_phase_serpent', hybrid: 'phase_serpent', title: 'ФАЗОВЫЙ ЗМЕЙ', desc: HYBRIDS.find((h) => h.id === 'phase_serpent')!.desc, avail: () => hybridAvail('phase_serpent'), apply: () => applyHybrid('phase_serpent') },
+    { id: 'hy_spore_reactor', hybrid: 'spore_reactor', title: 'СПОРОВЫЙ РЕАКТОР', desc: HYBRIDS.find((h) => h.id === 'spore_reactor')!.desc, avail: () => hybridAvail('spore_reactor'), apply: () => applyHybrid('spore_reactor') },
+    { id: 'hy_ion_colossus', hybrid: 'ion_colossus', title: 'ИОННЫЙ КОЛОСС', desc: HYBRIDS.find((h) => h.id === 'ion_colossus')!.desc, avail: () => hybridAvail('ion_colossus'), apply: () => applyHybrid('ion_colossus') },
+    { id: 'hy_psi_web', hybrid: 'psi_web', title: 'ПСИ-СЕТЬ', desc: HYBRIDS.find((h) => h.id === 'psi_web')!.desc, avail: () => hybridAvail('psi_web'), apply: () => applyHybrid('psi_web') },
   ];
 
-  /** Подпись уровня оружия на карточке апгрейда: игрок видит, что именно качает */
-  const BRANCH_ICONS: Record<DnaBranch, string> = DNA_ICONS;
   type GenomeId = DnaBranchOrNeutral | HybridId;
   let mainGenome: GenomeId = 'neutral';
 
@@ -785,7 +802,10 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     mainGenome = best;
   }
 
+  const STACKABLE_STATS = new Set(['dmg', 'aspd', 'move', 'hp', 'magnet', 'regen', 'chi_dmg', 'my_regen', 'si_magnet', 'si_aspd', 'si_move']);
+
   function weaponLvlTag(id: string): string {
+    if (id === 'spikes0') return ' · открытие';
     if (id === 'spikes+') return ` · ур.${wlvl.spikes} → ${wlvl.spikes + 1}`;
     if (id === 'orbits0') return ' · открытие';
     if (id === 'orbits+') return ` · ур.${wlvl.orbs} → ${wlvl.orbs + 1}`;
@@ -797,7 +817,15 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     if (id === 'mandibles+') return ` · ур.${wlvl.mandibles} → ${wlvl.mandibles + 1}`;
     if (id === 'cysts0') return ' · открытие';
     if (id === 'cysts+') return ` · ур.${wlvl.cysts} → ${wlvl.cysts + 1}`;
+    if (STACKABLE_STATS.has(id)) return ` · ${(statStacks[id] ?? 0)}/${STAT_MAX_STACKS}`;
     return '';
+  }
+
+  function resolveCardDesc(u: UpgradeDef): string {
+    if (u.id === 'spikes+' && wlvl.spikes === 2) {
+      return 'Больше урона и выше скорострельность';
+    }
+    return u.desc;
   }
 
   function openUpgrades(): void {
@@ -817,7 +845,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     while (picks.length < want && bag.length > 0) {
       picks.push(bag.splice(Math.floor(Math.random() * bag.length), 1)[0]);
     }
-    upgradeTitle.textContent = `УРОВЕНЬ ${level} - ВЫБЕРИТЕ УЛУЧШЕНИЕ`;
+    upgradeTitle.textContent = `УРОВЕНЬ ${level} — ВЫБЕРИТЕ МУТАЦИЮ`;
     cardsEl.innerHTML = '';
     for (const u of picks) {
       const card = document.createElement('button');
@@ -827,7 +855,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (u.branch) card.classList.add(`branch-${u.branch}`);
       if (u.curse) {
         card.classList.add('curse');
-        crestHtml = '<div class="card-crest curse-crest">⚠️ ПРОКЛЯТИЕ ⚠️</div>';
+        crestHtml = '<div class="card-crest curse-crest"><svg class="inline-card-ico" viewBox="0 0 32 32"><use href="#ico-skull-hazard"/></svg> ПАТОЛОГИЯ</div>';
       }
       if (u.hybrid) card.classList.add('hybrid');
       let branchTag = '';
@@ -853,7 +881,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
         <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
         <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <h3>${branchTag}${cleanTitle}${weaponLvlTag(u.id)}</h3>${crestHtml}<p>${u.desc}</p>
+        <h3>${branchTag}${cleanTitle}${weaponLvlTag(u.id)}</h3>${crestHtml}<p>${resolveCardDesc(u)}</p>
       `;
       cardsEl.appendChild(card);
     }
@@ -920,7 +948,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   /** Шкала бытия: имя масштаба и заполнение биомассы до Титана */
   function updateScaleHud(): void {
     const sc = SCALES[scaleIdx];
-    scaleChipEl.textContent = `ШКАЛА ${sc.id} - ${sc.name}`;
+    scaleChipEl.textContent = `ШКАЛА ${sc.id} — ${sc.name}`;
+    scaleChipEl.title = sc.sub;
     const goal = sc.biomassGoal;
     const frac = Math.min(1, biomass / goal);
     bioFillEl.style.width = `${(frac * 100).toFixed(1)}%`;
@@ -998,10 +1027,31 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   let codexPage = 0;
   const CODEX_PAGE_SIZE = 6;
 
+  function codexIconSvg(entryId: string, category: string, fallbackIconId: string): string {
+    if (category === 'enemy') {
+      const map: Record<string, string> = {
+        grub: ENEMY_SPRITES.grub,
+        runner: ENEMY_SPRITES.runner,
+        brute: ENEMY_SPRITES.brute,
+        spitter: ENEMY_SPRITES.spitter,
+        pulsar: ENEMY_SPRITES.pulsar,
+        boss: ENEMY_SPRITES.titan,
+        titan: ENEMY_SPRITES.titan,
+        healer: ENEMY_SPRITES_V2.healer,
+        mirror: ENEMY_SPRITES_V2.mirror,
+        colony: ENEMY_SPRITES_V2.colony,
+        splitter: ENEMY_SPRITES_V2.splitter,
+        brood: ENEMY_SPRITES_V2.brood,
+      };
+      if (map[entryId]) return map[entryId];
+    }
+    return `<svg viewBox="0 0 32 32"><use href="#${fallbackIconId}"/></svg>`;
+  }
+
   function renderCodex(): void {
     const unlocked = loadCodex();
     if (codexStatsEl) {
-      codexStatsEl.textContent = `ОТКРЫТО: ${unlocked.size} / ${CODEX_ENTRIES.length} ВИДОВ`;
+      codexStatsEl.textContent = `ОТКРЫТО: ${unlocked.size} / ${CODEX_ENTRIES.length}`;
     }
 
     const filtered = CODEX_ENTRIES.filter((e) => {
@@ -1034,17 +1084,17 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       item.innerHTML = `
         <div class="codex-item-top">
           <div class="codex-icon-wrap" style="color: ${isUnl ? entry.color : '#475569'};">
-            <svg viewBox="0 0 32 32"><use href="#${entry.iconId}"/></svg>
+            ${codexIconSvg(entry.id, entry.category, entry.iconId)}
           </div>
           <div class="codex-meta">
             <span class="codex-cat-badge" style="color: ${entry.color};">${catLabel}</span>
             <div class="codex-item-title" style="color: ${isUnl ? entry.color : '#94a3b8'};">
-              ${isUnl ? entry.name : '??? НЕИЗВЕСТНЫЙ ВИД'}
+              ${isUnl ? entry.name : '??? НЕИЗВЕСТНАЯ ЗАПИСЬ'}
             </div>
           </div>
         </div>
         <div class="codex-lore">${isUnl ? entry.lore : 'Биологический образец не исследован. Встретьте или активируйте его в бою.'}</div>
-        <div class="codex-bonus">${isUnl && entry.bonus ? `⚡ БОНУС: ${entry.bonus}` : '🔒 ТРЕБУЕТСЯ ИССЛЕДОВАНИЕ'}</div>
+        <div class="codex-bonus">${isUnl && entry.bonus ? `<svg class="inline-card-ico" viewBox="0 0 32 32"><use href="#ico-symbiont"/></svg> БОНУС: ${entry.bonus}` : 'ТРЕБУЕТСЯ ИССЛЕДОВАНИЕ'}</div>
       `;
       codexGridEl.appendChild(item);
     }
@@ -1158,7 +1208,10 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       else if (u.id.includes('nova')) ico = 'ico-weapon-nova';
       else if (u.id.includes('magnet')) ico = 'ico-node-magnet';
       else if (u.id.includes('regen')) ico = 'ico-node-gen';
-      else if (u.id.includes('dna')) ico = 'ico-node-mutagen';
+      else if (u.id === 'unlock_vermis') ico = 'ico-vermis';
+      else if (u.id === 'unlock_chimera') ico = 'ico-chimera';
+      else if (u.id === 'unlock_mycelium') ico = 'ico-mycelium';
+      else if (u.id === 'unlock_symbiont') ico = 'ico-symbiont';
 
       card.innerHTML =
         `<div class="bl-head"><h3><svg class="bio-icon bio-cyan" viewBox="0 0 32 32" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"><use href="#${ico}"/></svg>${u.name}</h3><span class="bl-cost">${bought ? 'КУПЛЕНО' : u.cost + ' ОЧКОВ'}</span></div>` +
@@ -1458,7 +1511,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     const def = ENEMIES[e.type];
     kills++;
     sfx.kill();
-    unlockCodexEntry(e.type);
+    if (unlockCodexEntry(e.titan ? 'titan' : e.type)) refreshCodexBonuses();
     const tip = e.tail.length > 0 ? e.tail[e.tail.length - 1] : e;
     overlay.spawnSplat(tip.x, tip.y, def.color);
     corpseBeacons.push({ x: tip.x, y: tip.y, ttl: 4 });
@@ -1584,7 +1637,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     biomass = 0;
     metamorphT = METAMORPH.slowT + METAMORPH.zoomT;
     sfx.metamorph();
-    showToast(`МЕТАМОРФОЗ: ${SCALES[scaleIdx].name}`);
+    showToast(`МЕТАМОРФОЗ: ${SCALES[scaleIdx].name} — ${SCALES[scaleIdx].sub}`);
     overlay.spawnPulse(player.x, player.y, 0xffffff, 280);
     overlay.beginShake(0.5);
     sim.spawnPlayerSpores(toSimX(player.x), toSimY(player.y), 3500);
@@ -1627,9 +1680,15 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     modalTitle.textContent = win ? 'ФРАКТАЛЬНЫЙ ПАРАДОКС' : 'ОРГАНИЗМ РАСТВОРЁН';
     modalTitle.classList.toggle('win', win);
     modalTitle.classList.toggle('lose', !win);
+    const hybridDef = HYBRIDS.find((h) => h.id === mainGenome);
+    const genomeLabel = mainGenome === 'neutral'
+      ? 'БАЗОВАЯ ОСОБЬ'
+      : hybridDef
+        ? `ГИБРИД: ${hybridDef.name}`
+        : `ГЕНОМ: ${DNA_NAMES[mainGenome as DnaBranch] ?? mainGenome}`;
     modalSub.textContent = win
-      ? 'Ты стал мозгом Левиафана. Левиафан - лишь молекула в реакторе ЕвроКорп-3. Каждый новый забег - новая вселенная.'
-      : `${mainGenome === 'neutral' ? 'НЕЙТРАЛЬНАЯ ОСОБЬ' : 'ГЕНОМ: ' + mainGenome.toUpperCase()} · +${blAfter.points - bl.points} БИОЛАБ-ОЧКОВ`;
+      ? 'Ты стал мозгом Макро-Левиафана. Левиафан — лишь молекула в реакторе «ЕвроКорп-3». Каждый новый забег — новая вселенная.'
+      : `${genomeLabel} · +${blAfter.points - bl.points} ОЧКОВ БИОЛАБА`;
     deathStatsEl.innerHTML =
       `<span class="stat-metric-row"><svg class="bio-icon bio-cyan" viewBox="0 0 32 32"><use href="#ico-timer"/></svg> ${fmtTime(gameTime)}${genome.record ? ' <svg class="bio-icon bio-amber" viewBox="0 0 32 32"><use href="#ico-record-badge"/></svg> РЕКОРД' : ''}</span>` +
       `<span class="stat-metric-row"><svg class="bio-icon bio-crimson" viewBox="0 0 32 32"><use href="#ico-skull-hazard"/></svg> ${kills} УБИТО</span>` +
@@ -1737,7 +1796,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   function triggerRing(poly: { x: number; y: number }[]): void {
     ringCd = RING.cooldown;
     const plasma = hybridsTaken.has('plasma_leviathan');
-    const dmg = tailLen * RING.dmgPerSeg * effDmg() * (plasma ? 4 : 1);
+    const dmg = tailLen * RING.dmgPerSeg * effDmg() * (plasma ? 4 : 1) * codexBonuses.explosiveDmgMul * codexBonuses.ringDmgMul;
     let cx = 0;
     let cy = 0;
     for (const p of poly) { cx += p.x; cy += p.y; }
@@ -1754,11 +1813,12 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     for (const e of nearby(cx, cy, maxR + 40)) {
       if (e.hp <= 0) continue;
       if (!inPoly(e.x, e.y, poly)) continue;
-      e.hp -= dmg;
+      const inDmg = dmg * enemyDmgBonus(e);
+      e.hp -= inDmg;
       e.flash = 0.12;
       e.tailCd = Math.max(e.tailCd, 0.3);
-      overlay.pushDamage(e.x, e.y - e.radius - 6, dmg, color);
-      damageDealt += dmg;
+      overlay.pushDamage(e.x, e.y - e.radius - 6, inDmg, color);
+      damageDealt += inDmg;
       // Огненный Удав: всё не-элитное внутри кольца аннигилирует
       if (plasma && !e.elite && e.type !== 'boss') e.hp = 0;
     }
@@ -1808,7 +1868,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         dna,
       });
     }
-    showToast('✨ ГНЕЗДО СПОР УНИЧТОЖЕНО! +14 ДУШ БИОМАССЫ');
+    showToast('<svg class="bio-icon bio-lime" viewBox="0 0 32 32"><use href="#ico-node-incubator"/></svg> ГНЕЗДО СПОР УНИЧТОЖЕНО! +14 СФЕР ДНК');
   }
 
   function hitCocoonsInArea(x: number, y: number, radius: number, dmg: number, color: number): boolean {
@@ -1837,7 +1897,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       const ax = Math.max(r + 20, Math.min(curWorldW - r - 20, player.x + Math.cos(ang) * dist));
       const ay = Math.max(r + 20, Math.min(curWorldH - r - 20, player.y + Math.sin(ang) * dist));
       anomalies.push({ kind: 'acid', x: ax, y: ay, r, warnT: 3.5, life: 9, maxLife: 9, spawnCd: 0 });
-      showToast('⚠️ ОСТОРОЖНО: КИСЛОТНЫЙ ПРИЛИВ В СЕКТОРЕ!');
+      showToast('<svg class="bio-icon bio-amber" viewBox="0 0 32 32"><use href="#ico-skull-hazard"/></svg> КИСЛОТНЫЙ ПРИЛИВ В СЕКТОРЕ');
       sfx.anomalyAlert();
     } else if (roll < 0.72) {
       // Гнездо спор: кокон, плодящий выводок, пока не уничтожен (особенно уязвим к Кольцу Смерти)
@@ -1847,7 +1907,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       const maxHp = Math.round(180 * (1 + scaleIdx * 0.5));
       anomalies.push({ kind: 'cocoon', x: ax, y: ay, r: 30, warnT: 1.5, life: 32, maxLife: 32, hp: maxHp, maxHp, spawnCd: 2.5 });
       overlay.spawnPulse(ax, ay, 0xa3e635, 110);
-      showToast('⚠️ ГНЕЗДО СПОР ПРОРОСЛО! СХЛОПНИТЕ ХВОСТОМ ИЛИ РАЗБЕЙТЕ!');
+      showToast('<svg class="bio-icon bio-lime" viewBox="0 0 32 32"><use href="#ico-node-incubator"/></svg> ГНЕЗДО СПОР: СХЛОПНИТЕ КОЛЬЦОМ!');
       sfx.anomalyAlert();
     } else {
       // Вспышка митоза: питательный дождь из 22 сфер ДНК и бафф хвоста на 10 сек
@@ -1863,7 +1923,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         orbs.push({ x: ox, y: oy, vx: 0, vy: 0, value: 1 + Math.floor(scaleIdx * 0.5), color: DNA_COLORS[dna], dna });
       }
       overlay.spawnPulse(player.x, player.y, 0x66fcf1, 180);
-      showToast('🌿 ВСПЫШКА МИТОЗА! ПИТАТЕЛЬНАЯ СРЕДА (10с)');
+      showToast('<svg class="bio-icon bio-cyan" viewBox="0 0 32 32"><use href="#ico-mycelium"/></svg> ВСПЫШКА МИТОЗА: ПИТАТЕЛЬНАЯ СРЕДА (10 с)');
       sfx.capture(true);
     }
   }
@@ -1989,13 +2049,14 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       // Симбиоз со штаммом: свой след ускоряет, чужой растворяет хвост
       const dashMul = dashT > 0 ? DASH.speedMul : 1;
       const spdNow = moveSpeed
+        * codexBonuses.moveSpeedMul
         * dashMul
         * (trailOwn ? STRAIN.ownSpeedMul : 1)
         * (unstableT > 0 && unstableKind === 0 ? 0.55 : 1);
       player.x = Math.max(16, Math.min(curWorldW - 16, player.x + (mx / mLen) * spdNow * dt));
       player.y = Math.max(16, Math.min(curWorldH - 16, player.y + (my / mLen) * spdNow * dt));
       player.iframe = Math.max(0, player.iframe - dt);
-      player.hp = Math.min(maxHp, player.hp + (regen + nodeRegenBonus) * dt);
+      player.hp = Math.min(maxHp, player.hp + (regen + nodeRegenBonus + codexBonuses.regenAdd) * dt);
 
       // Экономика хвоста: движение сжигает энергию, хвост растворяется.
       // Усилитель (Этап 2.1) замораживает таяние, пока узел ваш;
@@ -2061,9 +2122,9 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       ringCd -= dt;
       detectRingClosure();
 
-      // Голод: без душ дольше 3 секунд кончик мигает, критика - оранжевая кромка
+      // Голод: без сфер ДНК дольше 3 секунд кончик мигает, критика - оранжевая кромка
       sinceSoul += dt;
-      if (curseHunger && sinceSoul > 2.5) {
+      if (curseHunger && sinceSoul > 3.0) {
         player.hp = Math.max(1, player.hp - 3 * dt);
       }
       tailMaxReached = Math.max(tailMaxReached, tailLen);
@@ -2099,7 +2160,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (gameTime >= nextBossAt) {
         nextBossAt += BOSS_EVERY;
         spawnEnemy('boss');
-        showToast('БОСС ПРИБЛИЖАЕТСЯ');
+        showToast('СТРАЖ ЦИКЛА ПРИБЛИЖАЕТСЯ');
         sfx.boss();
       }
       // Биомасса шкалы созрела: из глубин пробуждается Титан масштаба
@@ -2111,7 +2172,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         titan.titan = true;
         titan.hp = titan.maxHp = Math.round(titan.maxHp * (1 + scaleIdx * 0.35));
         overlay.spawnPulse(titan.x, titan.y, 0xffffff, 150);
-        showToast(`ТИТАН МАСШТАБА ПРОБУДИЛСЯ - ${SCALES[scaleIdx].name}`);
+        showToast(`ТИТАН МАСШТАБА ПРОБУДИЛСЯ — ${SCALES[scaleIdx].name}`);
         sfx.boss();
       }
       // Вражеский инкубатор (💜): плодит личинок каждые 20 секунд
@@ -2212,7 +2273,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
             overlay.spawnPulse(e.x, e.y, 0xff1744, e.radius * 4.5);
             overlay.beginShake(0.28);
             sfx.boss();
-            showToast(e.titan ? '⚠️ ТИТАН ВПАЛ В ЯРОСТЬ! РАСТРЕСКИВАНИЕ ПАНЦИРЯ!' : '⚠️ БОСС ВПАЛ В ЯРОСТЬ!');
+            showToast(e.titan ? 'ТИТАН ВПАЛ В ЯРОСТЬ! РАСТРЕСКИВАНИЕ ПАНЦИРЯ!' : 'СТРАЖ ЦИКЛА ВПАЛ В ЯРОСТЬ!');
           }
           if (e.enragedPhase) eSpeed *= 1.4;
         }
@@ -2547,19 +2608,20 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
               const dx = e.x - pt.x;
               const dy = e.y - pt.y;
               if (dx * dx + dy * dy < hitDistSq) {
-                e.hp -= dmg;
+                const inDmg = dmg * enemyDmgBonus(e);
+                e.hp -= inDmg;
                 e.flash = 0.06;
                 e.tailCd = TAIL.cd;
-                overlay.pushDamage(e.x, e.y - e.radius - 6, dmg, 0x66fcf1);
-                damageDealt += dmg;
+                overlay.pushDamage(e.x, e.y - e.radius - 6, inDmg, 0x66fcf1);
+                damageDealt += inDmg;
                 // «Отражение» элиты: часть урона возвращается бойцу вблизи
                 if (e.elite === 'mirrored' && Math.hypot(e.x - player.x, e.y - player.y) < 200 && player.iframe <= 0) {
-                  applyDamageToPlayer(dmg * 0.15);
+                  applyDamageToPlayer(inDmg * 0.15);
                 }
                 // «Поглощение» (Вермис) и «Живой Инкубатор» (Уроборос-Паразит):
                 // тело жертвы прирастает сегментами, гибрид растёт втрое сильнее
                 if (e.hp <= 0 && (genes.has('absorb') || hybridsTaken.has('ouroboros'))) {
-                  const gain = e.radius * (hybridsTaken.has('ouroboros') ? 2.4 : 0.8);
+                  const gain = e.radius * (hybridsTaken.has('ouroboros') ? 2.4 : 0.8) * codexBonuses.absorbMul;
                   tailLen = Math.min(maxTail(), tailLen + gain);
                 }
                 break;
@@ -2652,7 +2714,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         for (const e of nearby(p.x, p.y, PROJ_RADIUS + 24)) {
           const def = ENEMIES[e.type];
           if (Math.hypot(p.x - e.x, p.y - e.y) < PROJ_RADIUS + def.radius) {
-            const inDmg = p.dmg * (e.elite === 'armored' ? 0.4 : 1);
+            const inDmg = p.dmg * (e.elite === 'armored' ? 0.4 : 1) * enemyDmgBonus(e);
             e.hp -= inDmg;
             e.flash = 0.1;
             sfx.hit();
@@ -2744,7 +2806,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         orbAngle += ORBS.speed * dt;
         const safeOrbsIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.orbs - 1));
         const count = ORBS.count[safeOrbsIdx];
-        const dmg = ORBS.dmg[safeOrbsIdx] * effDmg() * orbDmgMul();
+        const dmg = ORBS.dmg[safeOrbsIdx] * effDmg() * orbDmgMul() * codexBonuses.orbsDmgMul;
         const orbR = ORBS.radius[safeOrbsIdx] * orbRadiusMul();
         for (let k = 0; k < count; k++) {
           const ang = orbAngle + (k * Math.PI * 2) / count;
@@ -2754,10 +2816,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
             if (e.orbCd > 0) continue;
             const def = ENEMIES[e.type];
             if (Math.hypot(ox - e.x, oy - e.y) < 12 + def.radius) {
-              e.hp -= dmg;
+              const inDmg = dmg * enemyDmgBonus(e);
+              e.hp -= inDmg;
               e.flash = 0.1;
               e.orbCd = ORBS.orbCd;
-              overlay.pushDamage(e.x, e.y - e.radius - 6, dmg, 0x9df5ff);
+              overlay.pushDamage(e.x, e.y - e.radius - 6, inDmg, 0x9df5ff);
             }
           }
         }
@@ -2791,13 +2854,13 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         const safeNovaIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.nova - 1));
         const scMul = genes.has('supercharge') ? 4 : 1;
         novaCd = (NOVA.cd[safeNovaIdx] * (genes.has('supercharge') ? 1.6 : 1)) / effAtkSpd();
-        const radius = NOVA.radius[safeNovaIdx] * (genes.has('supercharge') ? 2 : 1);
-        const dmg = NOVA.dmg[safeNovaIdx] * effDmg() * scMul;
+        const radius = NOVA.radius[safeNovaIdx] * (genes.has('supercharge') ? 2 : 1) * codexBonuses.novaRadiusMul;
+        const dmg = NOVA.dmg[safeNovaIdx] * effDmg() * scMul * codexBonuses.explosiveDmgMul;
         sfx.nova();
         for (const e of nearby(player.x, player.y, radius)) {
           const d = Math.hypot(player.x - e.x, player.y - e.y);
           if (d < radius + ENEMIES[e.type].radius) {
-            const inDmg = dmg * (e.elite === 'armored' ? 0.4 : 1);
+            const inDmg = dmg * (e.elite === 'armored' ? 0.4 : 1) * enemyDmgBonus(e);
             e.hp -= inDmg;
             e.flash = 0.12;
             const push = 200;
@@ -2931,18 +2994,19 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           sim.spawnPlayerSpores(toSimX(cyst.x), toSimY(cyst.y), 300);
           for (const e of nearby(cyst.x, cyst.y, cyst.r * 1.8)) {
             if (Math.hypot(e.x - cyst.x, e.y - cyst.y) < cyst.r * 1.8 + ENEMIES[e.type].radius) {
-              e.hp -= cyst.dmg;
+              const inDmg = cyst.dmg * codexBonuses.explosiveDmgMul * enemyDmgBonus(e);
+              e.hp -= inDmg;
               e.flash = 0.12;
-              overlay.pushDamage(e.x, e.y - e.radius - 6, cyst.dmg, 0x39ff14);
-              damageDealt += cyst.dmg;
+              overlay.pushDamage(e.x, e.y - e.radius - 6, inDmg, 0x39ff14);
+              damageDealt += inDmg;
             }
           }
           liveCysts.splice(i, 1);
         }
       }
 
-      // Осколки опыта: вялый дрейф к игроку отовсюду + магнит вблизи
-      const effMagnet = magnetR * (magnetNodeOwned ? 2.5 : 1);
+      // Сферы ДНК: вялый дрейф к игроку отовсюду + магнит вблизи
+      const effMagnet = magnetR * (magnetNodeOwned ? 2.5 : 1) * codexBonuses.magnetMul;
       // Консолидация душ: если душ на поле больше 70, объединяем дальние, устраняя мусор
       if (orbs.length > 70) {
         let bestDist = 1e9;
@@ -3016,7 +3080,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           if (resonanceMult > prevMult) {
             sfx.resTierUp(resonanceMult);
             overlay.spawnPulse(player.x, player.y, resonanceMult >= 2.5 ? 0xff7b93 : 0x00ff9d, 48 + resonanceMult * 14);
-            if (resonanceMult >= 2.0) showToast(`⚡ СИМБИОТИЧЕСКИЙ РЕЗОНАНС x${resonanceMult.toFixed(1)}!`);
+            if (resonanceMult >= 2.0) showToast(`<svg class="bio-icon bio-cyan" viewBox="0 0 32 32"><use href="#ico-symbiont"/></svg> СИМБИОТИЧЕСКИЙ РЕЗОНАНС x${resonanceMult.toFixed(1)}`);
           }
           updateResonanceHud();
 
@@ -3146,7 +3210,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           const n = bioNodes[i];
           if (!n) return;
           // Пси-Сеть: захват узлов ускорен - сверхразум тянет территорию дистанционно
-          const psiBoost = hybridsTaken.has('psi_web') ? 1.7 : 1;
+          const psiBoost = (hybridsTaken.has('psi_web') ? 1.7 : 1) * codexBonuses.captureSpeedMul;
           const delta = (s.playerDensity - s.enemyDensity) * 0.05 * psiBoost;
           n.capture = Math.max(-1, Math.min(1, n.capture + delta));
           const prev = n.owner;
@@ -3248,7 +3312,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (xpConduitFillEl) xpConduitFillEl.style.width = xpPct;
       levelEl.textContent = `УР. ${level}`;
       timerEl.textContent = fmtTime(gameTime);
-      waveEl.textContent = `ВОЛНА ${Math.floor(gameTime / 30) + 1}`;
+      waveEl.textContent = `ЦИКЛ ${Math.floor(gameTime / 30) + 1}`;
       killsEl.textContent = `x${kills}`;
       // Хвост-ресурс: счётчик + цвет состояния + мигание при голоде
       tailNumEl.textContent = `${Math.round(tailLen)}/${Math.round(maxTail())}`;
@@ -3292,7 +3356,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
 
       if (relicGalvanic) {
         galvanicTimer += dt;
-        if (galvanicTimer >= 3.8) {
+        if (galvanicTimer >= 4.0) {
           galvanicTimer = 0;
           const targets = enemies
             .filter((e) => e.hp > 0 && e.infected <= 0 && Math.hypot(e.x - player.x, e.y - player.y) < 220)

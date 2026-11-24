@@ -4,7 +4,7 @@
 export const SIM_WIDTH = 960;
 export const SIM_HEIGHT = 540;
 export const MAX_BEACONS = 32;
-export const MAX_NODES = 16;
+export const MAX_NODES = 24;
 export const AGENT_COUNT = 120_000;
 
 /** Маяк феромонного поля симуляции */
@@ -61,7 +61,6 @@ export const DNA_COLORS: Record<DnaBranch, number> = {
   symbiont: 0xffd166, // золото - фаза
 };
 
-export const DNA_ICONS: Record<DnaBranch, string> = { vermis: '🐍', chimera: '🧪', mycelium: '🌿', symbiont: '⚡' };
 export const DNA_NAMES: Record<DnaBranch, string> = { vermis: 'ВЕРМИС', chimera: 'ХИМЕРА', mycelium: 'МИЦЕЛИЙ', symbiont: 'СИМБИОНТ' };
 
 /** Пороги накопленной ДНК-биомассы для уровней 1..3 ветки */
@@ -77,12 +76,12 @@ export interface HybridDef {
 
 /** Шесть Великих Гибридов: уникальная механика слияния двух геномов */
 export const HYBRIDS: HybridDef[] = [
-  { id: 'plasma_leviathan', name: 'ПЛАЗМЕННЫЙ ЛЕВИАФАН', desc: 'Огненный Удав: кольцо смерти аннигилирует всё внутри', a: 'vermis', b: 'chimera' },
-  { id: 'ouroboros', name: 'УРОБОРОС-ПАРАЗИТ', desc: 'Живой Инкубатор: жертвы хвоста прирастают сегментами тела', a: 'vermis', b: 'mycelium' },
-  { id: 'phase_serpent', name: 'ФАЗОВЫЙ ЗМЕЙ', desc: 'Грави-Хлыст: хвост перехватывает снаряды и швыряет их во врагов', a: 'vermis', b: 'symbiont' },
-  { id: 'spore_reactor', name: 'СПОРОВЫЙ РЕАКТОР', desc: 'Чумная Сверхновая: нова заражает спорами, трупы детонируют цепью', a: 'chimera', b: 'mycelium' },
-  { id: 'ion_colossus', name: 'ИОННЫЙ КОЛОСС', desc: 'Тесла-Сеть: орбиты бьют дугами по врагам, разрезая толпу', a: 'chimera', b: 'symbiont' },
-  { id: 'psi_web', name: 'ПСИ-СЕТЬ', desc: 'Сверхразум: захваченные узлы бьют лазерами, захват ускорен', a: 'mycelium', b: 'symbiont' },
+  { id: 'plasma_leviathan', name: 'ПЛАЗМЕННЫЙ ЛЕВИАФАН', desc: 'Огненный Удав: Кольцо Смерти наносит x4 урона и аннигилирует обычных врагов внутри', a: 'vermis', b: 'chimera' },
+  { id: 'ouroboros', name: 'УРОБОРОС-ПАРАЗИТ', desc: 'Живой Инкубатор: враги, убитые хвостом, прирастают живыми сегментами', a: 'vermis', b: 'mycelium' },
+  { id: 'phase_serpent', name: 'ФАЗОВЫЙ ЗМЕЙ', desc: 'Грави-Хлыст: хвост перехватывает вражеские снаряды и швыряет их обратно', a: 'vermis', b: 'symbiont' },
+  { id: 'spore_reactor', name: 'СПОРОВЫЙ РЕАКТОР', desc: 'Чумная Сверхновая: Нова заражает врагов спорами, их тела детонируют цепью', a: 'chimera', b: 'mycelium' },
+  { id: 'ion_colossus', name: 'ИОННЫЙ КОЛОСС', desc: 'Тесла-Сеть: электроорбиты бьют дугами по ближайшим врагам', a: 'chimera', b: 'symbiont' },
+  { id: 'psi_web', name: 'ПСИ-СЕТЬ', desc: 'Сверхразум: узлы захватываются быстрее, а ваши узлы бьют лазерами', a: 'mycelium', b: 'symbiont' },
 ];
 
 export interface EnemyDef {
@@ -209,8 +208,8 @@ export const BOSS_FIRST_AT = 90;
 export const BOSS_EVERY = 90;
 
 /**
- * Хвост светляка - это ресурс и тело одновременно:
- * растёт от собранных душ, тает от движения, чем длиннее - тем сильнее
+ * Хвост особи — это ресурс и тело одновременно:
+ * растёт от собранных сфер ДНК, тает от движения, чем длиннее — тем сильнее
  */
 export const TAIL = {
   startLen: 14,
@@ -269,12 +268,12 @@ export interface ScaleTheme {
   biomassGoal: number;   // биомасса для созревания Титана
 }
 
-/** 5 масштабов бытия: от капли до фрактала. Зумаут - кульминация шкалы */
+/** 5 масштабов бытия: от капли до фрактала. Зумаут — кульминация шкалы */
 export const SCALES: ScaleTheme[] = [
-  { id: 1, name: 'ПЕРВИЧНАЯ КАПЛЯ', sub: 'Микро-мир: капля жижи из реактора зонда', zoom: 1.0, enemyHpMul: 1.0, enemyDmgMul: 1.0, enemySizeMul: 1.0, enemySpeedMul: 1.0, biomassGoal: 120 },
-  { id: 2, name: 'КРОВЕНОСНЫЙ ТРАКТ', sub: 'Ткань: пульсирующие стенки сосуда', zoom: 0.85, enemyHpMul: 2.0, enemyDmgMul: 1.6, enemySizeMul: 1.45, enemySpeedMul: 1.12, biomassGoal: 240 },
-  { id: 3, name: 'ВНУТРЕННИЙ ОКЕАН', sub: 'Орган: чёрная желчь и светящийся планктон', zoom: 0.72, enemyHpMul: 3.8, enemyDmgMul: 2.4, enemySizeMul: 2.0, enemySpeedMul: 1.25, biomassGoal: 380 },
-  { id: 4, name: 'КОНТИНЕНТАЛЬНЫЙ РАЗЛОМ', sub: 'Планета: полушарие Ξ-9', zoom: 0.60, enemyHpMul: 6.5, enemyDmgMul: 3.5, enemySizeMul: 2.7, enemySpeedMul: 1.4, biomassGoal: 560 },
+  { id: 1, name: 'ПЕРВИЧНАЯ КАПЛЯ', sub: 'Микромир: капля биомассы в реакторе зонда «ЕвроКорп-3»', zoom: 1.0, enemyHpMul: 1.0, enemyDmgMul: 1.0, enemySizeMul: 1.0, enemySpeedMul: 1.0, biomassGoal: 120 },
+  { id: 2, name: 'КРОВЕНОСНЫЙ ТРАКТ', sub: 'Ткань носителя: пульсирующие стенки сосуда', zoom: 0.85, enemyHpMul: 2.0, enemyDmgMul: 1.6, enemySizeMul: 1.45, enemySpeedMul: 1.12, biomassGoal: 240 },
+  { id: 3, name: 'ВНУТРЕННИЙ ОКЕАН', sub: 'Орган: чёрная желчь и биолюминесцентная взвесь', zoom: 0.72, enemyHpMul: 3.8, enemyDmgMul: 2.4, enemySizeMul: 2.0, enemySpeedMul: 1.25, biomassGoal: 380 },
+  { id: 4, name: 'КОНТИНЕНТАЛЬНЫЙ РАЗЛОМ', sub: 'Планета Ξ-9: магматическая кора полушария', zoom: 0.60, enemyHpMul: 6.5, enemyDmgMul: 3.5, enemySizeMul: 2.7, enemySpeedMul: 1.4, biomassGoal: 560 },
   { id: 5, name: 'ФРАКТАЛ БЕСКОНЕЧНОСТИ', sub: 'Метаматематика: выход за пределы биологии', zoom: 0.50, enemyHpMul: 11.0, enemyDmgMul: 4.8, enemySizeMul: 3.5, enemySpeedMul: 1.55, biomassGoal: 760 },
 ];
 

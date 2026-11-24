@@ -46,7 +46,7 @@ interface BranchStyle {
 }
 
 const BRANCHES: Record<Branch, BranchStyle> = {
-  neutral: { name: 'НЕЙТРАЛЬ', tag: 'ВЕТКА: НЕЙТРАЛЬ', color: '#9df5ff', dim: '#264d59' },
+  neutral: { name: 'ОСОБЬ', tag: 'ГЕНОМ: БАЗОВЫЙ', color: '#9df5ff', dim: '#264d59' },
   // чистые геномы
   vermis: { name: 'ВЕРМИС', tag: 'ГЕНОМ: ВЕРМИС', color: '#66fcf1', dim: '#1d5a55' },
   chimera: { name: 'ХИМЕРА', tag: 'ГЕНОМ: ХИМЕРА', color: '#ff7b93', dim: '#5f2231' },
@@ -488,7 +488,32 @@ function drawOrganism(ctx: CanvasRenderingContext2D, inp: NormInput, col: RGB, d
   ctx.lineJoin = 'round';
   drawTail(ctx, ptsT, r, col, dim);
   if (inp.weapons.includes('spikes')) drawSpikes(ctx, body, r, col, rng);
+  if (inp.weapons.includes('cysts')) {
+    for (let i = 1; i < ptsT.length; i += Math.max(3, Math.floor(ptsT.length / 4))) {
+      ctx.fillStyle = 'rgba(57,255,20,0.45)';
+      ctx.strokeStyle = 'rgba(134,239,172,0.85)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(ptsT[i].x, ptsT[i].y, Math.max(4, r * 0.25), 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
   drawBody(ctx, body, r, col, dim);
+  if (inp.weapons.includes('mandibles')) {
+    const prev = ptsT.length >= 2 ? ptsT[ptsT.length - 2] : { x: body.x - 1, y: body.y };
+    const ang = Math.atan2(body.y - prev.y, body.x - prev.x);
+    ctx.strokeStyle = rgba(col, 0.95);
+    ctx.lineWidth = 3;
+    for (const side of [-1, 1]) {
+      const a0 = ang + side * 0.45;
+      const a1 = ang + side * 0.12;
+      ctx.beginPath();
+      ctx.moveTo(body.x + Math.cos(a0) * r * 0.85, body.y + Math.sin(a0) * r * 0.85);
+      ctx.lineTo(body.x + Math.cos(a1) * r * 1.55, body.y + Math.sin(a1) * r * 1.55);
+      ctx.stroke();
+    }
+  }
   if (inp.weapons.includes('aura')) drawAura(ctx, body, r, col);
   if (inp.weapons.includes('nova')) drawNova(ctx, body, r, col);
   if (inp.weapons.includes('orbs')) drawOrbs(ctx, body, r, col, rng);
@@ -528,8 +553,8 @@ function drawHeader(ctx: CanvasRenderingContext2D, style: BranchStyle, record: b
   setTracking(ctx, 5);
   ctx.font = `500 17px ${MONO}`;
   ctx.fillStyle = 'rgba(140,175,185,0.9)';
-  // строка метаданных: тег ветки + (при масштабе выше 1) подпись масштаба бытия
-  const meta = scale > 1 ? `ОРГАНИЗМ // ${style.tag} // ШКАЛА: ${scale}/5` : `ОРГАНИЗМ // ${style.tag}`;
+  // строка метаданных: тег ветки + масштаб бытия
+  const meta = `ОРГАНИЗМ // ${style.tag} // ШКАЛА: ${scale}/5`;
   ctx.fillText(meta, 70, 76);
   setTracking(ctx, 2);
   ctx.font = `700 58px ${MONO}`;

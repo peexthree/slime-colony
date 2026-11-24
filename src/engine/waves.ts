@@ -88,7 +88,7 @@ export class WaveDirector {
       this.active.left -= dt;
       if (this.active.kind === 'void' && this.active.left <= 0 && this.active.burstPending) {
         this.active.burstPending = false;
-        this.hooks.announce('<span class="wave-event-banner bio-orange"><svg viewBox="0 0 32 32"><use href="#ico-damage-nova"/></svg> ОНИ ВЕРНУЛИСЬ</span>');
+        this.hooks.announce('<span class="wave-event-banner bio-orange"><svg viewBox="0 0 32 32"><use href="#ico-damage-nova"/></svg> ПРОРЫВ РОЯ</span>');
         for (let k = 0; k < 12; k++) this.queue.push({ type: 'grub', side: null });
       }
       if (this.active.left <= 0) this.active = null;
@@ -111,17 +111,17 @@ export class WaveDirector {
         break;
       }
       case 'void': {
-        this.hooks.announce('<span class="wave-event-banner bio-violet"><svg viewBox="0 0 32 32"><use href="#ico-pause"/></svg> ТИШИНА...</span>');
+        this.hooks.announce('<span class="wave-event-banner bio-violet"><svg viewBox="0 0 32 32"><use href="#ico-pause"/></svg> ЗАТИШЬЕ: спавн остановлен</span>');
         this.active = { kind: 'void', speedMul: 1, side: null, left: event.duration, burstPending: true };
         break;
       }
       case 'berserker': {
-        this.hooks.announce('<span class="wave-event-banner bio-crimson"><svg viewBox="0 0 32 32"><use href="#ico-fury"/></svg> ЯРОСТЬ РОЯ x' + event.speedMul + '</span>');
+        this.hooks.announce('<span class="wave-event-banner bio-crimson"><svg viewBox="0 0 32 32"><use href="#ico-fury"/></svg> ЯРОСТЬ РОЯ: ускорение врагов</span>');
         this.active = { kind: 'berserker', speedMul: event.speedMul, side: null, left: event.duration, burstPending: false };
         break;
       }
       case 'feast': {
-        this.hooks.announce('<span class="wave-event-banner bio-lime"><svg viewBox="0 0 32 32"><use href="#ico-feast"/></svg> ПИР: души без врагов</span>');
+        this.hooks.announce('<span class="wave-event-banner bio-lime"><svg viewBox="0 0 32 32"><use href="#ico-feast"/></svg> ПИР: выброс сфер ДНК</span>');
         for (let k = 0; k < event.orbCount; k++) {
           const a = Math.random() * Math.PI * 2;
           const r = 60 + Math.random() * 200;
@@ -130,7 +130,7 @@ export class WaveDirector {
         break;
       }
       case 'migration': {
-        this.hooks.announce('<span class="wave-event-banner bio-amber"><svg viewBox="0 0 24 48"><use href="#ico-scale-bracket"/></svg> МИГРАЦИЯ: ' + (event.dir === 'right' ? 'справа' : 'слева') + '</span>');
+        this.hooks.announce('<span class="wave-event-banner bio-amber"><svg viewBox="0 0 24 48"><use href="#ico-scale-bracket"/></svg> МИГРАЦИЯ РОЯ: ' + (event.dir === 'right' ? 'справа' : 'слева') + '</span>');
         this.active = { kind: 'migration', speedMul: 1, side: event.dir === 'right' ? 1 : 3, left: event.duration, burstPending: false };
         break;
       }
