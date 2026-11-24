@@ -11,5 +11,12 @@
   "lang_label": "Язык / Language",
   "reroll_btn": "ПЕРЕРОЛЛ",
   "restart_btn": "НОВЫЙ ЗАБЕГ",
-  "save_portrait": "ПОРТРЕТ PNG"
+  "save_portrait": "ПОРТРЕТ PNG",
+  "endless_btn": "OVERDRIVE ∞",
+  "codex_title": "БЕСТИАРИЙ И КОДЕКС ГИБРИДОВ",
+  "settings_title": "НАСТРОЙКИ КОМФОРТА И ЗВУКА",
+  "settings_close": "СОХРАНИТЬ И ЗАКРЫТЬ",
+  "biolab_close": "ЗАКРЫТЬ",
+  "export_save": "ЭКСПОРТ СЕЙВА",
+  "import_save": "ИМПОРТ СЕЙВА"
 }

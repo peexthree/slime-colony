@@ -181,12 +181,14 @@ export class PixiOverlay {
   private playerTextures?: Record<PlayerSpriteKey, Texture>;
   /** Мир: контейнер для камеры (перемещение и зум происходят здесь) */
   private world = new Container();
-  private bgBokeh = new Graphics();    // глубина микромира: плавающие вне фокуса клетки боке
+  private bgBokeh = new Container();   // глубина микромира: плавающие вне фокуса клетки боке (Sprite pool)
   private fxUnder = new Graphics();    // биом, мембраны границ и ауры под сущностями
   private entityLayer = new Container();
   private organLayer = new Graphics(); // морфология организма: жвалы, шипы, усики, кристаллы
   private fxOver = new Graphics();     // полоски HP, вспышки, кольца, лазеры, телеграфы
-  private fgSnow = new Graphics();     // планктонная взвесь / морской снег перед линзой
+  private fgSnow = new Container();    // планктонная взвесь / морской снег перед линзой (Sprite pool)
+  private bokehSprites: Sprite[] = [];
+  private snowSprites: Sprite[] = [];
   private rings: PulseRing[] = [];
   /** Вспышки полигона Кольца Смерти */
   private polys: { pts: { x: number; y: number }[]; life: number; color: number }[] = [];
@@ -268,25 +270,42 @@ export class PixiOverlay {
       console.warn('Failed to load biopunk vector textures, falling back to glowTex', e);
     }
 
-    // Процедурные частицы микромира: глубокие клетки боке и планктонный морской снег
+    // Процедурные частицы микромира: глубокие клетки боке и планктонный морской снег (без пересборки Graphics)
     for (let i = 0; i < 28; i++) {
+      const color = i % 3 === 0 ? 0x0e7490 : i % 3 === 1 ? 0x1e3a8a : 0x064e3b;
+      const r = 32 + (i % 7) * 8;
       this.bokehParticles.push({
         baseX: (i * 137.5) % 2400,
         baseY: ((i * 223.7) % 2400),
-        r: 32 + (i % 7) * 8,
+        r,
         phase: i * 0.8,
-        color: i % 3 === 0 ? 0x0e7490 : i % 3 === 1 ? 0x1e3a8a : 0x064e3b,
+        color,
         alpha: 0.045 + (i % 5) * 0.012,
       });
+      const sp = new Sprite(this.glowTex);
+      sp.anchor.set(0.5);
+      sp.tint = color;
+      sp.blendMode = 'add';
+      sp.visible = false;
+      this.bgBokeh.addChild(sp);
+      this.bokehSprites.push(sp);
     }
     for (let i = 0; i < 35; i++) {
+      const r = 1.2 + (i % 3) * 0.7;
       this.snowParticles.push({
         x: (i * 91.3) % 2400,
         y: (i * 127.1) % 2400,
-        r: 1.2 + (i % 3) * 0.7,
+        r,
         vy: 0.4 + (i % 4) * 0.25,
         alpha: 0.25 + (i % 4) * 0.15,
       });
+      const sp = new Sprite(this.glowTex);
+      sp.anchor.set(0.5);
+      sp.tint = 0x9df5ff;
+      sp.blendMode = 'add';
+      sp.visible = false;
+      this.fgSnow.addChild(sp);
+      this.snowSprites.push(sp);
     }
 
     this.app.stage.addChild(this.world);
@@ -382,8 +401,6 @@ export class PixiOverlay {
 
   render(state: RenderState, time: number, dt: number): void {
     const s = this.sx();
-    this.bgBokeh.clear();
-    this.fgSnow.clear();
     this.fxUnder.clear();
     this.organLayer.clear();
     this.fxOver.clear();
@@ -402,13 +419,17 @@ export class PixiOverlay {
       this.world.position.set(0, 0);
     }
 
-    // Глубокий параллакс микромира (боке плавающих клеток в толще жидкости)
-    if (state.settings?.parallax !== false && cam) {
+    // Глубокий параллакс микромира (боке плавающих клеток в толще жидкости — спрайтовый пул)
+    const showParallax = state.settings?.parallax !== false && !!cam;
+    if (showParallax && cam) {
       const pCamX = cam.x * 0.32;
       const pCamY = cam.y * 0.32;
       const wW = cam.worldW || 1200;
       const wH = cam.worldH || 1200;
-      for (const b of this.bokehParticles) {
+      const texR = Math.max(1, this.glowTex.width * 0.5);
+      for (let i = 0; i < this.bokehParticles.length; i++) {
+        const b = this.bokehParticles[i];
+        const sp = this.bokehSprites[i];
         const driftX = Math.sin(time * 0.2 + b.phase) * 35;
         const driftY = Math.cos(time * 0.18 + b.phase) * 35;
         let bx = (b.baseX + driftX + pCamX) % wW;
@@ -416,12 +437,13 @@ export class PixiOverlay {
         if (bx < 0) bx += wW;
         if (by < 0) by += wH;
         const pulse = 1 + Math.sin(time * 0.5 + b.phase) * 0.08;
-        this.bgBokeh.circle(bx, by, b.r * pulse)
-          .fill({ color: b.color, alpha: b.alpha * 0.4 })
-          .stroke({ width: 1.5, color: b.color, alpha: b.alpha * 0.7 });
-        this.bgBokeh.circle(bx, by, b.r * 0.45 * pulse)
-          .fill({ color: b.color, alpha: b.alpha * 0.7 });
+        sp.visible = true;
+        sp.position.set(bx, by);
+        sp.scale.set((b.r * 1.6 * pulse) / texR);
+        sp.alpha = b.alpha * 1.4;
       }
+    } else {
+      for (let i = 0; i < this.bokehSprites.length; i++) this.bokehSprites[i].visible = false;
     }
 
     // Живой декор биома под сущностями: среда, граница арены, циркуляция
@@ -1208,20 +1230,27 @@ export class PixiOverlay {
       }
     }
 
-    // Планктонная взвесь / морской снег перед линзой объектива (быстрый параллакс 1.32x)
+    // Планктонная взвесь / морской снег перед линзой объектива (спрайтовый пул)
     if (state.settings?.parallax !== false && cam) {
       const fgCamX = cam.x * 1.32;
       const fgCamY = cam.y * 1.32;
       const wW = cam.worldW || 1200;
       const wH = cam.worldH || 1200;
-      for (const s of this.snowParticles) {
-        let sx = (s.x + Math.sin(time * 0.7 + s.y * 0.04) * 14 + fgCamX) % wW;
-        let sy = (s.y + (time * 16 * s.vy) + fgCamY) % wH;
+      const texR = Math.max(1, this.glowTex.width * 0.5);
+      for (let i = 0; i < this.snowParticles.length; i++) {
+        const sn = this.snowParticles[i];
+        const sp = this.snowSprites[i];
+        let sx = (sn.x + Math.sin(time * 0.7 + sn.y * 0.04) * 14 + fgCamX) % wW;
+        let sy = (sn.y + (time * 16 * sn.vy) + fgCamY) % wH;
         if (sx < 0) sx += wW;
         if (sy < 0) sy += wH;
-        this.fgSnow.circle(sx, sy, s.r)
-          .fill({ color: 0x9df5ff, alpha: s.alpha * (0.6 + Math.sin(time * 2 + s.x) * 0.35) });
+        sp.visible = true;
+        sp.position.set(sx, sy);
+        sp.scale.set((sn.r * 2.2) / texR);
+        sp.alpha = sn.alpha * (0.6 + Math.sin(time * 2 + sn.x) * 0.35);
       }
+    } else {
+      for (let i = 0; i < this.snowSprites.length; i++) this.snowSprites[i].visible = false;
     }
   }
 

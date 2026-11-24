@@ -11,5 +11,12 @@
   "lang_label": "Language / Язык",
   "reroll_btn": "REROLL",
   "restart_btn": "NEW RUN",
-  "save_portrait": "PORTRAIT PNG"
+  "save_portrait": "PORTRAIT PNG",
+  "endless_btn": "OVERDRIVE ∞",
+  "codex_title": "BESTIARY & HYBRID CODEX",
+  "settings_title": "COMFORT & AUDIO SETTINGS",
+  "settings_close": "SAVE & CLOSE",
+  "biolab_close": "CLOSE",
+  "export_save": "EXPORT SAVE",
+  "import_save": "IMPORT SAVE"
 }

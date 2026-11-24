@@ -181,6 +181,12 @@ async function bootstrap() {
   try {
     await sim.init(gpuCanvas);
     await overlay.init(pixiCanvas, stage);
+    sim.onDeviceLost = (reason) => {
+      paused = true;
+      sfx.setTailDrone(false);
+      sfx.stopBgm();
+      showToast(`WEBGPU ПОТЕРЯН (${reason}) — ОБНОВИТЕ СТРАНИЦУ`, 'danger');
+    };
   } catch (err) {
     const errorMsg = (err as Error).message || String(err);
     console.error('Initialization error:', err);
@@ -894,6 +900,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   let pacifistShown = false;
   let scale5NoNodeTime = 0;
   let watcherSpawned = false;
+  let titanTrailTime = 0;
+  let titanSatedDone = false;
 
   function syncRerollBtn(): void {
     if (!rerollBtn) return;
@@ -1331,13 +1339,84 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (sp) sp.textContent = t('settings');
     }
     if (restartBtn) restartBtn.textContent = t('restart_btn');
+    if (endlessBtn) endlessBtn.textContent = t('endless_btn');
     if (savePortraitBtn) {
       const sp = savePortraitBtn.querySelector('span');
       if (sp) sp.textContent = t('save_portrait');
     }
+    if (biolabBtn) {
+      const sp = biolabBtn.querySelector('span');
+      if (sp) sp.textContent = t('biolab');
+    }
+    const codexTitleEl = document.querySelector('#codex .codex-title');
+    if (codexTitleEl) codexTitleEl.textContent = t('codex_title');
+    const settingsTitleEl = document.querySelector('#settings-modal .settings-title');
+    if (settingsTitleEl) settingsTitleEl.textContent = t('settings_title');
+    if (settingsCloseBtn) settingsCloseBtn.textContent = t('settings_close');
+    if (biolabCloseBtn) biolabCloseBtn.textContent = t('biolab_close');
+    const expBtn = document.getElementById('export-save-btn');
+    if (expBtn) expBtn.textContent = t('export_save');
+    const impBtn = document.getElementById('import-save-btn');
+    if (impBtn) impBtn.textContent = t('import_save');
     syncRerollBtn();
   }
   applyI18n();
+
+  const SAVE_KEYS = [
+    'lumivore-biolab-v1',
+    'lumivore_codex_v1',
+    'lumivore_achievements_v1',
+    'lumivore_leaderboard_v1',
+    'lumivore_settings_v1',
+  ] as const;
+
+  const exportSaveBtn = document.getElementById('export-save-btn');
+  const importSaveBtn = document.getElementById('import-save-btn');
+  const importSaveFile = document.getElementById('import-save-file') as HTMLInputElement | null;
+
+  if (exportSaveBtn) {
+    exportSaveBtn.addEventListener('click', () => {
+      const payload: Record<string, unknown> = { version: 1, exportedAt: new Date().toISOString() };
+      for (const k of SAVE_KEYS) {
+        const raw = localStorage.getItem(k);
+        if (raw) {
+          try { payload[k] = JSON.parse(raw); } catch { payload[k] = raw; }
+        }
+      }
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lumivore-save-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('СЕЙВ ЭКСПОРТИРОВАН');
+    });
+  }
+
+  if (importSaveBtn && importSaveFile) {
+    importSaveBtn.addEventListener('click', () => importSaveFile.click());
+    importSaveFile.addEventListener('change', async () => {
+      const file = importSaveFile.files?.[0];
+      if (!file) return;
+      try {
+        const parsed = JSON.parse(await file.text()) as Record<string, unknown>;
+        for (const k of SAVE_KEYS) {
+          if (k in parsed && parsed[k] !== undefined) {
+            localStorage.setItem(k, typeof parsed[k] === 'string' ? parsed[k] as string : JSON.stringify(parsed[k]));
+          }
+        }
+        renderBiolab();
+        renderCodex();
+        refreshCodexBonuses();
+        showToast('СЕЙВ ИМПОРТИРОВАН', 'success');
+      } catch {
+        showToast('ОШИБКА ИМПОРТА СЕЙВА', 'danger');
+      } finally {
+        importSaveFile.value = '';
+      }
+    });
+  }
 
   document.querySelectorAll('#opt-lang .settings-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -1510,6 +1589,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     pacifistShown = false;
     scale5NoNodeTime = 0;
     watcherSpawned = false;
+    titanTrailTime = 0;
+    titanSatedDone = false;
     level = 1;
     xp = 0;
     xpNext = 6;
@@ -2208,6 +2289,18 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (!pacifistShown && gameTime >= 60 && spikesFired === 0) {
         pacifistShown = true;
         showToast('СКРЫТЫЙ ТИТУЛ «СИМБИОНТ МИРА»: 60с без агрессии шипов');
+      }
+      if (!titanSatedDone && trailOwn) {
+        const titan = enemies.find((e) => e.titan && e.hp > 0);
+        if (titan && Math.hypot(titan.x - player.x, titan.y - player.y) < 180) {
+          titanTrailTime += dt;
+          if (titanTrailTime >= 20) {
+            titanSatedDone = true;
+            orbs.push({ x: titan.x, y: titan.y, vx: 0, vy: 0, value: 15, color: DNA_COLORS.symbiont, dna: 'symbiont' });
+            overlay.spawnPulse(titan.x, titan.y, DNA_COLORS.symbiont, 140);
+            showToast('СЫТЫЙ ТИТАН: МУТАЦИЯ ПОГЛОТИЛА СЛЕД (+ДНК)');
+          }
+        }
       }
       if (!watcherSpawned && scaleIdx >= 4) {
         const owned = bioNodes.filter((n) => n.owner === 0).length;
