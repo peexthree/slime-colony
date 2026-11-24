@@ -8,5 +8,13 @@ export default defineConfig({
   },
   build: {
     target: 'es2022',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          pixi: ['pixi.js'],
+          engine: ['./src/engine/WebGPUSim', './src/engine/PixiOverlay'],
+        },
+      },
+    },
   },
 });

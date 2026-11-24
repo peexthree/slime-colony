@@ -1,0 +1,12 @@
+{
+  "start_run": "НАЧАТЬ ЗАБЕГ",
+  "resume_run": "ПРОДОЛЖИТЬ",
+  "daily_challenge": "ИСПЫТАНИЕ ДНЯ",
+  "biolab": "БИОЛАБ",
+  "codex": "КОДЕКС",
+  "help": "СПРАВКА",
+  "settings": "НАСТРОЙКИ",
+  "no_nodes": "нет узлов",
+  "quality_label": "Качество WebGPU",
+  "lang_label": "Язык / Language"
+}

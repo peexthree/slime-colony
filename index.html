@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#020304" />
+  <link rel="manifest" href="/manifest.json" />
   <title>LUMIVORE // THE LIVING FRACTAL</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -362,7 +364,7 @@
       cursor: pointer;
       transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
     }
-    .up-card:hover {
+    .up-card:hover, .up-card.gp-focus {
       border-color: var(--cyan);
       box-shadow: 0 0 18px rgba(102, 252, 241, 0.2);
       transform: translateY(-2px);
@@ -1143,6 +1145,10 @@
             <svg viewBox="0 0 32 32"><polygon points="10,6 26,16 10,26" fill="currentColor"/></svg>
             <span id="start-btn-label">НАЧАТЬ ЗАБЕГ</span>
           </button>
+          <button id="daily-challenge-btn" class="secondary-btn" style="width:100%;border-color:rgba(250,204,21,0.45);color:#fde047;">
+            <svg viewBox="0 0 32 32"><use href="#ico-record-badge"/></svg>
+            <span id="daily-challenge-label">ИСПЫТАНИЕ ДНЯ</span>
+          </button>
           
           <div class="menu-row-btns">
             <button id="biolab-open" class="secondary-btn">
@@ -1339,6 +1345,29 @@
             <div class="settings-options" id="opt-parallax">
               <button class="settings-btn active" data-val="on">ВКЛ</button>
               <button class="settings-btn" data-val="off">ВЫКЛ</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-info">
+              <span class="settings-name">КАЧЕСТВО WEBGPU</span>
+              <span class="settings-hint">Плотность роя частиц и постобработка bloom</span>
+            </div>
+            <div class="settings-options" id="opt-quality">
+              <button class="settings-btn" data-val="low">НИЗКОЕ</button>
+              <button class="settings-btn active" data-val="medium">СРЕДНЕЕ</button>
+              <button class="settings-btn" data-val="high">ВЫСОКОЕ</button>
+            </div>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-info">
+              <span class="settings-name">ЯЗЫК / LANGUAGE</span>
+              <span class="settings-hint">Локализация интерфейса</span>
+            </div>
+            <div class="settings-options" id="opt-lang">
+              <button class="settings-btn active" data-val="ru">RU</button>
+              <button class="settings-btn" data-val="en">EN</button>
             </div>
           </div>
 

@@ -41,6 +41,13 @@ export class WebGPUSim {
   private beaconScratch = new Float32Array(MAX_BEACONS * 8);
   private sporeScratch = new Float32Array(0);
   readonly agentCount = AGENT_COUNT;
+  private activeAgentCount = AGENT_COUNT;
+
+  /** Настройка качества симуляции: доля активных агентов (0.5..1.0) */
+  setQualityRatio(ratio: number): void {
+    const r = Math.max(0.35, Math.min(1, ratio));
+    this.activeAgentCount = Math.max(1024, Math.floor(this.agentCount * r));
+  }
 
   async init(canvas: HTMLCanvasElement): Promise<void> {
     if (!navigator.gpu) {
@@ -218,7 +225,7 @@ export class WebGPUSim {
     f32[1] = SIM_HEIGHT;
     f32[2] = dt;
     f32[3] = time;
-    u32[4] = this.agentCount;
+    u32[4] = this.activeAgentCount;
     u32[5] = Math.min(beacons.length, MAX_BEACONS);
     u32[6] = Math.min(nodes.length, MAX_NODES);
     u32[7] = this.frame;
@@ -263,7 +270,7 @@ export class WebGPUSim {
     const cPass = enc.beginComputePass();
     cPass.setBindGroup(0, bg);
     cPass.setPipeline(this.updatePipeline);
-    cPass.dispatchWorkgroups(Math.ceil(this.agentCount / 64));
+    cPass.dispatchWorkgroups(Math.ceil(this.activeAgentCount / 64));
     cPass.setPipeline(this.diffusePipeline);
     cPass.dispatchWorkgroups(Math.ceil(SIM_WIDTH / 8), Math.ceil(SIM_HEIGHT / 8));
 

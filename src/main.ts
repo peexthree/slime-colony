@@ -11,6 +11,10 @@ import { downloadPortrait, renderPortrait } from './engine/portrait';
 import { createJoystick } from './engine/joystick';
 import { GamepadController } from './engine/gamepad';
 import { CODEX_ENTRIES, getCodexBonuses, loadCodex, unlockCodexEntry } from './engine/codex';
+import { checkAchievements } from './engine/achievements';
+import { recordLeaderboardEntry } from './engine/leaderboard';
+import { getDailyChallenge } from './engine/challenge';
+import { getLocale, setLocale, t } from './i18n';
 import { ENEMY_SPRITES, ENEMY_SPRITES_V2 } from './engine/svgAssets';
 import {
   AURA, Beacon, BioNode, BOSS_EVERY, BOSS_FIRST_AT, CALL, CYSTS, DASH, DNA_COLORS, DNA_LEVELS,
@@ -554,12 +558,23 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     microParallax: boolean;
     bgmVolume: number; // 0..100
     sfxVolume: number; // 0..100
+    quality: 'low' | 'medium' | 'high';
   }
 
   function loadSettings(): SettingsData {
     try {
       const raw = localStorage.getItem('lumivore_settings_v1');
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          screenFlashes: parsed.screenFlashes ?? 'soft',
+          cameraShake: parsed.cameraShake ?? 'subtle',
+          microParallax: parsed.microParallax ?? true,
+          bgmVolume: parsed.bgmVolume ?? 60,
+          sfxVolume: parsed.sfxVolume ?? 80,
+          quality: parsed.quality ?? 'medium',
+        };
+      }
     } catch {}
     return {
       screenFlashes: 'soft',
@@ -567,6 +582,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       microParallax: true,
       bgmVolume: 60,
       sfxVolume: 80,
+      quality: 'medium',
     };
   }
 
@@ -617,9 +633,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       sfx.zap();
       return false;
     }
-    player.hp -= amount;
+    const incomingDmg = isUnlocked('perm_armor') ? amount * 0.85 : amount;
+    player.hp -= incomingDmg;
     player.iframe = iframeNow();
     hurtFlash();
+    gamepad.vibrate(110, 0.55, 0.25);
     if (resonanceStreak >= 3) sfx.resDrop();
     resonanceStreak = 0;
     resonanceTimer = 0;
@@ -932,6 +950,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     const u = UPGRADES.find((x) => x.id === card.dataset.id);
     if (!u) return;
     u.apply();
+    sfx.upgradeSelect();
     // Разовый выброс спор в честь эволюции / выбора мутации
     sim.spawnPlayerSpores(toSimX(player.x), toSimY(player.y), 2200);
     // Гибрид меняет представление генома в HUD сразу после выбора
@@ -1056,7 +1075,20 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     if (sliderSfx) sliderSfx.value = String(gameSettings.sfxVolume);
     if (bgmVolLabel) bgmVolLabel.textContent = `${gameSettings.bgmVolume}%`;
     if (sfxVolLabel) sfxVolLabel.textContent = `${gameSettings.sfxVolume}%`;
+    document.querySelectorAll('#opt-quality .settings-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-val') === gameSettings.quality);
+    });
+    document.querySelectorAll('#opt-lang .settings-btn').forEach((btn) => {
+      btn.classList.toggle('active', btn.getAttribute('data-val') === getLocale());
+    });
   }
+
+  function applyQualitySettings(): void {
+    const ratio = gameSettings.quality === 'low' ? 0.5 : 1.0;
+    sim.setQualityRatio(ratio);
+    bloomCanvas.style.display = gameSettings.quality === 'low' ? 'none' : '';
+  }
+  applyQualitySettings();
 
   // ---------- Бестиарий и Кодекс Гибридов: постраничная кнопочная навигация (Без скролла) ----------
   let codexCategory: 'all' | 'enemy' | 'hybrid' | 'branch' = 'all';
@@ -1162,7 +1194,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     });
   }
 
-  if (codexOpenBtn) codexOpenBtn.addEventListener('click', () => showModal('codex'));
+  if (codexOpenBtn) codexOpenBtn.addEventListener('click', () => { sfx.codexOpen(); showModal('codex'); });
   if (codexCloseBtn) codexCloseBtn.addEventListener('click', () => showModal(!started || paused ? 'intro' : null));
 
   // Переключение вкладок Руководства
@@ -1236,10 +1268,57 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   if (settingsOpenBtn) settingsOpenBtn.addEventListener('click', () => showModal('settings'));
   if (settingsCloseBtn) settingsCloseBtn.addEventListener('click', () => showModal(!started || paused ? 'intro' : null));
 
+  document.querySelectorAll('#opt-quality .settings-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      gameSettings.quality = (btn.getAttribute('data-val') || 'medium') as typeof gameSettings.quality;
+      saveSettings();
+      applyQualitySettings();
+      syncSettingsUI();
+    });
+  });
+
+  function applyI18n(): void {
+    if (startBtnLabel) startBtnLabel.textContent = started ? t('resume_run') : t('start_run');
+    const dcLabel = document.getElementById('daily-challenge-label');
+    if (dcLabel) {
+      const ch = getDailyChallenge();
+      dcLabel.textContent = `${t('daily_challenge')}: ${ch.title}`;
+    }
+    if (biolabOpenBtn) {
+      const sp = biolabOpenBtn.querySelector('span');
+      if (sp) sp.textContent = t('biolab');
+    }
+    if (codexOpenBtn) {
+      const sp = codexOpenBtn.querySelector('span');
+      if (sp) sp.textContent = t('codex');
+    }
+    if (helpModalOpenBtn) {
+      const sp = helpModalOpenBtn.querySelector('span');
+      if (sp) sp.textContent = t('help');
+    }
+    if (settingsOpenBtn) {
+      const sp = settingsOpenBtn.querySelector('span');
+      if (sp) sp.textContent = t('settings');
+    }
+  }
+  applyI18n();
+
+  document.querySelectorAll('#opt-lang .settings-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const lang = (btn.getAttribute('data-val') || 'ru') as 'ru' | 'en';
+      setLocale(lang);
+      applyI18n();
+      syncSettingsUI();
+    });
+  });
+
   // ---------- Биолаб: мета-прогрессия между забегами (Этап 6.1) ----------
   function renderBiolab(): void {
     const bl = loadBiolab();
-    biolabPointsEl.innerHTML = `<svg class="bio-icon bio-violet" viewBox="0 0 32 32"><use href="#ico-node-incubator"/></svg> ${bl.points} ОЧКОВ · РЕКОРД ${fmtTime(bl.bestTime)} · ЗАБЕГОВ ${bl.runs}`;
+    const ownedCount = BIOLAB_UNLOCKS.filter((u) => isUnlocked(u.id)).length;
+    const pct = Math.round((ownedCount / BIOLAB_UNLOCKS.length) * 100);
+    biolabPointsEl.innerHTML =
+      `<svg class="bio-icon bio-violet" viewBox="0 0 32 32"><use href="#ico-node-incubator"/></svg> ${bl.points} ОЧКОВ · ПРОГРЕСС ${ownedCount}/${BIOLAB_UNLOCKS.length} (${pct}%) · РЕКОРД ${fmtTime(bl.bestTime)}`;
     biolabListEl.innerHTML = '';
     for (const u of BIOLAB_UNLOCKS) {
       const bought = isUnlocked(u.id);
@@ -1270,8 +1349,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     const card = (e.target as HTMLElement).closest('.bl-card') as HTMLElement | null;
     if (!card || !card.dataset.id) return;
     if (purchase(card.dataset.id)) {
-      sfx.capture(true);
-      showToast('БИОЛАБ: улучшение куплено');
+      sfx.biolabUnlock();
+      showToast('БИОЛАБ: улучшение куплено', 'success');
     } else {
       sfx.capture(false);
     }
@@ -1293,6 +1372,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     if (isUnlocked('start_nova2')) { wlvl.nova = 2; novaCd = NOVA.cd[1]; }
     if (isUnlocked('perm_regen')) regen += 0.3;
     if (isUnlocked('perm_magnet')) magnetR *= 1.25;
+    if (isUnlocked('perm_dmg')) dmgMul *= 1.1;
     // Синтез генома: старт с 1 ДНК-уровнем ветки
     if (isUnlocked('unlock_vermis')) { dnaXp.vermis = DNA_LEVELS[0]; lastDnaLvl.vermis = 1; }
     if (isUnlocked('unlock_chimera')) { dnaXp.chimera = DNA_LEVELS[0]; lastDnaLvl.chimera = 1; }
@@ -1306,8 +1386,24 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     paused = false;
     sfx.startBgm();
     showModal(null);
-    if (startBtnLabel) startBtnLabel.textContent = 'ПРОДОЛЖИТЬ';
+    if (startBtnLabel) startBtnLabel.textContent = t('resume_run');
   });
+
+  const dailyChallengeBtn = document.getElementById('daily-challenge-btn');
+  if (dailyChallengeBtn) {
+    dailyChallengeBtn.addEventListener('click', () => {
+      const ch = getDailyChallenge();
+      restartBtn.click();
+      started = true;
+      paused = false;
+      dnaXp[ch.branch] = Math.max(dnaXp[ch.branch], DNA_LEVELS[0]);
+      lastDnaLvl[ch.branch] = Math.max(lastDnaLvl[ch.branch], 1);
+      updateDnaHud();
+      updateBranchChip();
+      showModal(null);
+      showToast(`ИСПЫТАНИЕ ДНЯ (${ch.dayKey}): ${ch.title}`, 'warn');
+    });
+  }
   helpBtn.addEventListener('click', () => {
     if (!started || gameOver) return;
     paused = true;
@@ -1736,6 +1832,27 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     };
     const blAfter = recordRun(genome);
     lastGenome = genome;
+    const topRecords = recordLeaderboardEntry({
+      branch: mainGenome,
+      time: gameTime,
+      kills,
+      scale: scaleMaxReached,
+      damageDealt: Math.round(damageDealt),
+    });
+    const newAchs = checkAchievements({
+      time: gameTime,
+      kills,
+      nodesHeldMax,
+      scaleMax: scaleMaxReached,
+      damageDealt,
+      codexCount: loadCodex().size,
+      codexTotal: CODEX_ENTRIES.length,
+      win,
+    });
+    for (const ach of newAchs) {
+      showToast(`ДОСТИЖЕНИЕ: ${ach.title}`, 'success');
+    }
+    const topStr = topRecords.slice(0, 3).map((r, i) => `#${i + 1} ${fmtTime(r.time)}`).join(' · ');
     modalTitle.textContent = win ? 'ФРАКТАЛЬНЫЙ ПАРАДОКС' : 'ОРГАНИЗМ РАСТВОРЁН';
     modalTitle.classList.toggle('win', win);
     modalTitle.classList.toggle('lose', !win);
@@ -1755,7 +1872,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       `<span class="stat-metric-row"><svg class="bio-icon bio-lime" viewBox="0 0 32 32"><use href="#ico-tail-length"/></svg> ХВОСТ ${Math.round(tailMaxReached)}</span>` +
       `<span class="stat-metric-row"><svg class="bio-icon bio-amber" viewBox="0 0 32 32"><use href="#ico-node-dominance"/></svg> УЗЛЫ ${nodesHeldMax}/${bioNodes.length}</span>` +
       `<span class="stat-metric-row"><svg class="bio-icon bio-violet" viewBox="0 0 32 32"><use href="#ico-macro-scale"/></svg> ШКАЛА ${scaleMaxReached}/5</span>` +
-      `<span class="stat-metric-row"><svg class="bio-icon bio-orange" viewBox="0 0 32 32"><use href="#ico-damage-nova"/></svg> УРОН ${Math.round(damageDealt).toLocaleString('ru')}</span>`;
+      `<span class="stat-metric-row"><svg class="bio-icon bio-orange" viewBox="0 0 32 32"><use href="#ico-damage-nova"/></svg> УРОН ${Math.round(damageDealt).toLocaleString('ru')}</span>` +
+      (topStr ? `<span class="stat-metric-row" style="color:var(--cyan);">ТОП (${mainGenome}): ${topStr}</span>` : '');
     // Портрет организма: процедурный фон + асинхронный readback physarum-поля
     const drawPortrait = (bg: HTMLCanvasElement | null): void => {
       const p = renderPortrait(bg, {
@@ -3588,7 +3706,25 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     frameArcs.length = 0;
     frameLasers.length = 0;
 
-    requestAnimationFrame(loop);
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+  let gpUpgradeFocus = 0;
+  window.setInterval(() => {
+    if (!upgradeModal.classList.contains('show')) return;
+    const gp = gamepad.poll();
+    if (!gp.connected) return;
+    const cards = Array.from(cardsEl.children) as HTMLButtonElement[];
+    if (cards.length === 0) return;
+    if (gp.navLeft) gpUpgradeFocus = (gpUpgradeFocus - 1 + cards.length) % cards.length;
+    if (gp.navRight) gpUpgradeFocus = (gpUpgradeFocus + 1) % cards.length;
+    cards.forEach((c, idx) => c.classList.toggle('gp-focus', idx === gpUpgradeFocus));
+    if (gp.confirmPressed && cards[gpUpgradeFocus]) {
+      cards[gpUpgradeFocus].click();
+    }
+  }, 80);
+
+  requestAnimationFrame(loop);
   }
 
   // Первый запуск: стартовые бонусы Биолаба, чип генома, ДНК и шкалы
@@ -3621,6 +3757,24 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     }),
   };
   (window as unknown as Record<string, unknown>).__lumivore = debugApi;
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+  let gpUpgradeFocus = 0;
+  window.setInterval(() => {
+    if (!upgradeModal.classList.contains('show')) return;
+    const gp = gamepad.poll();
+    if (!gp.connected) return;
+    const cards = Array.from(cardsEl.children) as HTMLButtonElement[];
+    if (cards.length === 0) return;
+    if (gp.navLeft) gpUpgradeFocus = (gpUpgradeFocus - 1 + cards.length) % cards.length;
+    if (gp.navRight) gpUpgradeFocus = (gpUpgradeFocus + 1) % cards.length;
+    cards.forEach((c, idx) => c.classList.toggle('gp-focus', idx === gpUpgradeFocus));
+    if (gp.confirmPressed && cards[gpUpgradeFocus]) {
+      cards[gpUpgradeFocus].click();
+    }
+  }, 80);
 
   requestAnimationFrame(loop);
 }

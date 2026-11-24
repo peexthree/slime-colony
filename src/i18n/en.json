@@ -1,0 +1,12 @@
+{
+  "start_run": "START RUN",
+  "resume_run": "RESUME",
+  "daily_challenge": "DAILY CHALLENGE",
+  "biolab": "BIOLAB",
+  "codex": "CODEX",
+  "help": "HELP",
+  "settings": "SETTINGS",
+  "no_nodes": "no nodes",
+  "quality_label": "WebGPU Quality",
+  "lang_label": "Language / Язык"
+}

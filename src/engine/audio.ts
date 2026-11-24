@@ -116,6 +116,27 @@ export class Sfx {
     this.burst(0.08, 0.07, 500, 0.9);
   }
 
+  biolabUnlock(): void {
+    if (!this.gate('biolab', 80)) return;
+    this.tone('sine', 420, 680, 0.16, 0.08);
+    this.tone('triangle', 680, 960, 0.18, 0.06, 0.06);
+  }
+
+  codexOpen(): void {
+    if (!this.gate('codex', 80)) return;
+    this.tone('sine', 340, 520, 0.1, 0.05);
+  }
+
+  upgradeSelect(): void {
+    if (!this.gate('up_sel', 80)) return;
+    this.tone('triangle', 480, 820, 0.14, 0.07);
+  }
+
+  upgradeHover(): void {
+    if (!this.gate('up_hov', 40)) return;
+    this.tone('sine', 620, 660, 0.035, 0.025);
+  }
+
   eat(): void {
     if (!this.gate('eat', 45)) return;
     this.tone('sine', 520, 940, 0.07, 0.09);

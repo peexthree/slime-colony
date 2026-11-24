@@ -52,6 +52,8 @@ export const BIOLAB_UNLOCKS: BiolabUnlock[] = [
   { id: 'unlock_chimera', cost: 60, name: 'Синтез «ХИМЕРА»', effect: 'Старт забега с 1-м уровнем ДНК Химеры' },
   { id: 'unlock_mycelium', cost: 60, name: 'Синтез «МИЦЕЛИЙ»', effect: 'Старт забега с 1-м уровнем ДНК Мицелия' },
   { id: 'unlock_symbiont', cost: 60, name: 'Синтез «СИМБИОНТ»', effect: 'Старт забега с 1-м уровнем ДНК Симбионта' },
+  { id: 'perm_dmg', cost: 85, name: 'Мутагенная агрессия', effect: '+10% ко всему исходящему урону навсегда' },
+  { id: 'perm_armor', cost: 80, name: 'Хитиновая мембрана', effect: '-15% входящего урона навсегда' },
 ];
 
 const STORAGE_KEY = 'lumivore-biolab-v1';

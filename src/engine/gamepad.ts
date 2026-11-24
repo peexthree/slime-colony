@@ -10,12 +10,24 @@ export interface GamepadState {
   dashPressed: boolean;
   callPressed: boolean;
   pausePressed: boolean;
+  navLeft: boolean;
+  navRight: boolean;
+  navUp: boolean;
+  navDown: boolean;
+  confirmPressed: boolean;
+  cancelPressed: boolean;
 }
 
 export class GamepadController {
   private prevDash = false;
   private prevCall = false;
   private prevPause = false;
+  private prevNavL = false;
+  private prevNavR = false;
+  private prevNavU = false;
+  private prevNavD = false;
+  private prevConfirm = false;
+  private prevCancel = false;
 
   poll(): GamepadState {
     const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -36,6 +48,12 @@ export class GamepadController {
         dashPressed: false,
         callPressed: false,
         pausePressed: false,
+        navLeft: false,
+        navRight: false,
+        navUp: false,
+        navDown: false,
+        confirmPressed: false,
+        cancelPressed: false,
       };
     }
 
@@ -71,9 +89,29 @@ export class GamepadController {
     const callPressed = rawCall && !this.prevCall;
     const pausePressed = rawPause && !this.prevPause;
 
+    const rawNavL = !!(gp.buttons[14]?.pressed || (gp.axes[0] ?? 0) < -0.55);
+    const rawNavR = !!(gp.buttons[15]?.pressed || (gp.axes[0] ?? 0) > 0.55);
+    const rawNavU = !!(gp.buttons[12]?.pressed || (gp.axes[1] ?? 0) < -0.55);
+    const rawNavD = !!(gp.buttons[13]?.pressed || (gp.axes[1] ?? 0) > 0.55);
+    const rawConfirm = !!(gp.buttons[0]?.pressed);
+    const rawCancel = !!(gp.buttons[1]?.pressed);
+
+    const navLeft = rawNavL && !this.prevNavL;
+    const navRight = rawNavR && !this.prevNavR;
+    const navUp = rawNavU && !this.prevNavU;
+    const navDown = rawNavD && !this.prevNavD;
+    const confirmPressed = rawConfirm && !this.prevConfirm;
+    const cancelPressed = rawCancel && !this.prevCancel;
+
     this.prevDash = rawDash;
     this.prevCall = rawCall;
     this.prevPause = rawPause;
+    this.prevNavL = rawNavL;
+    this.prevNavR = rawNavR;
+    this.prevNavU = rawNavU;
+    this.prevNavD = rawNavD;
+    this.prevConfirm = rawConfirm;
+    this.prevCancel = rawCancel;
 
     return {
       connected: true,
@@ -84,6 +122,12 @@ export class GamepadController {
       dashPressed,
       callPressed,
       pausePressed,
+      navLeft,
+      navRight,
+      navUp,
+      navDown,
+      confirmPressed,
+      cancelPressed,
     };
   }
 
