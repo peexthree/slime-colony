@@ -47,6 +47,19 @@ export const WAVE_EVENTS: { time: number; event: WaveEvent }[] = [
   { time: 555, event: { kind: 'swarm', type: 'runner', count: 35 } },
   { time: 600, event: { kind: 'feast', orbCount: 50 } },
   { time: 612, event: { kind: 'ambush' } },
+  { time: 660, event: { kind: 'void', duration: 10 } },
+  { time: 690, event: { kind: 'berserker', speedMul: 2.1, duration: 18 } },
+  { time: 740, event: { kind: 'swarm', type: 'brute', count: 14 } },
+  { time: 790, event: { kind: 'migration', dir: 'right', duration: 14 } },
+  { time: 840, event: { kind: 'feast', orbCount: 60 } },
+  { time: 870, event: { kind: 'ambush' } },
+  { time: 920, event: { kind: 'swarm', type: 'runner', count: 45 } },
+  { time: 970, event: { kind: 'void', duration: 10 } },
+  { time: 1000, event: { kind: 'berserker', speedMul: 2.25, duration: 20 } },
+  { time: 1060, event: { kind: 'migration', dir: 'left', duration: 15 } },
+  { time: 1120, event: { kind: 'swarm', type: 'brute', count: 18 } },
+  { time: 1170, event: { kind: 'feast', orbCount: 70 } },
+  { time: 1200, event: { kind: 'ambush' } },
 ];
 
 export class WaveDirector {

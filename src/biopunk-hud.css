@@ -1031,3 +1031,17 @@
 .resonance-hud.tier-high .res-bar-fill {
   background: linear-gradient(90deg, #ff3b5c, #c084fc, #66fcf1);
 }
+
+@media (max-width: 640px) {
+  #weapon-hud {
+    right: 14px !important;
+    bottom: 152px !important;
+    max-width: calc(100vw - 28px);
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  #petri-radar-hud {
+    width: 104px !important;
+    height: 104px !important;
+  }
+}

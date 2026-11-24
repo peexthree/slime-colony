@@ -330,11 +330,11 @@ export const UI_DECOR = {
 } as const;
 
 export const NODE_SPRITES = {
-  gen: UI_ICONS.nodeGen.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="32" height="32"'),
-  amp: UI_ICONS.nodeAmp.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="32" height="32"'),
-  magnet: UI_ICONS.nodeMagnet.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="32" height="32"'),
-  mutagen: UI_ICONS.nodeMutagen.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="32" height="32"'),
-  incubator: UI_ICONS.nodeIncubator.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="32" height="32"'),
+  gen: UI_ICONS.nodeGen.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
+  amp: UI_ICONS.nodeAmp.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
+  magnet: UI_ICONS.nodeMagnet.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
+  mutagen: UI_ICONS.nodeMutagen.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
+  incubator: UI_ICONS.nodeIncubator.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
 } as const;
 
 export type EnemySpriteKey = keyof typeof ENEMY_SPRITES;

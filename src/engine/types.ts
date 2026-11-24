@@ -4,7 +4,7 @@
 export const SIM_WIDTH = 960;
 export const SIM_HEIGHT = 540;
 export const MAX_BEACONS = 32;
-export const MAX_NODES = 24;
+export const MAX_NODES = 64;
 export const AGENT_COUNT = 120_000;
 
 /** Маяк феромонного поля симуляции */

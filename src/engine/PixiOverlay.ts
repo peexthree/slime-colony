@@ -85,7 +85,7 @@ export interface RenderState {
   /** Морфология организма: какие органы сейчас на теле */
   morph: MorphView | null;
   enemies: EnemyView[];
-  projs: { x: number; y: number }[];
+  projs: { x: number; y: number; vx?: number; vy?: number }[];
   /** Яд врагов-плевателей */
   eprojs: { x: number; y: number }[];
   xpOrbs: { x: number; y: number; value: number; color: number }[];
@@ -199,6 +199,8 @@ export class PixiOverlay {
   private playerGlow!: Sprite;
   private playerCore!: Sprite;
   private v3Textures?: Awaited<ReturnType<typeof loadBiopunkTexturesV3>>;
+  private predatorEyeContainer1 = new Container();
+  private predatorEyeContainer2 = new Container();
   private predatorEyeSprite!: Sprite;
   private predatorPupilSprite!: Sprite;
   private predatorEyeSprite2!: Sprite;
@@ -297,14 +299,19 @@ export class PixiOverlay {
 
     this.playerGlow = this.makeSprite('player', 0x66fcf1, 'add');
     this.playerCore = this.makeSprite('playerCore', 0xffffff, 'normal');
-    this.predatorEyeSprite = this.makeSprite('predEye1', 0xffffff, 'normal', this.v3Textures?.eye.predatorEye);
-    this.predatorPupilSprite = this.makeSprite('predPupil1', 0xffffff, 'normal', this.v3Textures?.eye.predatorPupil);
-    this.predatorEyeSprite2 = this.makeSprite('predEye2', 0xffffff, 'normal', this.v3Textures?.eye.predatorEye);
-    this.predatorPupilSprite2 = this.makeSprite('predPupil2', 0xffffff, 'normal', this.v3Textures?.eye.predatorPupil);
-    this.predatorEyeSprite.visible = false;
-    this.predatorPupilSprite.visible = false;
-    this.predatorEyeSprite2.visible = false;
-    this.predatorPupilSprite2.visible = false;
+    this.entityLayer.addChild(this.predatorEyeContainer1, this.predatorEyeContainer2);
+    this.predatorEyeSprite = new Sprite(this.v3Textures?.eye.predatorEye ?? this.glowTex);
+    this.predatorEyeSprite.anchor.set(0.5);
+    this.predatorPupilSprite = new Sprite(this.v3Textures?.eye.predatorPupil ?? this.glowTex);
+    this.predatorPupilSprite.anchor.set(0.5);
+    this.predatorEyeContainer1.addChild(this.predatorEyeSprite, this.predatorPupilSprite);
+    this.predatorEyeSprite2 = new Sprite(this.v3Textures?.eye.predatorEye ?? this.glowTex);
+    this.predatorEyeSprite2.anchor.set(0.5);
+    this.predatorPupilSprite2 = new Sprite(this.v3Textures?.eye.predatorPupil ?? this.glowTex);
+    this.predatorPupilSprite2.anchor.set(0.5);
+    this.predatorEyeContainer2.addChild(this.predatorEyeSprite2, this.predatorPupilSprite2);
+    this.predatorEyeContainer1.visible = false;
+    this.predatorEyeContainer2.visible = false;
   }
 
   /** O(1): после releasePool курсор с нуля, каждый take занимает следующий слот */
@@ -726,10 +733,8 @@ export class PixiOverlay {
     if (state.morph) {
       this.drawOrgans(state, time, s, px, py);
     } else {
-      if (this.predatorEyeSprite) this.predatorEyeSprite.visible = false;
-      if (this.predatorPupilSprite) this.predatorPupilSprite.visible = false;
-      if (this.predatorEyeSprite2) this.predatorEyeSprite2.visible = false;
-      if (this.predatorPupilSprite2) this.predatorPupilSprite2.visible = false;
+      this.predatorEyeContainer1.visible = false;
+      this.predatorEyeContainer2.visible = false;
     }
 
     // Враги: пул спрайтов
@@ -1067,7 +1072,9 @@ export class PixiOverlay {
       sp.position.set(p.x, p.y);
       const nw = needleTex?.width || 64;
       sp.scale.set(22 / nw);
-      sp.rotation = Math.atan2(p.y - py, p.x - px);
+      sp.rotation = (p.vx !== undefined && p.vy !== undefined)
+        ? Math.atan2(p.vy, p.vx)
+        : Math.atan2(p.y - py, p.x - px);
     }
 
     // Души убитых врагов (хвост плазмоида ориентирован назад от вектора к игроку)
@@ -1482,52 +1489,48 @@ export class PixiOverlay {
           // 2 стереоскопических глаза по бокам головы
           for (const side of [-1, 1]) {
             const isLeft = side === -1;
+            const eyeCont = isLeft ? this.predatorEyeContainer1 : this.predatorEyeContainer2;
             const eyeSp = isLeft ? this.predatorEyeSprite : this.predatorEyeSprite2;
             const pupSp = isLeft ? this.predatorPupilSprite : this.predatorPupilSprite2;
             const eyeAngle = ang + side * 0.52;
             const eyeX = px + Math.cos(eyeAngle) * (r * 0.65);
             const eyeY = py + Math.sin(eyeAngle) * (r * 0.65);
+            eyeCont.position.set(eyeX, eyeY);
+            eyeCont.visible = true;
+
             eyeSp.texture = this.v3Textures.eye.predatorEye;
-            eyeSp.position.set(eyeX, eyeY);
+            eyeSp.position.set(0, 0);
             eyeSp.rotation = ang;
             eyeSp.scale.set((r * 0.72) / 128);
-            eyeSp.visible = true;
 
             pupSp.texture = this.v3Textures.eye.predatorPupil;
             pupSp.rotation = ang;
             pupSp.scale.set((r * 0.72) / 64);
-            updatePredatorPupil(pupSp, eyeX, eyeY, targetX, targetY, (r * 0.12), ang);
-            pupSp.position.x += eyeX;
-            pupSp.position.y += eyeY;
-            pupSp.visible = true;
+            updatePredatorPupil(pupSp, eyeX, eyeY, targetX, targetY, (r * 0.12), 0);
           }
         } else {
           // 1 циклопический глаз хищника по центру лба
           const eyeX = px + Math.cos(ang) * (r * 0.52);
           const eyeY = py + Math.sin(ang) * (r * 0.52);
+          this.predatorEyeContainer1.position.set(eyeX, eyeY);
+          this.predatorEyeContainer1.visible = true;
+
           this.predatorEyeSprite.texture = this.v3Textures.eye.predatorEye;
-          this.predatorEyeSprite.position.set(eyeX, eyeY);
+          this.predatorEyeSprite.position.set(0, 0);
           this.predatorEyeSprite.rotation = ang;
           this.predatorEyeSprite.scale.set((r * 0.85) / 128);
-          this.predatorEyeSprite.visible = true;
 
           this.predatorPupilSprite.texture = this.v3Textures.eye.predatorPupil;
           this.predatorPupilSprite.rotation = ang;
           this.predatorPupilSprite.scale.set((r * 0.85) / 64);
-          updatePredatorPupil(this.predatorPupilSprite, eyeX, eyeY, targetX, targetY, (r * 0.16), ang);
-          this.predatorPupilSprite.position.x += eyeX;
-          this.predatorPupilSprite.position.y += eyeY;
-          this.predatorPupilSprite.visible = true;
+          updatePredatorPupil(this.predatorPupilSprite, eyeX, eyeY, targetX, targetY, (r * 0.16), 0);
 
-          this.predatorEyeSprite2.visible = false;
-          this.predatorPupilSprite2.visible = false;
+          this.predatorEyeContainer2.visible = false;
         }
       }
     } else {
-      if (this.predatorEyeSprite) this.predatorEyeSprite.visible = false;
-      if (this.predatorPupilSprite) this.predatorPupilSprite.visible = false;
-      if (this.predatorEyeSprite2) this.predatorEyeSprite2.visible = false;
-      if (this.predatorPupilSprite2) this.predatorPupilSprite2.visible = false;
+      this.predatorEyeContainer1.visible = false;
+      this.predatorEyeContainer2.visible = false;
     }
 
     // ================= 2. ХИМЕРА (Костяные Шипы, Плазменный Рог) =================
@@ -1749,5 +1752,25 @@ export class PixiOverlay {
           .stroke({ width: 1.2, color: 0xc084fc, alpha: 0.5 + Math.sin(time * 5) * 0.3 });
       }
     }
+  }
+
+  /** Полный сброс пулов, эффектов и слоёв при рестарте забега */
+  reset(): void {
+    this.rings.length = 0;
+    this.polys.length = 0;
+    this.splats.length = 0;
+    this.dmgLive.length = 0;
+    this.shakeT = 0;
+    this.world.position.set(0, 0);
+    this.world.scale.set(1);
+    for (const pool of this.pools.values()) {
+      for (const s of pool) s.visible = false;
+    }
+    this.poolCursor.clear();
+    for (const s of this.dmgSprites) s.visible = false;
+    for (const t of this.nodeTexts) t.visible = false;
+    this.fxUnder.clear();
+    this.organLayer.clear();
+    this.fxOver.clear();
   }
 }

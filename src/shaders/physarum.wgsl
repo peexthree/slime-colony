@@ -306,6 +306,10 @@ fn sampleNodes(@builtin(global_invocation_id) id: vec3<u32>) {
   let nd = nodes[nIdx];
   let w = i32(params.width);
   let h = i32(params.height);
+  if (nd.x < 0.0 || nd.x >= params.width || nd.y < 0.0 || nd.y >= params.height) {
+    nodeStats[nIdx] = vec2<f32>(0.0);
+    return;
+  }
   let cx = i32(nd.x);
   let cy = i32(nd.y);
 

@@ -21,11 +21,11 @@ export class Sfx {
     if (!AC) return;
     this.ctx = new AC();
     this.master = this.ctx.createGain();
-    this.master.gain.value = this.muted ? 0 : 0.4;
+    this.master.gain.value = this.muted ? 0 : 0.5 * this.sfxVol;
     this.master.connect(this.ctx.destination);
 
     this.bgmGain = this.ctx.createGain();
-    this.bgmGain.gain.value = 0.25;
+    this.bgmGain.gain.value = 0.35 * this.bgmVol;
     this.bgmGain.connect(this.master);
 
     // Буфер белого шума для перкуссии
