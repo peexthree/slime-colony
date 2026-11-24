@@ -166,6 +166,27 @@ export class Sfx {
     this.burst(0.06, 0.05, 380, 0.8);
   }
 
+  /** Повышение уровня Симбиотического Резонанса */
+  resTierUp(mult: number): void {
+    if (!this.gate('resUp', 180)) return;
+    const base = 440 + (mult - 1) * 190;
+    this.tone('triangle', base, base * 1.25, 0.14, 0.09, 0);
+    this.tone('sine', base * 1.5, base * 1.5, 0.18, 0.08, 0.07);
+  }
+
+  /** Сброс комбо Резонанса */
+  resDrop(): void {
+    if (!this.gate('resDrop', 250)) return;
+    this.tone('sine', 240, 110, 0.16, 0.07);
+  }
+
+  /** Предупреждение о биологической аномалии в чашке Петри */
+  anomalyAlert(): void {
+    if (!this.gate('anomaly', 500)) return;
+    this.tone('sine', 640, 480, 0.22, 0.09, 0);
+    this.tone('sine', 480, 640, 0.25, 0.09, 0.16);
+  }
+
   /** Низкий пульс при критическом хвосте: включается/выключается состоянием */
   setTailDrone(on: boolean): void {
     if (!this.ctx) return;

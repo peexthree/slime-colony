@@ -1,7 +1,7 @@
 // LUMIVORE: THE LIVING FRACTAL - игровой цикл био-эволютивного рогалика
 // Змейка-хвост + ДНК-матрица Spore + Кольцо Смерти + метаморфоз 5 шкал.
 // Сущности на CPU + Pixi-пулы, physarum-симуляция живёт вместе с игроком
-import { PixiOverlay } from './engine/PixiOverlay';
+import { PixiOverlay, AnomalyView } from './engine/PixiOverlay';
 import { PetriRadar } from './engine/radar';
 import { WebGPUSim, NodeStat } from './engine/WebGPUSim';
 import { Sfx } from './engine/audio';
@@ -41,6 +41,8 @@ interface Enemy {
   sporeInf: number;
   /** Титан масштаба: хранитель метаморфоза */
   titan: boolean;
+  /** Активирована фаза ярости босса/титана при < 40% HP */
+  enragedPhase?: boolean;
   /** Ссылка на матку для выводка колонии */
   colonyId: number;
   /** Перезарядка особого поведения (плевок/кольцо/выводок) */
@@ -153,6 +155,10 @@ async function bootstrap() {
   const bloomCtx = bloomCanvas.getContext('2d')!;
   const radarCanvas = document.getElementById('radar-canvas') as HTMLCanvasElement;
   const radarBadgeEl = document.getElementById('radar-badge');
+  const resHudEl = document.getElementById('resonance-hud');
+  const resMultEl = document.getElementById('res-mult');
+  const resStreakEl = document.getElementById('res-streak');
+  const resBarFillEl = document.getElementById('res-bar-fill');
   const radar = new PetriRadar();
   if (radarCanvas) {
     radar.init(radarCanvas, radarBadgeEl);
@@ -281,6 +287,43 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   let nodesHeldMax = 0;
   let scaleMaxReached = 1;
   let lastGenome: RunGenome | null = null;
+
+  // ---- Аномалии чашки Петри, нейросеть узлов и Симбиотический Резонанс ----
+  interface Anomaly extends AnomalyView {
+    spawnCd: number;
+  }
+  const anomalies: Anomaly[] = [];
+  let anomalyCd = 42;
+  let bloomBuffT = 0;
+  let neuralLinkActive = false;
+
+  const RESONANCE_WINDOW = 3.0;
+  let resonanceStreak = 0;
+  let resonanceTimer = 0;
+  let resonanceMult = 1.0;
+
+  function getResonanceMult(streak: number): number {
+    if (streak >= 35) return 3.0;
+    if (streak >= 22) return 2.5;
+    if (streak >= 14) return 2.0;
+    if (streak >= 7) return 1.5;
+    if (streak >= 3) return 1.2;
+    return 1.0;
+  }
+
+  function updateResonanceHud(): void {
+    if (!resHudEl) return;
+    const active = resonanceTimer > 0 && resonanceStreak >= 2;
+    resHudEl.classList.toggle('show', active);
+    resHudEl.classList.toggle('tier-mid', resonanceMult >= 1.5 && resonanceMult < 2.5);
+    resHudEl.classList.toggle('tier-high', resonanceMult >= 2.5);
+    if (resMultEl) resMultEl.textContent = `x${resonanceMult.toFixed(1)}`;
+    if (resStreakEl) resStreakEl.textContent = String(resonanceStreak);
+    if (resBarFillEl) {
+      const pct = Math.max(0, Math.min(100, (resonanceTimer / RESONANCE_WINDOW) * 100));
+      resBarFillEl.style.width = `${pct}%`;
+    }
+  }
 
   // ---- Территория: био-узлы, захваченные плотностью штаммов ----
   const NODE_KINDS: NodeKind[] = ['gen', 'amp', 'magnet', 'mutagen', 'incubator', 'gen', 'amp'];
@@ -534,6 +577,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     player.hp -= amount;
     player.iframe = iframeNow();
     hurtFlash();
+    if (resonanceStreak >= 3) sfx.resDrop();
+    resonanceStreak = 0;
+    resonanceTimer = 0;
+    resonanceMult = 1.0;
+    updateResonanceHud();
     return true;
   }
 
@@ -1265,6 +1313,14 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     trailOwn = false;
     trailEnemy = false;
     winRun = false;
+    anomalies.length = 0;
+    anomalyCd = 42;
+    bloomBuffT = 0;
+    neuralLinkActive = false;
+    resonanceStreak = 0;
+    resonanceTimer = 0;
+    resonanceMult = 1.0;
+    updateResonanceHud();
     gpuCanvas.style.transform = '';
     gpuCanvas.style.transformOrigin = '';
     bloomCanvas.style.transform = '';
@@ -1706,8 +1762,110 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       // Огненный Удав: всё не-элитное внутри кольца аннигилирует
       if (plasma && !e.elite && e.type !== 'boss') e.hp = 0;
     }
+    // Кольцо Смерти наносит x2.5 осадного урона Гнёздам спор внутри полигона
+    for (let ai = anomalies.length - 1; ai >= 0; ai--) {
+      const a = anomalies[ai];
+      if (a.kind !== 'cocoon' || (a.hp ?? 0) <= 0) continue;
+      if (inPoly(a.x, a.y, poly)) {
+        const siegeDmg = dmg * 2.5;
+        a.hp = (a.hp ?? 0) - siegeDmg;
+        overlay.pushDamage(a.x, a.y - a.r - 6, siegeDmg, color);
+        damageDealt += siegeDmg;
+        if ((a.hp ?? 0) <= 0) destroyCocoon(ai);
+      }
+    }
     // Маленькая плата за кольцо: хвост тратится на замыкание
     tailLen = Math.max(TAIL.minLen, tailLen - 1.5);
+  }
+
+  function destroyCocoon(idx: number): void {
+    const a = anomalies[idx];
+    if (!a) return;
+    anomalies.splice(idx, 1);
+    overlay.spawnPulse(a.x, a.y, 0xa3e635, 160);
+    overlay.spawnSplat(a.x, a.y, 0x86efac);
+    overlay.beginShake(0.24);
+    sfx.capture(true);
+    sim.spawnPlayerSpores(toSimX(a.x), toSimY(a.y), 1400);
+    // Взрыв гнезда бьёт окружающих врагов и осыпает арену богатыми душами ДНК
+    for (const o of nearby(a.x, a.y, 140)) {
+      if (o.hp > 0) {
+        o.hp -= 55 * effDmg();
+        o.flash = 0.12;
+      }
+    }
+    const branches: DnaBranch[] = ['vermis', 'chimera', 'mycelium', 'symbiont'];
+    for (let k = 0; k < 14; k++) {
+      const ang = (k / 14) * Math.PI * 2 + Math.random() * 0.3;
+      const spd = 80 + Math.random() * 140;
+      const dna = branches[k % branches.length];
+      orbs.push({
+        x: a.x, y: a.y,
+        vx: Math.cos(ang) * spd,
+        vy: Math.sin(ang) * spd,
+        value: 2 + scaleIdx,
+        color: DNA_COLORS[dna],
+        dna,
+      });
+    }
+    showToast('✨ ГНЕЗДО СПОР УНИЧТОЖЕНО! +14 ДУШ БИОМАССЫ');
+  }
+
+  function hitCocoonsInArea(x: number, y: number, radius: number, dmg: number, color: number): boolean {
+    let hitAny = false;
+    for (let ai = anomalies.length - 1; ai >= 0; ai--) {
+      const a = anomalies[ai];
+      if (a.kind !== 'cocoon' || (a.hp ?? 0) <= 0) continue;
+      if (Math.hypot(x - a.x, y - a.y) < radius + a.r) {
+        a.hp = (a.hp ?? 0) - dmg;
+        overlay.pushDamage(a.x, a.y - a.r - 6, dmg, color);
+        damageDealt += dmg;
+        hitAny = true;
+        if ((a.hp ?? 0) <= 0) destroyCocoon(ai);
+      }
+    }
+    return hitAny;
+  }
+
+  function spawnAnomaly(): void {
+    const roll = Math.random();
+    const ang = Math.random() * Math.PI * 2;
+    if (roll < 0.36) {
+      // Кислотный прилив: зона 3.5с предупреждения -> 9с едкой кислоты
+      const r = 160 + scaleIdx * 18;
+      const dist = 210 + Math.random() * 140;
+      const ax = Math.max(r + 20, Math.min(curWorldW - r - 20, player.x + Math.cos(ang) * dist));
+      const ay = Math.max(r + 20, Math.min(curWorldH - r - 20, player.y + Math.sin(ang) * dist));
+      anomalies.push({ kind: 'acid', x: ax, y: ay, r, warnT: 3.5, life: 9, maxLife: 9, spawnCd: 0 });
+      showToast('⚠️ ОСТОРОЖНО: КИСЛОТНЫЙ ПРИЛИВ В СЕКТОРЕ!');
+      sfx.anomalyAlert();
+    } else if (roll < 0.72) {
+      // Гнездо спор: кокон, плодящий выводок, пока не уничтожен (особенно уязвим к Кольцу Смерти)
+      const dist = 260 + Math.random() * 150;
+      const ax = Math.max(70, Math.min(curWorldW - 70, player.x + Math.cos(ang) * dist));
+      const ay = Math.max(70, Math.min(curWorldH - 70, player.y + Math.sin(ang) * dist));
+      const maxHp = Math.round(180 * (1 + scaleIdx * 0.5));
+      anomalies.push({ kind: 'cocoon', x: ax, y: ay, r: 30, warnT: 1.5, life: 32, maxLife: 32, hp: maxHp, maxHp, spawnCd: 2.5 });
+      overlay.spawnPulse(ax, ay, 0xa3e635, 110);
+      showToast('⚠️ ГНЕЗДО СПОР ПРОРОСЛО! СХЛОПНИТЕ ХВОСТОМ ИЛИ РАЗБЕЙТЕ!');
+      sfx.anomalyAlert();
+    } else {
+      // Вспышка митоза: питательный дождь из 22 сфер ДНК и бафф хвоста на 10 сек
+      bloomBuffT = 10;
+      anomalies.push({ kind: 'bloom', x: player.x, y: player.y, r: 240, warnT: 0, life: 10, maxLife: 10, spawnCd: 0 });
+      const branches: DnaBranch[] = ['vermis', 'chimera', 'mycelium', 'symbiont'];
+      for (let k = 0; k < 22; k++) {
+        const oa = (k / 22) * Math.PI * 2 + Math.random() * 0.25;
+        const od = 90 + Math.random() * 210;
+        const ox = Math.max(16, Math.min(curWorldW - 16, player.x + Math.cos(oa) * od));
+        const oy = Math.max(16, Math.min(curWorldH - 16, player.y + Math.sin(oa) * od));
+        const dna = branches[k % branches.length];
+        orbs.push({ x: ox, y: oy, vx: 0, vy: 0, value: 1 + Math.floor(scaleIdx * 0.5), color: DNA_COLORS[dna], dna });
+      }
+      overlay.spawnPulse(player.x, player.y, 0x66fcf1, 180);
+      showToast('🌿 ВСПЫШКА МИТОЗА! ПИТАТЕЛЬНАЯ СРЕДА (10с)');
+      sfx.capture(true);
+    }
   }
 
 
@@ -1841,21 +1999,51 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
 
       // Экономика хвоста: движение сжигает энергию, хвост растворяется.
       // Усилитель (Этап 2.1) замораживает таяние, пока узел ваш;
-      // чужой штамм ускоряет растворение, свой штамм регенерирует хвост
+      // Нейросеть (2+ узла) и Вспышка митоза замедляют таяние и питают хвост.
+      let ownedNodeCnt = 0;
+      for (const n of bioNodes) if (n.owner === 1) ownedNodeCnt++;
+      neuralLinkActive = false;
+      if (ownedNodeCnt >= 2) {
+        for (const n of bioNodes) {
+          if (n.owner === 1 && Math.hypot(player.x - n.x, player.y - n.y) <= 380) {
+            neuralLinkActive = true;
+            break;
+          }
+        }
+      }
+      if (bloomBuffT > 0) bloomBuffT = Math.max(0, bloomBuffT - dt);
+      if (resonanceTimer > 0) {
+        resonanceTimer -= dt;
+        if (resonanceTimer <= 0) {
+          if (resonanceStreak >= 3) sfx.resDrop();
+          resonanceStreak = 0;
+          resonanceTimer = 0;
+          resonanceMult = 1.0;
+        }
+      }
+      updateResonanceHud();
+
       const isMoving = mx !== 0 || my !== 0;
       const isVoidEvent = waves.isVoidActive();
+      const networkMeltMul = (neuralLinkActive ? 0.85 : 1) * (bloomBuffT > 0 ? 0.5 : 1);
       if (!tailFreeze && !isVoidEvent) {
         if (isMoving) {
-          const melt = moveCost() * (trailEnemy ? STRAIN.enemyMeltMul : 1) * (cursePredator ? 3 : 1);
+          const melt = moveCost() * (trailEnemy ? STRAIN.enemyMeltMul : 1) * (cursePredator ? 3 : 1) * networkMeltMul;
           tailLen = Math.max(TAIL.minLen, tailLen - melt * dt);
         } else {
           // Метаболический голод неподвижности: если стоять на месте, организм тратит биомассу хвоста
-          const idleMelt = TAIL.idleCost * (trailEnemy ? STRAIN.enemyMeltMul : 1) * (cursePredator ? 3 : 1);
+          const idleMelt = TAIL.idleCost * (trailEnemy ? STRAIN.enemyMeltMul : 1) * (cursePredator ? 3 : 1) * networkMeltMul;
           tailLen = Math.max(TAIL.minLen, tailLen - idleMelt * dt);
         }
       }
       if (trailOwn && tailLen < maxTail()) {
         tailLen = Math.min(maxTail(), tailLen + STRAIN.ownTailRegen * dt);
+      }
+      if (neuralLinkActive && tailLen < maxTail()) {
+        tailLen = Math.min(maxTail(), tailLen + 1.4 * dt);
+      }
+      if (bloomBuffT > 0 && tailLen < maxTail()) {
+        tailLen = Math.min(maxTail(), tailLen + 2.8 * dt);
       }
       // Если хвост сжался до минимума и игрок стоит на месте без движения - голод грызёт здоровье
       if (tailLen <= TAIL.minLen + 0.1 && !isMoving && !tailFreeze && !isVoidEvent) {
@@ -1963,6 +2151,45 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
 
       buildHash();
 
+      // Аномалии чашки Петри: периодические биологические события и их эффекты
+      anomalyCd -= dt;
+      if (anomalyCd <= 0 && anomalies.length < 3 && metamorphT <= 0) {
+        spawnAnomaly();
+        anomalyCd = 46 + Math.random() * 18;
+      }
+      for (let ai = anomalies.length - 1; ai >= 0; ai--) {
+        const a = anomalies[ai];
+        if (a.warnT > 0) {
+          a.warnT -= dt;
+          continue;
+        }
+        a.life -= dt;
+        if (a.life <= 0) {
+          anomalies.splice(ai, 1);
+          continue;
+        }
+        if (a.kind === 'acid') {
+          if (Math.hypot(player.x - a.x, player.y - a.y) < a.r) {
+            tailLen = Math.max(TAIL.minLen, tailLen - 12 * dt);
+          }
+          for (const e of nearby(a.x, a.y, a.r + 16)) {
+            if (e.hp > 0 && Math.hypot(e.x - a.x, e.y - a.y) < a.r) {
+              e.hp -= 32 * effDmg() * dt;
+              e.flash = Math.max(e.flash, 0.04);
+            }
+          }
+        } else if (a.kind === 'cocoon') {
+          a.spawnCd -= dt;
+          if (a.spawnCd <= 0 && enemies.length < ENEMY_CAP) {
+            a.spawnCd = 3.4;
+            const spawnT1: EnemyType = Math.random() < 0.35 ? 'runner' : 'grub';
+            spawnEnemy(spawnT1, undefined, a.x + (Math.random() - 0.5) * 44, a.y + (Math.random() - 0.5) * 44);
+            spawnEnemy('grub', undefined, a.x + (Math.random() - 0.5) * 44, a.y + (Math.random() - 0.5) * 44);
+            overlay.spawnPulse(a.x, a.y, 0xa3e635, a.r + 18);
+          }
+        }
+      }
+
       // Враги: погоня + лёгкое расталкивание + контактный урон + экосистема (Этап 4.1)
       for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
@@ -1978,6 +2205,17 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         }
         // Ярость элиты: +100% скорость при низком HP (Этап 4.3)
         if (e.elite === 'enraged' && e.hp < e.maxHp * 0.3) eSpeed *= 2;
+        // Фаза 2 Титана/Босса: ярость и растрескивание панциря при HP < 40%
+        if ((e.type === 'boss' || e.titan) && e.infected <= 0) {
+          if (e.hp < e.maxHp * 0.4 && !e.enragedPhase) {
+            e.enragedPhase = true;
+            overlay.spawnPulse(e.x, e.y, 0xff1744, e.radius * 4.5);
+            overlay.beginShake(0.28);
+            sfx.boss();
+            showToast(e.titan ? '⚠️ ТИТАН ВПАЛ В ЯРОСТЬ! РАСТРЕСКИВАНИЕ ПАНЦИРЯ!' : '⚠️ БОСС ВПАЛ В ЯРОСТЬ!');
+          }
+          if (e.enragedPhase) eSpeed *= 1.4;
+        }
 
         // Цель: заражённые союзники охотятся на штамм врага (Этап 3.1 «Инфицирование»)
         let tx = player.x;
@@ -2167,6 +2405,36 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
                 if (b.type === 'brood') b.colonyId = e.id;
               }
             }
+          } else if (e.type === 'boss') {
+            // Босс / Титан: веерный залп шипов или радиальный шквал в фазе ярости (< 40% HP)
+            const baseAng = Math.atan2(player.y - e.y, player.x - e.x);
+            const pDmg = Math.round((e.titan ? 14 : 11) * (1 + scaleIdx * 0.7));
+            const pSpd = 175 + scaleIdx * 18;
+            if (e.enragedPhase) {
+              e.skillCd = 3.0;
+              overlay.spawnPulse(e.x, e.y, 0xff1744, e.radius + 45);
+              for (let k = 0; k < 8; k++) {
+                const ang = baseAng + (k * Math.PI * 2) / 8;
+                eprojs.push({
+                  x: e.x, y: e.y,
+                  vx: Math.cos(ang) * pSpd,
+                  vy: Math.sin(ang) * pSpd,
+                  dmg: pDmg, life: 3.0,
+                });
+              }
+            } else {
+              e.skillCd = 4.2;
+              overlay.spawnPulse(e.x, e.y, 0xff2a85, e.radius + 20);
+              for (const spread of [-0.24, 0, 0.24]) {
+                const ang = baseAng + spread;
+                eprojs.push({
+                  x: e.x, y: e.y,
+                  vx: Math.cos(ang) * pSpd,
+                  vy: Math.sin(ang) * pSpd,
+                  dmg: pDmg, life: 2.8,
+                });
+              }
+            }
           }
         }
         // Заражённые союзники тают со временем
@@ -2298,6 +2566,10 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
               }
             }
           }
+          // Хвост также задевает Гнёзда спор на арене
+          for (let i = pts.length - 1; i >= 0; i -= 4) {
+            if (hitCocoonsInArea(pts[i].x, pts[i].y, TAIL.hitRadius, dmg, 0x66fcf1)) break;
+          }
         }
         // «Змея-хлыст» (Змея): кончик бьёт второй точкой с отдельной перезарядкой
         if (genes.has('whip2') && whipTipCd <= 0 && pts.length > 3) {
@@ -2409,6 +2681,10 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
             }
             break;
           }
+        }
+        if (!hit && hitCocoonsInArea(p.x, p.y, PROJ_RADIUS, p.dmg, 0xffffff)) {
+          sfx.hit();
+          hit = true;
         }
         if (hit || p.life <= 0) projs.splice(i, 1);
       }
@@ -2533,6 +2809,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
             if (hybridsTaken.has('spore_reactor') && e.sporeInf <= 0) e.sporeInf = 3;
           }
         }
+        hitCocoonsInArea(player.x, player.y, radius, dmg, 0xff7b93);
         overlay.spawnPulse(player.x, player.y, 0xff7b93, radius + 14);
         overlay.beginShake(0.22);
         toxinFlash = 0.5;
@@ -2554,6 +2831,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
               damageDealt += dmg;
             }
           }
+          hitCocoonsInArea(player.x, player.y, radius, dmg, 0x86efac);
         }
       }
 
@@ -2569,19 +2847,32 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         const arc = MANDIBLES.arc;
         const dmg = MANDIBLES.dmg[mandIdx] * effDmg();
         let enemyInCone = false;
-        for (const e of nearby(player.x, player.y, range + 20)) {
-          const dx = e.x - player.x;
-          const dy = e.y - player.y;
+        for (const a of anomalies) {
+          if (a.kind !== 'cocoon') continue;
+          const dx = a.x - player.x;
+          const dy = a.y - player.y;
           const d = Math.hypot(dx, dy);
-          if (d <= range + ENEMIES[e.type].radius) {
-            const dot = (dx * playerDirX + dy * playerDirY) / Math.max(0.001, d);
-            if (dot >= Math.cos(arc / 2)) { enemyInCone = true; break; }
+          if (d <= range + a.r && (dx * playerDirX + dy * playerDirY) / Math.max(0.001, d) >= Math.cos(arc / 2)) {
+            enemyInCone = true;
+            break;
+          }
+        }
+        if (!enemyInCone) {
+          for (const e of nearby(player.x, player.y, range + 20)) {
+            const dx = e.x - player.x;
+            const dy = e.y - player.y;
+            const d = Math.hypot(dx, dy);
+            if (d <= range + ENEMIES[e.type].radius) {
+              const dot = (dx * playerDirX + dy * playerDirY) / Math.max(0.001, d);
+              if (dot >= Math.cos(arc / 2)) { enemyInCone = true; break; }
+            }
           }
         }
         if (enemyInCone) {
           mandiblesCd = MANDIBLES.cd[mandIdx] / effAtkSpd();
           sfx.mandible();
           mandibleSwipes.push({ x: player.x, y: player.y, dirX: playerDirX, dirY: playerDirY, range, arc, life: 0.22 });
+          hitCocoonsInArea(player.x + playerDirX * (range * 0.5), player.y + playerDirY * (range * 0.5), range * 0.65, dmg, 0x00ff9d);
           for (const e of nearby(player.x, player.y, range + 20)) {
             const dx = e.x - player.x;
             const dy = e.y - player.y;
@@ -2717,13 +3008,25 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         o.x = Math.max(10, Math.min(curWorldW - 10, o.x));
         o.y = Math.max(10, Math.min(curWorldH - 10, o.y));
         if (d < 12) {
+          // Симбиотический Резонанс: непрерывный сбор душ повышает множитель x1.0 .. x3.0
+          const prevMult = resonanceMult;
+          resonanceStreak++;
+          resonanceTimer = RESONANCE_WINDOW;
+          resonanceMult = getResonanceMult(resonanceStreak);
+          if (resonanceMult > prevMult) {
+            sfx.resTierUp(resonanceMult);
+            overlay.spawnPulse(player.x, player.y, resonanceMult >= 2.5 ? 0xff7b93 : 0x00ff9d, 48 + resonanceMult * 14);
+            if (resonanceMult >= 2.0) showToast(`⚡ СИМБИОТИЧЕСКИЙ РЕЗОНАНС x${resonanceMult.toFixed(1)}!`);
+          }
+          updateResonanceHud();
+
           // Душа съедена: опыт + энергия хвоста + ДНК её генома + биомасса шкалы
-          xp += o.value * xpMul;
+          xp += o.value * xpMul * resonanceMult;
           tailLen = Math.min(maxTail(), tailLen + o.value * TAIL.soulGain);
           sinceSoul = 0;
           sfx.eat();
           dnaXp[o.dna] += o.value;
-          biomass += o.value;
+          biomass += o.value * resonanceMult;
           updateScaleHud();
           const lvl = dnaLvl(o.dna);
           if (lvl > lastDnaLvl[o.dna]) {
@@ -3041,15 +3344,29 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         bioNodes,
         curWorldW,
         curWorldH,
-        Math.max(650, 850 / camZoom)
+        Math.max(650, 850 / camZoom),
+        anomalies
       );
     }
 
-    // Био-радар: стрелки к скрытым за экраном вражеским узлам и титанам
+    // Био-радар: стрелки к скрытым за экраном вражеским узлам, титанам и гнёздам спор
     const radarMarkers: { angle: number; dist: number; color: number; icon: 'boss' | 'titan' | 'node' }[] = [];
     if (started && !gameOver) {
       const halfViewW = (overlay.screenWidth / 2) / (camZoom * overlay.scale);
       const halfViewH = (overlay.screenHeight / 2) / (camZoom * overlay.scale);
+      for (const a of anomalies) {
+        if (a.kind !== 'cocoon') continue;
+        const dx = a.x - camX;
+        const dy = a.y - camY;
+        if (Math.abs(dx) > halfViewW - 30 || Math.abs(dy) > halfViewH - 30) {
+          radarMarkers.push({
+            angle: Math.atan2(a.y - player.y, a.x - player.x),
+            dist: Math.hypot(a.x - player.x, a.y - player.y),
+            color: 0xa3e635,
+            icon: 'node',
+          });
+        }
+      }
       for (const n of bioNodes) {
         if (n.owner === 1) continue;
         const dx = n.x - camX;
@@ -3118,6 +3435,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         cysts: liveCysts,
         mandibleSwipes,
         radarMarkers,
+        anomalies,
+        neuralLinkActive,
         settings: {
           parallax: gameSettings.microParallax,
           subtleShake: gameSettings.cameraShake === 'subtle',

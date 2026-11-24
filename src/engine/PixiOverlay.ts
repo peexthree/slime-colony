@@ -44,6 +44,18 @@ export interface NodeView {
   kind: NodeKind;
 }
 
+export interface AnomalyView {
+  kind: 'acid' | 'cocoon' | 'bloom';
+  x: number;
+  y: number;
+  r: number;
+  warnT: number;
+  life: number;
+  maxLife: number;
+  hp?: number;
+  maxHp?: number;
+}
+
 export interface MorphView {
   /** Направление головы организма (для жвал и органов на спине) */
   dirX: number;
@@ -92,6 +104,10 @@ export interface RenderState {
   lasers: { x1: number; y1: number; x2: number; y2: number }[];
   /** Настройки комфорта и глубины */
   settings?: { parallax?: boolean; softFlashes?: boolean; subtleShake?: boolean };
+  /** Биологические аномалии чашки Петри (Кислотный прилив, Гнездо спор, Вспышка митоза) */
+  anomalies?: AnomalyView[];
+  /** Игрок находится в зоне действия нейросети своих захваченных узлов */
+  neuralLinkActive?: boolean;
 }
 
 /** Радужная текстура свечения: яркое ядро + мягкий ореол */
@@ -456,6 +472,74 @@ export class PixiOverlay {
       }
     }
 
+    // Биологические аномалии среды (Кислотный прилив, Вспышка митоза, Гнездо спор)
+    if (state.anomalies) {
+      for (const a of state.anomalies) {
+        if (a.kind === 'acid') {
+          if (a.warnT > 0) {
+            // Фаза предупреждения: пульсирующий янтарный контур
+            const warnPulse = 0.5 + 0.5 * Math.sin(time * 10);
+            this.fxUnder.circle(a.x, a.y, a.r)
+              .fill({ color: 0xf59e0b, alpha: 0.07 + warnPulse * 0.06 })
+              .stroke({ width: 2.2, color: 0xfacc15, alpha: 0.55 + warnPulse * 0.35 });
+            const shrinkR = Math.max(12, a.r * Math.min(1, a.warnT / 3.5));
+            this.fxUnder.circle(a.x, a.y, shrinkR)
+              .stroke({ width: 1.5, color: 0xff7b93, alpha: 0.65 });
+          } else {
+            // Активная кислотная зона: багряно-кислотное озеро с кипящими пузырями
+            const fade = Math.min(1, a.life / 1.5);
+            const wobble = 1 + Math.sin(time * 4 + a.x) * 0.03;
+            this.fxUnder.circle(a.x, a.y, a.r * wobble)
+              .fill({ color: 0x7f1d1d, alpha: 0.28 * fade })
+              .stroke({ width: 2.5, color: 0xff2a85, alpha: 0.68 * fade });
+            this.fxUnder.circle(a.x, a.y, a.r * 0.72)
+              .fill({ color: 0xbe123c, alpha: 0.14 * fade });
+            // Кипящие пузыри
+            for (let b = 0; b < 7; b++) {
+              const phase = (time * 0.9 + b * 0.142 + a.x * 0.01) % 1;
+              const ang = b * 1.9 + Math.floor(time * 0.9 + b * 0.142) * 0.7;
+              const dist = a.r * (0.2 + ((b * 0.37) % 0.65));
+              const bx = a.x + Math.cos(ang) * dist;
+              const by = a.y + Math.sin(ang) * dist;
+              const br = 3 + phase * 8;
+              this.fxUnder.circle(bx, by, br)
+                .stroke({ width: 1.4, color: 0xfb7185, alpha: (1 - phase) * 0.7 * fade });
+            }
+          }
+        } else if (a.kind === 'bloom') {
+          const fade = Math.min(1, a.life / 2.0);
+          const pulse = 1 + Math.sin(time * 5) * 0.06;
+          this.fxUnder.circle(a.x, a.y, a.r * pulse)
+            .fill({ color: 0x10b981, alpha: 0.08 * fade })
+            .stroke({ width: 2, color: 0x66fcf1, alpha: 0.5 * fade });
+        } else if (a.kind === 'cocoon') {
+          const pulse = 1 + Math.sin(time * 5.2) * 0.11;
+          // Корневые жилы вокруг кокона
+          for (let v = 0; v < 6; v++) {
+            const ang = (v * Math.PI * 2) / 6 + 0.3;
+            const len = a.r * (1.8 + Math.sin(time * 3 + v) * 0.2);
+            this.fxUnder.moveTo(a.x, a.y)
+              .lineTo(a.x + Math.cos(ang) * len, a.y + Math.sin(ang) * len)
+              .stroke({ width: 2.2, color: 0x84cc16, alpha: 0.55 });
+          }
+          // Внешняя мембрана гнезда спор и пульсирующее ядро
+          this.fxOver.circle(a.x, a.y, a.r * pulse)
+            .fill({ color: 0x365314, alpha: 0.68 })
+            .stroke({ width: 2.8, color: 0xa3e635, alpha: 0.92 });
+          this.fxOver.circle(a.x, a.y, a.r * 0.52 * (1 + Math.sin(time * 8) * 0.15))
+            .fill({ color: 0xc084fc, alpha: 0.85 });
+          // Дуга здоровья гнезда
+          if (a.hp !== undefined && a.maxHp) {
+            const hpFrac = Math.max(0, Math.min(1, a.hp / a.maxHp));
+            const hr = a.r + 8;
+            this.fxOver.moveTo(a.x + Math.cos(-Math.PI / 2) * hr, a.y + Math.sin(-Math.PI / 2) * hr);
+            this.fxOver.arc(a.x, a.y, hr, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * hpFrac)
+              .stroke({ width: 3, color: 0x86efac, alpha: 0.9 });
+          }
+        }
+      }
+    }
+
     // ---- Узлы территории: мягкое свечение + кольцо владельца + дуга захвата ----
     this.releasePool('nodeGlow');
     this.releasePool('nodeIco');
@@ -505,6 +589,54 @@ export class PixiOverlay {
     }
     const hideFrom = this.nodeTextures ? 0 : state.nodes.length;
     for (let j = hideFrom; j < this.nodeTexts.length; j++) this.nodeTexts[j].visible = false;
+
+    // Нейросеть колонии: живые синаптические био-аксоны между захваченными узлами игрока
+    const ownedNodes: NodeView[] = [];
+    for (let i = 0; i < state.nodes.length; i++) {
+      if (state.nodes[i].owner === 1) ownedNodes.push(state.nodes[i]);
+    }
+    if (ownedNodes.length >= 2) {
+      for (let i = 0; i < ownedNodes.length; i++) {
+        for (let j = i + 1; j < ownedNodes.length; j++) {
+          const n1 = ownedNodes[i];
+          const n2 = ownedNodes[j];
+          const dist = Math.hypot(n2.x - n1.x, n2.y - n1.y);
+          if (dist > 820) continue;
+          const midX = (n1.x + n2.x) * 0.5;
+          const midY = (n1.y + n2.y) * 0.5;
+          const perpX = -(n2.y - n1.y) / Math.max(1, dist);
+          const perpY = (n2.x - n1.x) / Math.max(1, dist);
+          const bend = Math.sin(time * 2.2 + i * 1.7 + j * 0.9) * 18;
+          const cx = midX + perpX * bend;
+          const cy = midY + perpY * bend;
+
+          this.fxUnder.moveTo(n1.x, n1.y)
+            .quadraticCurveTo(cx, cy, n2.x, n2.y)
+            .stroke({ width: 2.2, color: 0x66fcf1, alpha: 0.24 + Math.sin(time * 3 + i) * 0.08 });
+
+          // Бегущий синаптический импульс по кривой Безье
+          const p = (time * 0.65 + (i * 0.27 + j * 0.13)) % 1;
+          const inv = 1 - p;
+          const px = inv * inv * n1.x + 2 * inv * p * cx + p * p * n2.x;
+          const py = inv * inv * n1.y + 2 * inv * p * cy + p * p * n2.y;
+          this.fxUnder.circle(px, py, 3.2).fill({ color: 0xbdfdf8, alpha: 0.85 });
+        }
+      }
+      // Связь игрока с ближайшим узлом нейросети, когда активен бафф регенерации
+      if (state.neuralLinkActive) {
+        let bestN: NodeView | null = null;
+        let bestD = 1e9;
+        for (const n of ownedNodes) {
+          const d = Math.hypot(n.x - state.player.x, n.y - state.player.y);
+          if (d < bestD) { bestD = d; bestN = n; }
+        }
+        if (bestN) {
+          this.fxUnder.moveTo(bestN.x, bestN.y)
+            .lineTo(state.player.x, state.player.y)
+            .stroke({ width: 1.4, color: 0x00ff9d, alpha: 0.28 + Math.sin(time * 6) * 0.12 });
+        }
+      }
+    }
 
     // Хвост светляка: цепь сегментов от тела к кончику (Анатомия Wave 3)
     this.releasePool('ptail');
@@ -774,6 +906,7 @@ export class PixiOverlay {
       }
 
       if (e.elite) {
+        // Базовый золотой нимб элиты
         if (this.v3Textures?.overlays.eliteCrownHalo) {
           const spHalo = this.makeSprite('eliteHalo', 0xffd166, 'add', this.v3Textures.overlays.eliteCrownHalo);
           spHalo.position.set(e.x, e.y);
@@ -785,6 +918,78 @@ export class PixiOverlay {
           this.fxOver.circle(e.x, e.y, haloR)
             .stroke({ width: 2, color: 0xffd166, alpha: 0.75 });
         }
+
+        // Уникальный визуальный био-силуэт каждой мутации
+        switch (e.elite) {
+          case 'armored': {
+            // Бронированный: 4 вращающихся хитиновых щита-сегмента
+            const plates = 4;
+            const plateR = e.radius + 7;
+            for (let k = 0; k < plates; k++) {
+              const ang = time * 1.3 + (k * Math.PI * 2) / plates;
+              this.fxOver.moveTo(e.x + Math.cos(ang - 0.42) * plateR, e.y + Math.sin(ang - 0.42) * plateR);
+              this.fxOver.arc(e.x, e.y, plateR, ang - 0.42, ang + 0.42)
+                .stroke({ width: 3.5, color: 0xf59e0b, alpha: 0.92 });
+            }
+            break;
+          }
+          case 'enraged': {
+            // Разъярённый: 6 пульсирующих алых био-шипов
+            const spikes = 6;
+            const spikePulse = 1 + Math.sin(time * 12) * 0.28;
+            for (let k = 0; k < spikes; k++) {
+              const ang = time * 2.5 + (k * Math.PI * 2) / spikes;
+              const inR = e.radius + 2;
+              const outR = e.radius + 13 * spikePulse;
+              this.fxOver.moveTo(e.x + Math.cos(ang) * inR, e.y + Math.sin(ang) * inR)
+                .lineTo(e.x + Math.cos(ang) * outR, e.y + Math.sin(ang) * outR)
+                .stroke({ width: 2.4, color: 0xff1744, alpha: 0.95 });
+            }
+            this.fxOver.circle(e.x, e.y, e.radius + 4)
+              .stroke({ width: 1.5, color: 0xff3b5c, alpha: 0.65 });
+            break;
+          }
+          case 'necromancer': {
+            // Некромант: чумная аура миазмов и 3 блуждающие споры смерти
+            const necroR = e.radius + 9;
+            this.fxOver.circle(e.x, e.y, necroR)
+              .stroke({ width: 1.8, color: 0x10b981, alpha: 0.85 });
+            for (let k = 0; k < 3; k++) {
+              const ang = -time * 3.2 + (k * Math.PI * 2) / 3;
+              const wx = e.x + Math.cos(ang) * (necroR + 4);
+              const wy = e.y + Math.sin(ang) * (necroR + 4);
+              this.fxOver.circle(wx, wy, 3.2).fill({ color: 0x86efac, alpha: 0.95 });
+            }
+            break;
+          }
+          case 'magnetic': {
+            // Магнитный: вихревая воронка с притягивающимися квантами пыли
+            const vortexR = e.radius + 12;
+            this.fxOver.circle(e.x, e.y, vortexR)
+              .stroke({ width: 1.5, color: 0x38bdf8, alpha: 0.7 });
+            for (let k = 0; k < 4; k++) {
+              const phase = ((time * 2.2 + k * 0.25) % 1);
+              const r = e.radius + 18 * (1 - phase);
+              const ang = time * 4.5 + k * (Math.PI / 2) + phase * 2.2;
+              this.fxOver.circle(e.x + Math.cos(ang) * r, e.y + Math.sin(ang) * r, 2.2)
+                .fill({ color: 0x7dd3fc, alpha: 0.85 * phase });
+            }
+            break;
+          }
+          case 'mirrored': {
+            // Зеркальный: преломляющие призматические треугольники
+            const prismR = e.radius + 8;
+            const prismPulse = 1 + Math.sin(time * 5.5) * 0.15;
+            for (let k = 0; k < 3; k++) {
+              const ang = time * 1.8 + (k * Math.PI * 2) / 3;
+              const px = e.x + Math.cos(ang) * (prismR * prismPulse);
+              const py = e.y + Math.sin(ang) * (prismR * prismPulse);
+              this.fxOver.moveTo(px, py - 4.5).lineTo(px + 4, py + 3.5).lineTo(px - 4, py + 3.5).closePath()
+                .stroke({ width: 1.6, color: 0xe0e7ff, alpha: 0.95 });
+            }
+            break;
+          }
+        }
       }
 
       if (e.type === 'mirror' && this.v3Textures?.overlays.shieldBarrier) {
@@ -795,12 +1000,31 @@ export class PixiOverlay {
         spShield.alpha = 0.82;
       }
 
-      if (e.titan) {
+      if (e.titan || e.type === 'boss') {
         const tr = e.radius + 12 + Math.sin(time * 3.2) * 3;
         this.fxOver.circle(e.x, e.y, tr)
-          .stroke({ width: 2.5, color: 0xffffff, alpha: 0.85 });
+          .stroke({ width: 2.5, color: e.titan ? 0xffd700 : 0xffffff, alpha: 0.85 });
         this.fxOver.circle(e.x, e.y, tr + 7)
           .stroke({ width: 1.5, color: 0x9df5ff, alpha: 0.5 + Math.sin(time * 4.4) * 0.3 });
+
+        // Фаза 2: Растрескивание панциря и пылающая аура ярости при HP < 40%
+        if (e.hp < e.maxHp * 0.4) {
+          const crackPulse = 0.8 + Math.sin(time * 10) * 0.2;
+          for (let c = 0; c < 6; c++) {
+            const baseA = c * 1.05 + 0.2;
+            const r0 = e.radius * 0.22;
+            const rMid = e.radius * 0.62;
+            const rEnd = e.radius * 0.95;
+            const midA = baseA + Math.sin(c * 2 + time * 2) * 0.22;
+            this.fxOver.moveTo(e.x + Math.cos(baseA) * r0, e.y + Math.sin(baseA) * r0)
+              .lineTo(e.x + Math.cos(midA) * rMid, e.y + Math.sin(midA) * rMid)
+              .lineTo(e.x + Math.cos(baseA + 0.1) * rEnd, e.y + Math.sin(baseA + 0.1) * rEnd)
+              .stroke({ width: 3.2, color: 0xff1744, alpha: 0.92 * crackPulse });
+          }
+          // Огненное кольцо ярости титана
+          this.fxOver.circle(e.x, e.y, e.radius + 18 + Math.sin(time * 8) * 4)
+            .stroke({ width: 2.6, color: 0xff3b5c, alpha: 0.85 });
+        }
       }
     }
 

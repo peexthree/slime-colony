@@ -38,7 +38,8 @@ export class PetriRadar {
     nodes: RadarNode[],
     worldW?: number,
     worldH?: number,
-    scanRange = 850
+    scanRange = 850,
+    anomalies?: { x: number; y: number; kind: string; warnT: number }[]
   ): void {
     if (!this.canvas || !this.ctx) return;
     const ctx = this.ctx;
@@ -183,6 +184,29 @@ export class PetriRadar {
       ctx.lineWidth = 1;
       ctx.stroke();
       ctx.restore();
+    }
+
+    // 4.5. Отрисовка биологических аномалий (Гнёзда спор, Кислотные зоны)
+    if (anomalies) {
+      for (const a of anomalies) {
+        if (a.kind === 'bloom') continue;
+        const dx = a.x - player.x;
+        const dy = a.y - player.y;
+        const dist = Math.hypot(dx, dy);
+        const angle = Math.atan2(dy, dx);
+        const rDist = dist > scanRange ? (radarR - 5) : (dist / scanRange) * (radarR - 8);
+        const ax = cx + Math.cos(angle) * rDist;
+        const ay = cy + Math.sin(angle) * rDist;
+        const col = a.kind === 'cocoon' ? '#a3e635' : '#f59e0b';
+        ctx.save();
+        ctx.fillStyle = col;
+        ctx.shadowColor = col;
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(ax, ay, a.kind === 'cocoon' ? 4 : 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
     }
 
     // 5. Отрисовка врагов, элит, боссов и титанов

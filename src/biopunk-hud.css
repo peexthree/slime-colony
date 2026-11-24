@@ -938,3 +938,95 @@
   box-shadow: 0 0 8px rgba(168, 85, 247, 0.8);
   cursor: pointer;
 }
+
+/* 8. Комбо-множитель Симбиотического Резонанса */
+.resonance-hud {
+  position: absolute;
+  top: 58px;
+  right: 14px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(2, 8, 12, 0.82);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(102, 252, 241, 0.25);
+  border-radius: 9px;
+  padding: 6px 12px;
+  min-width: 162px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.resonance-hud.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.resonance-hud.tier-mid {
+  border-color: rgba(250, 204, 21, 0.55);
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.18);
+}
+.resonance-hud.tier-high {
+  border-color: rgba(255, 59, 92, 0.72);
+  box-shadow: 0 0 22px rgba(255, 59, 92, 0.28), 0 0 12px rgba(102, 252, 241, 0.2);
+}
+.resonance-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.res-glow {
+  font-size: 12px;
+  color: #00ff9d;
+}
+.res-mult {
+  font-weight: 800;
+  font-size: 13px;
+  color: #66fcf1;
+  text-shadow: 0 0 8px rgba(102, 252, 241, 0.6);
+}
+.resonance-hud.tier-mid .res-mult {
+  color: #facc15;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.65);
+}
+.resonance-hud.tier-high .res-mult {
+  color: #ff7b93;
+  text-shadow: 0 0 12px rgba(255, 59, 92, 0.75);
+}
+.res-label {
+  color: #94a3b8;
+  font-size: 9.5px;
+  font-weight: 700;
+  flex: 1;
+}
+.res-streak {
+  color: #e2e8f0;
+  font-weight: 700;
+  font-size: 10.5px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.res-bar-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.res-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #00ff9d, #66fcf1);
+  border-radius: 3px;
+  transition: width 0.06s linear;
+}
+.resonance-hud.tier-mid .res-bar-fill {
+  background: linear-gradient(90deg, #f59e0b, #facc15);
+}
+.resonance-hud.tier-high .res-bar-fill {
+  background: linear-gradient(90deg, #ff3b5c, #c084fc, #66fcf1);
+}
