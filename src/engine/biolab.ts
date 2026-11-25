@@ -225,12 +225,12 @@ export function purchase(id: string): boolean {
   if (!item) return false;
   const s = loadBiolab();
   if (s.unlocked.includes(id) || s.points < item.cost) return false;
+  const prevActive = getActiveIds(s);
+  const hasSameExclusive = (item.category === 'form' || item.category === 'dna') &&
+    prevActive.some((aid) => BIOLAB_UNLOCKS.find((u) => u.id === aid)?.category === item.category);
   s.points -= item.cost;
   s.unlocked.push(id);
-  const active = getActiveIds(s);
-  const hasSameExclusive = (item.category === 'form' || item.category === 'dna') &&
-    active.some((aid) => BIOLAB_UNLOCKS.find((u) => u.id === aid)?.category === item.category);
-  if (active.length >= MAX_ACTIVE_BIOLAB || hasSameExclusive) {
+  if (prevActive.length >= MAX_ACTIVE_BIOLAB || hasSameExclusive) {
     s.disabled.push(id);
   }
   saveBiolab(s);

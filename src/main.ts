@@ -912,18 +912,18 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   }
 
   const UPGRADES: UpgradeDef[] = [
-    { id: 'spikes0', title: 'Шипы', desc: 'Автоматические иглы: поражают ближайших врагов', avail: () => wlvl.spikes === 0, apply: () => (wlvl.spikes = 1) },
-    { id: 'spikes+', title: 'Шипы', desc: 'Больше урона, шипов и выше скорострельность', avail: () => wlvl.spikes > 0 && wlvl.spikes < WEAPON_MAX_LVL, apply: () => wlvl.spikes++ },
-    { id: 'orbits0', title: 'Электроорбиты', desc: 'Сферы вращаются вокруг вас и жгут врагов рядом', avail: () => wlvl.orbs === 0, apply: () => (wlvl.orbs = 1) },
-    { id: 'orbits+', title: 'Электроорбиты', desc: '+1 сфера и повышение урона', avail: () => wlvl.orbs > 0 && wlvl.orbs < WEAPON_MAX_LVL, apply: () => wlvl.orbs++ },
-    { id: 'nova0', title: 'Нова-импульс', desc: 'Взрывное кольцо: урон и отброс толпы', avail: () => wlvl.nova === 0, apply: () => (wlvl.nova = 1) },
-    { id: 'nova+', title: 'Нова-импульс', desc: 'Больше радиус и урон, быстрее перезарядка', avail: () => wlvl.nova > 0 && wlvl.nova < WEAPON_MAX_LVL, apply: () => wlvl.nova++ },
-    { id: 'aura0', title: 'Токсичная аура', desc: 'Едкое поле отравляет всех врагов вокруг', avail: () => wlvl.aura === 0, apply: () => (wlvl.aura = 1) },
-    { id: 'aura+', title: 'Токсичная аура', desc: 'Больше радиус и урон в секунду', avail: () => wlvl.aura > 0 && wlvl.aura < WEAPON_MAX_LVL, apply: () => wlvl.aura++ },
-    { id: 'mandibles0', title: 'Хищные жвала', desc: 'Фронтальный конус урона: разрывает врагов перед вами', avail: () => wlvl.mandibles === 0, apply: () => (wlvl.mandibles = 1) },
-    { id: 'mandibles+', title: 'Хищные жвала', desc: 'Больше радиус, угол рассечения и урон', avail: () => wlvl.mandibles > 0 && wlvl.mandibles < WEAPON_MAX_LVL, apply: () => wlvl.mandibles++ },
-    { id: 'cysts0', title: 'Споровые цисты', desc: 'Органические мины: сбрасываются позади и взрываются при контакте', avail: () => wlvl.cysts === 0, apply: () => (wlvl.cysts = 1) },
-    { id: 'cysts+', title: 'Споровые цисты', desc: 'Больше цист в кладке, выше радиус и урон детонации', avail: () => wlvl.cysts > 0 && wlvl.cysts < WEAPON_MAX_LVL, apply: () => wlvl.cysts++ },
+    { id: 'spikes0', title: 'Шипы', desc: 'Автоматические иглы: поражают ближайших врагов', avail: () => canUnlockWeapon('spikes', wlvl, level), apply: () => (wlvl.spikes = 1) },
+    { id: 'spikes+', title: 'Шипы', desc: 'Больше урона, шипов и выше скорострельность', avail: () => canUpgradeWeapon('spikes', wlvl.spikes, level), apply: () => wlvl.spikes++ },
+    { id: 'orbits0', title: 'Электроорбиты', desc: 'Сферы вращаются вокруг вас и жгут врагов рядом', avail: () => canUnlockWeapon('orbs', wlvl, level), apply: () => (wlvl.orbs = 1) },
+    { id: 'orbits+', title: 'Электроорбиты', desc: '+1 сфера и повышение урона', avail: () => canUpgradeWeapon('orbs', wlvl.orbs, level), apply: () => wlvl.orbs++ },
+    { id: 'nova0', title: 'Нова-импульс', desc: 'Взрывное кольцо: урон и отброс толпы', avail: () => canUnlockWeapon('nova', wlvl, level), apply: () => (wlvl.nova = 1) },
+    { id: 'nova+', title: 'Нова-импульс', desc: 'Больше радиус и урон, быстрее перезарядка', avail: () => canUpgradeWeapon('nova', wlvl.nova, level), apply: () => wlvl.nova++ },
+    { id: 'aura0', title: 'Токсичная аура', desc: 'Едкое поле отравляет всех врагов вокруг', avail: () => canUnlockWeapon('aura', wlvl, level), apply: () => (wlvl.aura = 1) },
+    { id: 'aura+', title: 'Токсичная аура', desc: 'Больше радиус и урон в секунду', avail: () => canUpgradeWeapon('aura', wlvl.aura, level), apply: () => wlvl.aura++ },
+    { id: 'mandibles0', title: 'Хищные жвала', desc: 'Фронтальный конус урона: разрывает врагов перед вами', avail: () => canUnlockWeapon('mandibles', wlvl, level), apply: () => (wlvl.mandibles = 1) },
+    { id: 'mandibles+', title: 'Хищные жвала', desc: 'Больше радиус, угол рассечения и урон', avail: () => canUpgradeWeapon('mandibles', wlvl.mandibles, level), apply: () => wlvl.mandibles++ },
+    { id: 'cysts0', title: 'Споровые цисты', desc: 'Органические мины: сбрасываются только в движении', avail: () => canUnlockWeapon('cysts', wlvl, level), apply: () => (wlvl.cysts = 1) },
+    { id: 'cysts+', title: 'Споровые цисты', desc: 'Больше цист, выше радиус и урон детонации', avail: () => canUpgradeWeapon('cysts', wlvl.cysts, level), apply: () => wlvl.cysts++ },
     // --- Критические мутации (патологии): сверхсила с расплатой ---
     {
       id: 'curse_predator',
@@ -986,14 +986,14 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       branch: 'chimera',
       title: 'Радикал',
       desc: 'Случайное оружие +1 уровень',
-      avail: () => (['spikes', 'orbs', 'nova', 'aura', 'mandibles', 'cysts'] as WeaponId[]).some((w) => wlvl[w] < WEAPON_MAX_LVL),
+      avail: () => (['spikes', 'orbs', 'nova', 'aura', 'mandibles', 'cysts'] as WeaponId[]).some((w) => canUpgradeWeapon(w, wlvl[w], level)),
       apply: () => {
-        const ids = (['spikes', 'orbs', 'nova', 'aura', 'mandibles', 'cysts'] as WeaponId[]).filter((w) => wlvl[w] < WEAPON_MAX_LVL);
+        const ids = (['spikes', 'orbs', 'nova', 'aura', 'mandibles', 'cysts'] as WeaponId[]).filter((w) => canUpgradeWeapon(w, wlvl[w], level));
         if (ids.length > 0) wlvl[ids[Math.floor(Math.random() * ids.length)]]++;
       },
     },
     { id: 'my_regen', branch: 'mycelium', title: 'Симбиоз', desc: '+1.5 HP/с восстановления', avail: () => stack('my_regen'), apply: () => { regen += 1.5; bump('my_regen'); } },
-    { id: 'my_aura', branch: 'mycelium', title: 'Спороносность', desc: 'Токсичная аура +1 уровень', avail: () => wlvl.aura > 0 && wlvl.aura < WEAPON_MAX_LVL, apply: () => { wlvl.aura++; } },
+    { id: 'my_aura', branch: 'mycelium', title: 'Спороносность', desc: 'Токсичная аура +1 уровень', avail: () => canUpgradeWeapon('aura', wlvl.aura, level), apply: () => { wlvl.aura++; } },
     { id: 'si_magnet', branch: 'symbiont', title: 'Феромонный магнит', desc: '+35% к радиусу сбора сфер ДНК', avail: () => stack('si_magnet'), apply: () => { magnetR *= 1.35; bump('si_magnet'); } },
     { id: 'si_aspd', branch: 'symbiont', title: 'Фазовые рефлексы', desc: '+15% к скорости атаки', avail: () => stack('si_aspd'), apply: () => { atkSpdMul += 0.15; bump('si_aspd'); } },
     { id: 'si_move', branch: 'symbiont', title: 'Фазовое скольжение', desc: '+10% к скорости движения', avail: () => stack('si_move'), apply: () => { moveSpeed *= 1.10; bump('si_move'); } },
@@ -1038,7 +1038,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   const STACKABLE_STATS = new Set(['dmg', 'aspd', 'move', 'hp', 'magnet', 'regen', 'chi_dmg', 'my_regen', 'si_magnet', 'si_aspd', 'si_move']);
 
   function weaponLvlTag(id: string): string {
-    const open = t('badge_opening');
+    const open = t('badge_weapon_new', { cur: equippedWeaponCount(wlvl), max: MAX_EQUIPPED_WEAPONS });
     const fmt = (lvl: number) => ` · ${t('badge_weapon_lvl', { from: lvl, to: lvl + 1 })}`;
     if (id === 'spikes0') return ` · ${open}`;
     if (id === 'spikes+') return fmt(wlvl.spikes);
@@ -1137,7 +1137,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     while (picks.length < want && bag.length > 0) {
       picks.push(bag.splice(Math.floor(Math.random() * bag.length), 1)[0]);
     }
-    upgradeTitle.textContent = t('upgrade_title', { lvl: level });
+    upgradeTitle.textContent = `${t('upgrade_title', { lvl: level })} · ${t('weapon_limit_hint', { cur: equippedWeaponCount(wlvl), max: MAX_EQUIPPED_WEAPONS })}`;
     cardsEl.innerHTML = '';
     for (let cardIdx = 0; cardIdx < picks.length; cardIdx++) {
       const u = picks[cardIdx];
@@ -1286,27 +1286,35 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   }
 
   function updateWeaponHud(): void {
+    const slotsFull = equippedWeaponCount(wlvl) >= MAX_EQUIPPED_WEAPONS;
+    const lockedLabel = (id: WeaponId): string | undefined => {
+      if (wlvl[id] > 0) return undefined;
+      if (slotsFull) return t('wh_slot_cap');
+      const req = WEAPON_UNLOCK_LEVEL[id];
+      return req > 1 ? t('wh_unlock_lvl', { lvl: req }) : t('wh_locked');
+    };
     const spIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.spikes - 1));
     const spMax = SPIKES.cd[spIdx] / effAtkSpd();
-    setSlot(wSlots.spikes, wlvl.spikes > 0 ? 1 - Math.max(0, spikesCd) / spMax : 0, wlvl.spikes, undefined, t('w_name_spikes'));
-    setSlot(wSlots.orbs, 1, wlvl.orbs, undefined, t('w_name_orbs'));
+    setSlot(wSlots.spikes, wlvl.spikes > 0 ? 1 - Math.max(0, spikesCd) / spMax : 0, wlvl.spikes, lockedLabel('spikes'), t('w_name_spikes'));
+    setSlot(wSlots.orbs, 1, wlvl.orbs, lockedLabel('orbs'), t('w_name_orbs'));
     const nvIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.nova - 1));
-    const nvMax = (NOVA.cd[nvIdx] * (genes.has('supercharge') ? 1.6 : 1)) / effAtkSpd();
-    setSlot(wSlots.nova, wlvl.nova > 0 ? 1 - Math.max(0, novaCd) / nvMax : 0, wlvl.nova, undefined, t('w_name_nova'));
-    setSlot(wSlots.aura, 1, wlvl.aura, undefined, t('w_name_aura'));
+    const nvMax = (NOVA.cd[nvIdx] * biolabNovaCdMul * (genes.has('supercharge') ? 1.6 : 1)) / effAtkSpd();
+    setSlot(wSlots.nova, wlvl.nova > 0 ? 1 - Math.max(0, novaCd) / nvMax : 0, wlvl.nova, lockedLabel('nova'), t('w_name_nova'));
+    setSlot(wSlots.aura, 1, wlvl.aura, lockedLabel('aura'), t('w_name_aura'));
 
     const mandIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.mandibles - 1));
     const mandMax = MANDIBLES.cd[mandIdx] / effAtkSpd();
-    setSlot(wSlots.mandibles, wlvl.mandibles > 0 ? 1 - Math.max(0, mandiblesCd) / mandMax : 0, wlvl.mandibles, undefined, t('w_name_mandibles'));
+    setSlot(wSlots.mandibles, wlvl.mandibles > 0 ? 1 - Math.max(0, mandiblesCd) / mandMax : 0, wlvl.mandibles, lockedLabel('mandibles'), t('w_name_mandibles'));
 
     const cystIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.cysts - 1));
     const cystMax = CYSTS.cd[cystIdx] / effAtkSpd();
-    setSlot(wSlots.cysts, wlvl.cysts > 0 ? 1 - Math.max(0, cystsCd) / cystMax : 0, wlvl.cysts, undefined, t('w_name_cysts'));
+    setSlot(wSlots.cysts, wlvl.cysts > 0 ? 1 - Math.max(0, cystsCd) / cystMax : 0, wlvl.cysts, lockedLabel('cysts'), t('w_name_cysts'));
 
     const dashReady = dashCd <= 0;
+    const dashMaxCd = Math.max(0.8, DASH.cd + dailyDashCdDelta);
     setSlot(
       wSlots.dash,
-      1 - Math.max(0, dashCd) / DASH.cd,
+      1 - Math.max(0, dashCd) / dashMaxCd,
       1,
       dashReady ? t('wh_dash_key') : `${dashCd.toFixed(1)}s`,
       t('w_name_dash')
@@ -1329,13 +1337,15 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     );
   }
 
-  // ---------- Навигация по модальным окнам (Главное Меню, Кодекс, Биолаб, Справка, Настройки) ----------
-  type ModalKind = 'intro' | 'biolab' | 'codex' | 'help' | 'settings';
+  // ---------- Навигация по модальным окнам (Главное Меню, Биолаб, Испытание, Достижения, Кодекс, Справка, Настройки) ----------
+  type ModalKind = 'intro' | 'biolab' | 'daily' | 'achievements' | 'codex' | 'help' | 'settings';
   let lastModalFocus: HTMLElement | null = null;
   let lastActiveModal: ModalKind | null = null;
   const MODAL_ELEMENTS: Record<ModalKind, HTMLElement | null> = {
     intro,
     biolab: biolabOverlay,
+    daily: dailyModal,
+    achievements: achievementsModal,
     codex: codexModal,
     help: helpModal,
     settings: settingsModal,
@@ -1345,16 +1355,18 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     const anyModal =
       intro.classList.contains('show') ||
       biolabOverlay.classList.contains('show') ||
+      Boolean(dailyModal?.classList.contains('show')) ||
+      Boolean(achievementsModal?.classList.contains('show')) ||
       Boolean(codexModal?.classList.contains('show')) ||
       Boolean(helpModal?.classList.contains('show')) ||
       Boolean(settingsModal?.classList.contains('show')) ||
       upgradeModal.classList.contains('show');
     if (!started) {
       stage.dataset.phase = 'menu';
-    } else if (paused || anyModal) {
-      stage.dataset.phase = 'paused';
     } else if (gameOver) {
       stage.dataset.phase = 'gameover';
+    } else if (paused || anyModal) {
+      stage.dataset.phase = 'paused';
     } else {
       stage.dataset.phase = 'playing';
     }
@@ -1364,18 +1376,22 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   function showModal(which: ModalKind | null): void {
     if (which !== null && lastActiveModal === null) {
       const active = document.activeElement as HTMLElement | null;
-      if (active && !active.closest('#intro, #biolab, #codex, #help-modal, #settings-modal, #upgrade')) {
+      if (active && !active.closest('#intro, #biolab, #daily-modal, #achievements-modal, #codex, #help-modal, #settings-modal, #upgrade')) {
         lastModalFocus = active;
       }
     }
     intro.classList.toggle('show', which === 'intro');
     biolabOverlay.classList.toggle('show', which === 'biolab');
+    if (dailyModal) dailyModal.classList.toggle('show', which === 'daily');
+    if (achievementsModal) achievementsModal.classList.toggle('show', which === 'achievements');
     if (codexModal) codexModal.classList.toggle('show', which === 'codex');
     if (helpModal) helpModal.classList.toggle('show', which === 'help');
     if (settingsModal) settingsModal.classList.toggle('show', which === 'settings');
     syncStagePhase();
 
     if (which === 'biolab') renderBiolab();
+    if (which === 'daily') renderDailyModal();
+    if (which === 'achievements') renderAchievements();
     if (which === 'codex') renderCodex();
     if (which === 'settings') syncSettingsUI();
     if (which === 'intro' && (menuRecordText || menuRecordBadge)) {
@@ -1630,7 +1646,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   }
 
   function togglePause(): void {
-    if (!started || gameOver || pendingUps > 0) return;
+    if (!started || gameOver || dying || pendingUps > 0) return;
     paused = !paused;
     if (paused) {
       sfx.setTailDrone(false);
@@ -1657,7 +1673,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (btn.getAttribute('data-close-modal') === 'help' && helpOpenedFromGame) {
         closeHelpModal();
       } else {
-        showModal(!started || paused ? 'intro' : null);
+        showModal(!started || (paused && !gameOver) ? 'intro' : null);
       }
     });
   });
@@ -1744,6 +1760,9 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       const ch = getDailyChallenge();
       dcLabel.textContent = `${t('daily_challenge')}: ${trChallengeTitle(ch.branch, ch.title)}`;
     }
+    if (achievementsOpenLabel) {
+      achievementsOpenLabel.textContent = t('achievements_btn', { unlocked: loadAchievements().size, total: ACHIEVEMENTS.length });
+    }
     if (biolabOpenBtn) {
       const sp = biolabOpenBtn.querySelector('span');
       if (sp) sp.textContent = t('biolab');
@@ -1813,11 +1832,26 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       const sp = biolabBtn.querySelector('span');
       if (sp) sp.textContent = t('biolab');
     }
+    if (deathAchBtn) {
+      const sp = deathAchBtn.querySelector('span');
+      if (sp) sp.textContent = t('achievements');
+    }
 
     // Biolab
     setText('biolab-title', 'biolab_title');
-    setText('biolab-sub', 'biolab_sub');
+    const bSub = document.getElementById('biolab-sub');
+    if (bSub) bSub.textContent = t('biolab_sub', { max: MAX_ACTIVE_BIOLAB });
+    if (biolabDisableAllBtn) biolabDisableAllBtn.textContent = t('biolab_disable_all');
     if (biolabCloseBtn) biolabCloseBtn.textContent = t('biolab_close');
+
+    // Daily Challenge & Achievements
+    setText('daily-modal-title', 'daily_challenge');
+    setText('daily-modal-sub', 'daily_modal_sub');
+    setText('daily-start-label', 'daily_start');
+    if (dailyCloseBtn) dailyCloseBtn.textContent = t('daily_back');
+    setText('ach-title-el', 'ach_title');
+    setText('ach-sub-el', 'ach_sub');
+    if (achCloseBtn) achCloseBtn.textContent = t('codex_close');
 
     // Codex
     setText('codex-title-el', 'codex_title');
@@ -1883,6 +1917,9 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     updateWeaponHud();
     renderBiolab();
     renderCodex();
+    renderAchievements();
+    if (dailyModal?.classList.contains('show')) renderDailyModal();
+    updateDailyHudPill();
   }
   applyI18n();
 
@@ -1892,6 +1929,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     'lumivore_achievements_v1',
     'lumivore_leaderboard_v1',
     'lumivore_settings_v1',
+    'lumivore_daily_done_v1',
   ] as const;
 
   const exportSaveBtn = document.getElementById('export-save-btn');
@@ -1932,6 +1970,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         }
         renderBiolab();
         renderCodex();
+        renderAchievements();
         refreshCodexBonuses();
         showToast(t('toast_save_imported'), 'success');
       } catch {
@@ -1951,81 +1990,256 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     });
   });
 
-  // ---------- Биолаб: мета-прогрессия между забегами (Этап 6.1) ----------
+  // ---------- Биолаб: мета-прогрессия между забегами, категории и переключение модулей ----------
   function renderBiolab(): void {
     const bl = loadBiolab();
-    const ownedCount = BIOLAB_UNLOCKS.filter((u) => isUnlocked(u.id)).length;
+    const ownedCount = BIOLAB_UNLOCKS.filter((u) => bl.unlocked.includes(u.id)).length;
+    const activeCount = getActiveIds(bl).length;
     const pct = Math.round((ownedCount / BIOLAB_UNLOCKS.length) * 100);
     biolabPointsEl.innerHTML =
       `<svg class="bio-icon bio-violet" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-node-incubator"/></svg> ${t('biolab_points', { pts: bl.points, owned: ownedCount, total: BIOLAB_UNLOCKS.length, pct, best: fmtTime(bl.bestTime) })}`;
-    biolabListEl.innerHTML = '';
-    for (const u of BIOLAB_UNLOCKS) {
-      const bought = isUnlocked(u.id);
-      const can = !bought && bl.points >= u.cost;
-      const trB = trBiolab(u.id, u.name, u.effect);
-      const card = document.createElement('button');
-      card.type = 'button';
-      card.className = 'bl-card' + (bought ? ' owned' : can ? ' afford' : '');
-      card.dataset.id = u.id;
-      let ico = 'ico-node-gen';
-      let icoVb = '0 0 32 32';
-      if (u.id.includes('orbs')) ico = 'ico-weapon-orbs';
-      else if (u.id.includes('aura')) ico = 'ico-weapon-aura';
-      else if (u.id.includes('tail')) ico = 'ico-tail-length';
-      else if (u.id.includes('nova')) ico = 'ico-weapon-nova';
-      else if (u.id.includes('magnet')) ico = 'ico-node-magnet';
-      else if (u.id.includes('regen')) ico = 'ico-node-gen';
-      else if (u.id === 'perm_dmg') { ico = 'ico-perm-dmg'; icoVb = '0 0 64 64'; }
-      else if (u.id === 'perm_armor') { ico = 'ico-perm-armor'; icoVb = '0 0 64 64'; }
-      else if (u.id === 'unlock_vermis') ico = 'ico-vermis';
-      else if (u.id === 'unlock_chimera') ico = 'ico-chimera';
-      else if (u.id === 'unlock_mycelium') ico = 'ico-mycelium';
-      else if (u.id === 'unlock_symbiont') ico = 'ico-symbiont';
+    if (biolabSlotsPillEl) {
+      biolabSlotsPillEl.textContent = t('biolab_slots', { active: activeCount, max: MAX_ACTIVE_BIOLAB });
+    }
+    if (biolabDisableAllBtn) {
+      biolabDisableAllBtn.disabled = activeCount === 0;
+    }
 
-      card.innerHTML =
-        `<div class="bl-head"><h3><svg class="bio-icon bio-cyan" viewBox="${icoVb}" style="width:16px;height:16px;vertical-align:-3px;margin-right:5px;" aria-hidden="true"><use href="#${ico}"/></svg>${trB.name}</h3><span class="bl-cost">${bought ? t('biolab_bought') : t('biolab_cost', { cost: u.cost })}</span></div>` +
-        `<p>${trB.effect}</p>`;
-      biolabListEl.appendChild(card);
+    biolabListEl.innerHTML = '';
+    const categories: BiolabCategory[] = ['form', 'dna', 'passive'];
+    for (const cat of categories) {
+      const catHead = document.createElement('div');
+      catHead.className = 'bl-section-title';
+      catHead.textContent = t(`biolab_cat_${cat}` as I18nKey);
+      biolabListEl.appendChild(catHead);
+
+      for (const u of BIOLAB_UNLOCKS.filter((item) => item.category === cat)) {
+        const bought = bl.unlocked.includes(u.id);
+        const active = bought && isActive(u.id, bl);
+        const can = !bought && bl.points >= u.cost;
+        const trB = trBiolab(u.id, u.name, u.effect);
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'bl-card' + (active ? ' owned' : bought ? ' disabled-mod' : can ? ' afford' : '');
+        card.dataset.id = u.id;
+        card.setAttribute('aria-pressed', bought ? (active ? 'true' : 'false') : 'false');
+        let ico = 'ico-node-gen';
+        let icoVb = '0 0 32 32';
+        if (u.id.includes('orbs')) ico = 'ico-weapon-orbs';
+        else if (u.id.includes('aura')) ico = 'ico-weapon-aura';
+        else if (u.id.includes('tail')) ico = 'ico-tail-length';
+        else if (u.id.includes('nova')) ico = 'ico-weapon-nova';
+        else if (u.id.includes('magnet')) ico = 'ico-node-magnet';
+        else if (u.id.includes('regen')) ico = 'ico-node-gen';
+        else if (u.id === 'perm_dmg') { ico = 'ico-perm-dmg'; icoVb = '0 0 64 64'; }
+        else if (u.id === 'perm_armor') { ico = 'ico-perm-armor'; icoVb = '0 0 64 64'; }
+        else if (u.id === 'unlock_vermis') ico = 'ico-vermis';
+        else if (u.id === 'unlock_chimera') ico = 'ico-chimera';
+        else if (u.id === 'unlock_mycelium') ico = 'ico-mycelium';
+        else if (u.id === 'unlock_symbiont') ico = 'ico-symbiont';
+
+        const costLabel = active
+          ? t('biolab_bought')
+          : bought
+            ? t('biolab_disabled')
+            : t('biolab_cost', { cost: u.cost });
+
+        card.innerHTML =
+          `<div class="bl-head"><h3><svg class="bio-icon bio-cyan" viewBox="${icoVb}" style="width:16px;height:16px;vertical-align:-3px;margin-right:5px;" aria-hidden="true"><use href="#${ico}"/></svg>${trB.name}</h3><span class="bl-cost">${costLabel}</span></div>` +
+          `<p>${trB.effect}</p>`;
+        biolabListEl.appendChild(card);
+      }
     }
   }
 
   biolabListEl.addEventListener('click', (e) => {
     const card = (e.target as HTMLElement).closest('.bl-card') as HTMLElement | null;
     if (!card || !card.dataset.id) return;
-    if (purchase(card.dataset.id)) {
-      sfx.biolabUnlock();
-      showToast(t('toast_biolab_bought'), 'success');
+    const id = card.dataset.id;
+    if (!isUnlocked(id)) {
+      if (purchase(id)) {
+        sfx.biolabUnlock();
+        showToast(t('toast_biolab_bought'), 'success');
+      } else {
+        sfx.capture(false);
+      }
     } else {
-      sfx.capture(false);
+      const res = toggleModule(id);
+      if (!res.ok && res.reason === 'limit') {
+        sfx.capture(false);
+        showToast(t('biolab_limit_toast', { max: MAX_ACTIVE_BIOLAB }), 'warn');
+      } else if (res.ok) {
+        sfx.upgradeSelect();
+      }
     }
     renderBiolab();
   });
+  if (biolabDisableAllBtn) {
+    biolabDisableAllBtn.addEventListener('click', () => {
+      disableAllBiolab();
+      sfx.upgradeSelect();
+      showToast(t('biolab_disabled_all_toast'), 'info');
+      renderBiolab();
+    });
+  }
+  const modalBackTarget = (): ModalKind | null => (!started || (paused && !gameOver) ? 'intro' : null);
   if (biolabOpenBtn) biolabOpenBtn.addEventListener('click', () => showModal('biolab'));
   if (biolabBtn) biolabBtn.addEventListener('click', () => showModal('biolab'));
-  biolabCloseBtn.addEventListener('click', () => showModal(!started || paused ? 'intro' : null));
+  biolabCloseBtn.addEventListener('click', () => showModal(modalBackTarget()));
   savePortraitBtn.addEventListener('click', () => {
     if (!lastGenome) return;
     downloadPortrait(portraitCanvas, `lumivore-${lastGenome.branch}-${Math.round(lastGenome.survivalTime)}s.png`);
   });
 
-  // Стартовые бонусы Биолаба применяются к каждому новому забегу
+  // Стартовые бонусы Биолаба применяются к каждому новому забегу (только активные модули!)
   function applyBiolabStart(): void {
-    if (isUnlocked('start_orbs')) { wlvl.orbs = 1; wlvl.spikes = 0; }
-    if (isUnlocked('start_aura')) { wlvl.aura = 1; maxHp -= 20; player.hp = Math.min(player.hp, maxHp); }
-    if (isUnlocked('start_tail_xl')) tailLen = TAIL.startLen * 2;
-    if (isUnlocked('start_nova2')) { wlvl.nova = 2; novaCd = NOVA.cd[1]; }
-    if (isUnlocked('perm_regen')) regen += 0.3;
-    if (isUnlocked('perm_magnet')) magnetR *= 1.25;
-    if (isUnlocked('perm_dmg')) dmgMul *= 1.1;
-    // Синтез генома: старт с 1 ДНК-уровнем ветки
-    if (isUnlocked('unlock_vermis')) { dnaXp.vermis = DNA_LEVELS[0]; lastDnaLvl.vermis = 1; }
-    if (isUnlocked('unlock_chimera')) { dnaXp.chimera = DNA_LEVELS[0]; lastDnaLvl.chimera = 1; }
-    if (isUnlocked('unlock_mycelium')) { dnaXp.mycelium = DNA_LEVELS[0]; lastDnaLvl.mycelium = 1; }
-    if (isUnlocked('unlock_symbiont')) { dnaXp.symbiont = DNA_LEVELS[0]; lastDnaLvl.symbiont = 1; }
+    const bl = loadBiolab();
+    if (isActive('start_orbs', bl)) { wlvl.orbs = 1; wlvl.spikes = 0; }
+    if (isActive('start_aura', bl)) {
+      wlvl.aura = 1;
+      wlvl.spikes = 0;
+      maxHp = Math.max(50, maxHp - 15);
+      player.hp = Math.min(player.hp, maxHp);
+    }
+    if (isActive('start_nova2', bl)) {
+      wlvl.nova = 1;
+      wlvl.spikes = 0;
+      biolabNovaCdMul = 1.15;
+      novaCd = NOVA.cd[0] * biolabNovaCdMul;
+    }
+    if (isActive('start_tail_xl', bl)) tailLen = TAIL.startLen + 6;
+    if (isActive('perm_regen', bl)) regen += 0.25;
+    if (isActive('perm_magnet', bl)) magnetR *= 1.2;
+    if (isActive('perm_dmg', bl)) dmgMul *= 1.08;
+    // Синтез генома: старт с 1 ДНК-уровнем выбранной ветки
+    if (isActive('unlock_vermis', bl)) { dnaXp.vermis = DNA_LEVELS[0]; lastDnaLvl.vermis = 1; }
+    if (isActive('unlock_chimera', bl)) { dnaXp.chimera = DNA_LEVELS[0]; lastDnaLvl.chimera = 1; }
+    if (isActive('unlock_mycelium', bl)) { dnaXp.mycelium = DNA_LEVELS[0]; lastDnaLvl.mycelium = 1; }
+    if (isActive('unlock_symbiont', bl)) { dnaXp.symbiont = DNA_LEVELS[0]; lastDnaLvl.symbiont = 1; }
+  }
+
+  function updateDailyHudPill(): void {
+    if (!dailyHudPillEl) return;
+    if (!dailyRunActive) {
+      dailyHudPillEl.hidden = true;
+      dailyHudPillEl.classList.remove('done');
+      return;
+    }
+    dailyHudPillEl.hidden = false;
+    dailyHudPillEl.classList.toggle('done', dailyRunDone);
+    dailyHudPillEl.textContent = dailyRunDone
+      ? t('daily_hud_done')
+      : t('daily_hud_progress', { cur: fmtTime(gameTime), goal: fmtTime(dailyInfo.goalTimeSec), scale: dailyInfo.goalScale });
+  }
+
+  function renderDailyModal(): void {
+    if (!dailyBriefBody) return;
+    const ch = getDailyChallenge();
+    const en = getLocale() === 'en';
+    const done = isDailyCompleted(ch.dayKey);
+    const dnaName = trDnaName(ch.branch, DNA_NAMES[ch.branch]);
+    const modName = en ? ch.modNameEn : ch.modNameRu;
+    const modDesc = en ? ch.modDescEn : ch.modDescRu;
+    const goalDesc = en ? ch.goalDescEn : ch.goalDescRu;
+    const challengeTitle = trChallengeTitle(ch.branch, ch.title);
+    dailyBriefBody.innerHTML = `
+      <div class="daily-box">
+        <h3>${t('daily_what_title')}</h3>
+        <p>${t('daily_what_desc', { pts: ch.bonusPoints })}</p>
+      </div>
+      <div class="daily-box">
+        <h3>${t('daily_genome_title', { day: ch.dayKey })}</h3>
+        <p><svg class="chip-ico" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-${ch.branch}"/></svg><strong>${dnaName}</strong> · ${challengeTitle}</p>
+      </div>
+      <div class="daily-box full">
+        <h3>${t('daily_mods_title', { name: modName })}</h3>
+        <p>${modDesc}</p>
+      </div>
+      <div class="daily-box full">
+        <h3>${t('daily_goal_title')}</h3>
+        <p>${goalDesc}</p>
+        <div class="daily-status-pill" style="color:${done ? '#00ff9d' : '#fde047'};">
+          ${t(done ? 'daily_status_done' : 'daily_status_todo', { pts: ch.bonusPoints })}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderAchievements(): void {
+    const unlocked = loadAchievements();
+    const en = getLocale() === 'en';
+    if (achievementsOpenLabel) {
+      achievementsOpenLabel.textContent = t('achievements_btn', { unlocked: unlocked.size, total: ACHIEVEMENTS.length });
+    }
+    if (achStatsPillEl) {
+      achStatsPillEl.textContent = t('ach_stats', { unlocked: unlocked.size, total: ACHIEVEMENTS.length });
+    }
+    if (achProgressEl) {
+      achProgressEl.max = ACHIEVEMENTS.length;
+      achProgressEl.value = unlocked.size;
+    }
+    if (!achievementsGridEl) return;
+    achievementsGridEl.innerHTML = '';
+    for (const a of ACHIEVEMENTS) {
+      const has = unlocked.has(a.id);
+      const item = document.createElement('div');
+      item.className = 'ach-item ' + (has ? 'unlocked' : 'locked');
+      const title = en ? a.titleEn : a.title;
+      const desc = en ? a.descEn : a.desc;
+      item.innerHTML = `
+        <div class="ach-ico"><svg viewBox="0 0 64 64" aria-hidden="true"><use href="#${a.iconId}"/></svg></div>
+        <div class="ach-info">
+          <div class="ach-head">
+            <h3>${title}</h3>
+            <span class="ach-badge" style="color:${has ? '#fde047' : '#9ab0c4'};">${t(has ? 'ach_unlocked' : 'ach_locked')}</span>
+          </div>
+          <p>${desc}</p>
+          <span class="ach-badge" style="color:${has ? '#00ff9d' : '#f59e0b'};">${t('ach_reward', { pts: a.reward })}</span>
+        </div>
+      `;
+      achievementsGridEl.appendChild(item);
+    }
+  }
+
+  function grantAchievements(newly: AchievementDef[]): void {
+    if (newly.length === 0) return;
+    const en = getLocale() === 'en';
+    let pts = 0;
+    for (const a of newly) pts += a.reward;
+    if (pts > 0) addBiolabPoints(pts);
+    renderAchievements();
+    if (!dying && !gameOver) sfx.biolabUnlock();
+    for (const ach of newly) {
+      const title = en ? ach.titleEn : ach.title;
+      showToast(
+        `<svg class="bio-icon bio-amber" viewBox="0 0 64 64" aria-hidden="true"><use href="#${ach.iconId}"/></svg> ` +
+        `${en ? 'ACHIEVEMENT' : 'ДОСТИЖЕНИЕ'}: ${title} (+${ach.reward})`,
+        'success'
+      );
+    }
   }
 
   // ---------- Старт / пауза / рестарт ----------
   introStartBtn.addEventListener('click', () => {
+    if (!started && gameTime === 0 && !gameOver) {
+      // Пересчитываем стартовый арсенал и активные модули Биолаба перед первым выходом
+      wlvl.spikes = 1; wlvl.orbs = 0; wlvl.nova = 0; wlvl.aura = 0; wlvl.mandibles = 0; wlvl.cysts = 0;
+      maxHp = PLAYER.hp;
+      player.hp = PLAYER.hp;
+      regen = 0.18;
+      magnetR = PLAYER.magnet;
+      dmgMul = 1;
+      tailLen = TAIL.startLen;
+      novaCd = 2;
+      biolabNovaCdMul = 1;
+      dnaXp.vermis = 0; dnaXp.chimera = 0; dnaXp.mycelium = 0; dnaXp.symbiont = 0;
+      lastDnaLvl.vermis = 0; lastDnaLvl.chimera = 0; lastDnaLvl.mycelium = 0; lastDnaLvl.symbiont = 0;
+      applyBiolabStart();
+      refreshMainGenome();
+      updateBranchChip();
+      updateDnaHud();
+      updateWeaponHud();
+    }
     started = true;
     paused = false;
     sfx.startBgm();
@@ -2035,21 +2249,43 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
 
   const dailyChallengeBtn = document.getElementById('daily-challenge-btn');
   if (dailyChallengeBtn) {
-    dailyChallengeBtn.addEventListener('click', () => {
+    dailyChallengeBtn.addEventListener('click', () => showModal('daily'));
+  }
+  if (dailyStartBtn) {
+    dailyStartBtn.addEventListener('click', () => {
       const ch = getDailyChallenge();
       restartBtn.click();
+      dailyInfo = ch;
+      dailyRunActive = true;
+      dailyRunDone = isDailyCompleted(ch.dayKey);
+      dailyRng = mulberry32(ch.seed);
+      dailyEnemySpeedMul = ch.modifiers.enemySpeedMul;
+      dailyTailDpsMul = ch.modifiers.tailDpsMul;
+      dailyDmgMul = ch.modifiers.dmgMul;
+      dailyCaptureSpeedMul = ch.modifiers.captureSpeedMul;
+      dailyEnemyNodeAggroMul = ch.modifiers.enemyNodeAggroMul;
+      dailyXpMul = ch.modifiers.xpMul;
+      dailyDashCdDelta = ch.modifiers.dashCdDelta;
+      maxHp = Math.max(40, maxHp + ch.modifiers.maxHpDelta);
+      player.hp = Math.min(player.hp, maxHp);
       started = true;
       paused = false;
       dnaXp[ch.branch] = Math.max(dnaXp[ch.branch], DNA_LEVELS[0]);
       lastDnaLvl[ch.branch] = Math.max(lastDnaLvl[ch.branch], 1);
+      refreshMainGenome();
       updateDnaHud();
       updateBranchChip();
+      updateDailyHudPill();
       showModal(null);
       showToast(`${t('daily_challenge')} (${ch.dayKey}): ${trChallengeTitle(ch.branch, ch.title)}`, 'warn');
     });
   }
+  if (dailyCloseBtn) dailyCloseBtn.addEventListener('click', () => showModal(modalBackTarget()));
+  if (achievementsOpenBtn) achievementsOpenBtn.addEventListener('click', () => showModal('achievements'));
+  if (deathAchBtn) deathAchBtn.addEventListener('click', () => showModal('achievements'));
+  if (achCloseBtn) achCloseBtn.addEventListener('click', () => showModal(modalBackTarget()));
   helpBtn.addEventListener('click', () => {
-    if (!started || gameOver) return;
+    if (!started || gameOver || dying) return;
     paused = true;
     helpOpenedFromGame = true;
     sfx.setTailDrone(false);
@@ -2058,6 +2294,24 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   });
 
   restartBtn.addEventListener('click', () => {
+    dying = false;
+    dyingT = 0;
+    lastDamageCause = null;
+    capturedDeathBg = null;
+    liveAchCheckT = 0;
+    dailyRunActive = false;
+    dailyRunDone = false;
+    dailyEnemySpeedMul = 1;
+    dailyTailDpsMul = 1;
+    dailyDmgMul = 1;
+    dailyCaptureSpeedMul = 1;
+    dailyEnemyNodeAggroMul = 1;
+    dailyXpMul = 1;
+    dailyDashCdDelta = 0;
+    dailyRng = Math.random;
+    biolabNovaCdMul = 1;
+    if (deathCauseEl) deathCauseEl.hidden = true;
+    updateDailyHudPill();
     scaleIdx = 0;
     curWorldW = worldSize(0).w;
     curWorldH = worldSize(0).h;
@@ -2076,7 +2330,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     maxHp = PLAYER.hp;
     moveSpeed = PLAYER.speed;
     magnetR = PLAYER.magnet;
-    regen = 0.5;
+    regen = 0.18;
     dmgMul = 1;
     atkSpdMul = 1;
     for (const k of Object.keys(statStacks)) delete statStacks[k];
@@ -2089,6 +2343,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     spikesCd = 0;
     mandiblesCd = 0;
     cystsCd = 0;
+    cystMoveDist = 0;
+    idleTime = 0;
     dashCd = 0;
     dashT = 0;
     dashRequested = false;
@@ -2122,13 +2378,15 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     titanSatedDone = false;
     level = 1;
     xp = 0;
-    xpNext = 6;
+    xpNext = xpRequiredForLevel(1);
     pendingUps = 0;
     gameTime = 0;
     spawnT = 1;
     nextBossAt = BOSS_FIRST_AT;
     nextPickDelta = 0;
     incubatorSpawnT = 20;
+    nodeRaidScanT = 0;
+    nodeUnattendedT.clear();
     callCd = 0;
     callRequested = false;
     frameBloom3 = 0;
@@ -2487,8 +2745,33 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     updateScaleHud();
   }
 
+  /** Запуск медленной анимации разрыва организма перед финальным окном */
+  function beginDeathSequence(): void {
+    if (dying || gameOver) return;
+    dying = true;
+    dyingT = DYING_DURATION;
+    player.hp = 0;
+    paused = false;
+    upgradeModal.classList.remove('show');
+    sfx.setTailDrone(false);
+    sfx.stopBgm();
+    sfx.death();
+    overlay.spawnPulse(player.x, player.y, 0xff3b5c, 165);
+    overlay.beginShake(0.45);
+    if (gameSettings.screenFlashes !== 'off') hurtEl.classList.add('hit');
+    const en = getLocale() === 'en';
+    const causeText = lastDamageCause
+      ? (en ? lastDamageCause.labelEn : lastDamageCause.labelRu)
+      : t('death_cause_unknown');
+    showToast(t('death_toast_fatal', { cause: causeText }), 'danger');
+    capturedDeathBg = null;
+    void sim.captureFrame().then((fc) => { if (fc) capturedDeathBg = fc; });
+    syncStagePhase();
+  }
+
   /** Финал забега: смерть (win=false) или Фрактальный Парадокс (win=true) */
   function finishRun(win: boolean): void {
+    dying = false;
     gameOver = true;
     winRun = win;
     sfx.setTailDrone(false);
@@ -2526,17 +2809,26 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       codexTotal: CODEX_ENTRIES.length,
       win,
     });
-    for (const ach of newAchs) {
-      showToast(
-        `<svg class="bio-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#${ach.iconId}"/></svg> ` +
-        `${getLocale() === 'en' ? 'ACHIEVEMENT' : 'ДОСТИЖЕНИЕ'}: ${ach.title}`,
-        'success'
-      );
-    }
+    const achBonusPts = newAchs.reduce((acc, a) => acc + a.reward, 0);
+    grantAchievements(newAchs);
+    const totalPtsGained = (blAfter.points - bl.points) + achBonusPts;
+
     const topStr = topRecords.slice(0, 3).map((r, i) => `#${i + 1} ${fmtTime(r.time)}`).join(' · ');
     modalTitle.textContent = win ? t('modal_win_title') : t('modal_lose_title');
     modalTitle.classList.toggle('win', win);
     modalTitle.classList.toggle('lose', !win);
+    if (deathCauseEl) {
+      if (!win) {
+        const en = getLocale() === 'en';
+        const causeText = lastDamageCause
+          ? (en ? lastDamageCause.labelEn : lastDamageCause.labelRu)
+          : t('death_cause_unknown');
+        deathCauseEl.hidden = false;
+        deathCauseEl.innerHTML = `<svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-skull-hazard"/></svg><span>${t('death_cause_label', { cause: causeText })}</span>`;
+      } else {
+        deathCauseEl.hidden = true;
+      }
+    }
     const hybridDef = HYBRIDS.find((h) => h.id === mainGenome);
     const trMainGenome = mainGenome === 'neutral'
       ? t('hud_specimen')
@@ -2550,7 +2842,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         : `${t('genome_prefix')}: ${trMainGenome}`;
     modalSub.textContent = win
       ? t('modal_win_sub')
-      : t('modal_lose_sub', { genome: genomeLabel, pts: blAfter.points - bl.points });
+      : t('modal_lose_sub', { genome: genomeLabel, pts: totalPtsGained });
     const dmgOther = Math.max(0, Math.round(damageDealt - dmgTail - dmgRing));
     deathStatsEl.innerHTML =
       `<span class="stat-metric-row"><svg class="bio-icon bio-cyan" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-timer"/></svg> ${fmtTime(gameTime)}${genome.record ? ` <svg class="bio-icon bio-amber" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-record-badge"/></svg> ${t('stat_record')}` : ''}</span>` +
@@ -2587,8 +2879,10 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       portraitCanvas.height = p.height;
       pctx.drawImage(p, 0, 0);
     };
-    drawPortrait(null);
-    void sim.captureFrame().then((fc) => { if (fc && gameOver) drawPortrait(fc); });
+    drawPortrait(capturedDeathBg);
+    if (!capturedDeathBg) {
+      void sim.captureFrame().then((fc) => { if (fc && gameOver) drawPortrait(fc); });
+    }
     bossHudEl?.classList.remove('show');
     modal.classList.add('show');
     syncStagePhase();
@@ -2810,12 +3104,12 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
 
     // Метаморфоз: bullet-time замедляет весь мир на переходе масштаба
     if (metamorphT > 0) metamorphT -= rawDt;
-    const timeScale = metamorphT > 0 ? METAMORPH.timeScale : 1;
+    const timeScale = dying ? 0.18 : metamorphT > 0 ? METAMORPH.timeScale : 1;
     const dt = rawDt * timeScale; // игровое время: таймеры и физика мира
 
-    // Камера: плавное слежение за игроком и твин зума текущей шкалы бытия
-    const zoomTarget = SCALES[scaleIdx].zoom;
-    camZoom += (zoomTarget - camZoom) * Math.min(1, rawDt * 2.0);
+    // Камера: плавное слежение за игроком и твин зума текущей шкалы бытия (в момент смерти мягко приближается)
+    const zoomTarget = SCALES[scaleIdx].zoom * (dying ? 1.18 : 1);
+    camZoom += (zoomTarget - camZoom) * Math.min(1, rawDt * (dying ? 3.5 : 2.0));
 
     camX += (player.x - camX) * Math.min(1, rawDt * 5.0);
     camY += (player.y - camY) * Math.min(1, rawDt * 5.0);
@@ -2833,8 +3127,44 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       camY = curWorldH / 2;
     }
 
-    if (started && !paused && !gameOver) {
+    if (dying) {
+      dyingT -= rawDt;
+      prevCamX = camX;
+      prevCamY = camY;
+      sim.step(nowSec, dt, [], [], { x: -500, y: -500 }, -0.75, 0.90, SCALES[scaleIdx].id, 0, 0, () => {});
+      if (dyingT <= 0) {
+        finishRun(false);
+      }
+    } else if (started && !paused && !gameOver) {
       gameTime += dt;
+      if (dailyRunActive) {
+        if (!dailyRunDone && (gameTime >= dailyInfo.goalTimeSec || scaleMaxReached >= dailyInfo.goalScale)) {
+          dailyRunDone = true;
+          if (markDailyCompleted(dailyInfo.dayKey)) {
+            addBiolabPoints(dailyInfo.bonusPoints);
+            sfx.hybrid();
+            showToast(t('daily_completed_toast', { pts: dailyInfo.bonusPoints }), 'success');
+          }
+          updateDailyHudPill();
+        } else if ((frameN & 15) === 0) {
+          updateDailyHudPill();
+        }
+      }
+      liveAchCheckT += dt;
+      if (liveAchCheckT >= 2.5) {
+        liveAchCheckT = 0;
+        grantAchievements(checkAchievements({
+          time: gameTime,
+          kills,
+          nodesHeldMax,
+          scaleMax: scaleMaxReached,
+          damageDealt,
+          codexCount: loadCodex().size,
+          codexTotal: CODEX_ENTRIES.length,
+          win: false,
+        }));
+      }
+
       if (!pacifistShown && gameTime >= 60 && spikesFired === 0) {
         pacifistShown = true;
         showToast('СКРЫТЫЙ ТИТУЛ «СИМБИОНТ МИРА»: 60с без агрессии шипов');
@@ -2870,7 +3200,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       const gp = gamepad.poll();
       if (gp.dashPressed) dashRequested = true;
       if (gp.callPressed) callRequested = true;
-      if (gp.pausePressed && started && !gameOver && pendingUps === 0) {
+      if (gp.pausePressed && started && !gameOver && !dying && pendingUps === 0) {
         paused = !paused;
         if (paused) {
           sfx.stopBgm();
@@ -2891,7 +3221,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if ((dashRequested || joyDash) && dashCd <= 0) {
         dashRequested = false;
         if (joyDash) joystick.consumeDash();
-        dashCd = DASH.cd;
+        dashCd = Math.max(0.8, DASH.cd + dailyDashCdDelta);
         dashT = DASH.duration;
         player.iframe = Math.max(player.iframe, DASH.duration + 0.15);
         sfx.dash();
@@ -2932,14 +3262,20 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         * dashMul
         * (trailOwn ? STRAIN.ownSpeedMul : 1)
         * (unstableT > 0 && unstableKind === 0 ? 0.55 : 1);
+      const prevPx = player.x;
+      const prevPy = player.y;
       player.x = Math.max(16, Math.min(curWorldW - 16, player.x + (mx / mLen) * spdNow * dt));
       player.y = Math.max(16, Math.min(curWorldH - 16, player.y + (my / mLen) * spdNow * dt));
+      const movedDist = Math.hypot(player.x - prevPx, player.y - prevPy);
+      cystMoveDist += movedDist;
+      if (movedDist > 0.35) idleTime = 0;
+      else idleTime += dt;
+
       player.iframe = Math.max(0, player.iframe - dt);
       player.hp = Math.min(maxHp, player.hp + (regen + nodeRegenBonus + codexBonuses.regenAdd) * dt);
 
-      // Экономика хвоста: движение сжигает энергию, хвост растворяется.
-      // Усилитель (Этап 2.1) замораживает таяние, пока узел ваш;
-      // Нейросеть (2+ узла) и Вспышка митоза замедляют таяние и питают хвост.
+      // Экономика хвоста: движение сжигает энергию, неподвижность истощает форму.
+      // Усилитель (-40% таяния), Нейросеть (2+ узла) и Вспышка митоза замедляют таяние и питают хвост.
       let ownedNodeCnt = 0;
       for (const n of bioNodes) if (n.owner === 1) ownedNodeCnt++;
       neuralLinkActive = false;
@@ -2967,13 +3303,14 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       const isVoidEvent = waves.isVoidActive();
       const networkMeltMul = (neuralLinkActive ? 0.85 : 1) * (bloomBuffT > 0 ? 0.5 : 1);
       const unstableMeltMul = unstableT > 0 && unstableKind === 1 ? 2 : 1;
-      if (!tailFreeze && !isVoidEvent) {
+      const ampMeltMul = ampOwned ? 0.6 : 1;
+      if (!isVoidEvent) {
         if (isMoving) {
-          const melt = moveCost() * (trailEnemy ? STRAIN.enemyMeltMul : 1) * (cursePredator ? 3 : 1) * networkMeltMul * unstableMeltMul;
+          const melt = moveCost() * (trailEnemy ? STRAIN.enemyMeltMul : 1) * (cursePredator ? 3 : 1) * networkMeltMul * unstableMeltMul * ampMeltMul;
           tailLen = Math.max(TAIL.minLen, tailLen - melt * dt);
         } else {
           // Метаболический голод неподвижности: если стоять на месте, организм тратит биомассу хвоста
-          const idleMelt = TAIL.idleCost * (trailEnemy ? STRAIN.enemyMeltMul : 1) * (cursePredator ? 3 : 1) * networkMeltMul * unstableMeltMul;
+          const idleMelt = TAIL.idleCost * (trailEnemy ? STRAIN.enemyMeltMul : 1) * (cursePredator ? 3 : 1) * networkMeltMul * unstableMeltMul * ampMeltMul;
           tailLen = Math.max(TAIL.minLen, tailLen - idleMelt * dt);
         }
       }
@@ -2987,8 +3324,17 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         tailLen = Math.min(maxTail(), tailLen + 2.8 * dt);
       }
       // Если хвост сжался до минимума и игрок стоит на месте без движения - голод грызёт здоровье
-      if (tailLen <= TAIL.minLen + 0.1 && !isMoving && !tailFreeze && !isVoidEvent) {
+      if (tailLen <= TAIL.minLen + 0.1 && !isMoving && !isVoidEvent) {
         player.hp = Math.max(0, player.hp - 10 * dt);
+        if (player.hp <= 0) {
+          lastDamageCause = {
+            kind: 'starvation',
+            labelRu: 'Истощение хвоста (неподвижность без энергии)',
+            labelEn: 'Tail starvation (idle with depleted tail)',
+            amount: 10 * dt,
+          };
+          beginDeathSequence();
+        }
       }
       // Траектория пишется с шагом, длина ограничена ёмкостью
       const lastPt = pathHistory[pathHistory.length - 1];
@@ -3095,7 +3441,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
             if (gameTime >= row.since) pool.push({ type: row.type, weight: row.chance });
           }
           const totalW = pool.reduce((s, e) => s + e.weight, 0);
-          let r = Math.random() * totalW;
+          let r = (dailyRunActive ? dailyRng() : Math.random()) * totalW;
           let type: EnemyType = 'grub';
           for (const entry of pool) {
             r -= entry.weight;
@@ -3111,7 +3457,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       anomalyCd -= dt;
       if (anomalyCd <= 0 && anomalies.length < 3 && metamorphT <= 0) {
         spawnAnomaly();
-        anomalyCd = 46 + Math.random() * 18;
+        anomalyCd = 46 + (dailyRunActive ? dailyRng() : Math.random()) * 18;
       }
       for (let ai = anomalies.length - 1; ai >= 0; ai--) {
         const a = anomalies[ai];
@@ -3127,6 +3473,18 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         if (a.kind === 'acid') {
           if (Math.hypot(player.x - a.x, player.y - a.y) < a.r) {
             tailLen = Math.max(TAIL.minLen, tailLen - 12 * dt);
+            if (tailLen <= TAIL.minLen + 0.1) {
+              player.hp = Math.max(0, player.hp - 6 * dt);
+              if (player.hp <= 0) {
+                lastDamageCause = {
+                  kind: 'acid',
+                  labelRu: 'Кислотный прилив (хвост растворён)',
+                  labelEn: 'Acid Tide (tail dissolved)',
+                  amount: 6 * dt,
+                };
+                beginDeathSequence();
+              }
+            }
           }
           for (const e of nearby(a.x, a.y, a.r + 16)) {
             if (e.hp > 0 && Math.hypot(e.x - a.x, e.y - a.y) < a.r) {
@@ -3146,7 +3504,60 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         }
       }
 
-      // Враги: погоня + лёгкое расталкивание + контактный урон + экосистема (Этап 4.1)
+      // Набеги монстров на оставленные без охраны био-башни
+      nodeRaidScanT -= dt;
+      if (nodeRaidScanT <= 0) {
+        nodeRaidScanT = 1.6;
+        const targetRaiders = Math.max(1, Math.round(2 * dailyEnemyNodeAggroMul));
+        const unattendedLimit = Math.max(5, 11 / dailyEnemyNodeAggroMul);
+        for (const n of bioNodes) {
+          if (n.owner !== 1 && n.capture <= 0.25) {
+            nodeUnattendedT.set(n.id, 0);
+            continue;
+          }
+          const pDist = Math.hypot(player.x - n.x, player.y - n.y);
+          if (pDist <= n.radius + 95) {
+            nodeUnattendedT.set(n.id, 0);
+            continue;
+          }
+          let curRaiders = 0;
+          for (const e of enemies) {
+            if (e.hp > 0 && e.infected <= 0 && e.raidNodeId === n.id) curRaiders++;
+          }
+          if (curRaiders < targetRaiders) {
+            for (const e of enemies) {
+              if (curRaiders >= targetRaiders) break;
+              if (
+                e.hp > 0 && e.infected <= 0 && e.raidNodeId === undefined &&
+                e.type !== 'boss' && !e.titan && e.type !== 'pulsar' && e.type !== 'colony' &&
+                Math.hypot(e.x - n.x, e.y - n.y) < 460
+              ) {
+                e.raidNodeId = n.id;
+                curRaiders++;
+              }
+            }
+          }
+          if (curRaiders === 0) {
+            const acc = (nodeUnattendedT.get(n.id) ?? 0) + 1.6;
+            nodeUnattendedT.set(n.id, acc);
+            if (acc >= unattendedLimit && enemies.length < ENEMY_CAP - 2) {
+              nodeUnattendedT.set(n.id, 0);
+              for (let rIdx = 0; rIdx < 2; rIdx++) {
+                const ang = (Math.random() * Math.PI * 2);
+                const sx = Math.max(24, Math.min(curWorldW - 24, n.x + Math.cos(ang) * (n.radius + 115)));
+                const sy = Math.max(24, Math.min(curWorldH - 24, n.y + Math.sin(ang) * (n.radius + 115)));
+                spawnEnemy(rIdx === 0 ? 'runner' : 'grub', undefined, sx, sy);
+                const spawned = enemies[enemies.length - 1];
+                if (spawned) spawned.raidNodeId = n.id;
+              }
+            }
+          } else {
+            nodeUnattendedT.set(n.id, 0);
+          }
+        }
+      }
+
+      // Враги: погоня + рейды на башни + расталкивание + контактный урон
       for (let i = enemies.length - 1; i >= 0; i--) {
         const e = enemies[i];
         if (e.hp <= 0) {
@@ -3154,9 +3565,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           continue;
         }
         const def = ENEMIES[e.type];
-        // Вражеский генератор (🔋): ближние враги +25% скорость (Этап 2.1);
-        // Шкала бытия: каждый следующий масштаб быстрее предыдущего
-        let eSpeed = def.speed * waves.speedMul() * SCALES[scaleIdx].enemySpeedMul;
+        let eSpeed = def.speed * waves.speedMul() * SCALES[scaleIdx].enemySpeedMul * dailyEnemySpeedMul;
         for (const n of bioNodes) {
           if (n.owner === -1 && n.kind === 'gen' && Math.hypot(e.x - n.x, e.y - n.y) < 220) {
             eSpeed *= 1.25;
@@ -3180,11 +3589,12 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           if (e.enragedPhase) eSpeed *= 1.4;
         }
 
-        // Цель: заражённые союзники охотятся на штамм врага (Этап 3.1 «Инфицирование»)
+        // Цель: заражённые союзники охотятся на врагов, а рейдеры идут отвоёвывать башню
         let tx = player.x;
         let ty = player.y;
         let keepDist = 0; // >0: держать дистанцию (плеватель/целитель/зеркало)
         if (e.infected > 0) {
+          e.raidNodeId = undefined;
           let bestD = 1e9;
           for (const o of enemies) {
             if (o === e || o.infected > 0) continue;
@@ -3192,12 +3602,22 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
             if (dd < bestD) { bestD = dd; tx = o.x; ty = o.y; }
           }
           if (bestD > 1e8) { tx = player.x; ty = player.y; }
-        } else if (e.type === 'spitter') {
-          keepDist = 190;
-        } else if (e.type === 'healer') {
-          keepDist = 260;
-        } else if (e.type === 'mirror') {
-          keepDist = 150;
+        } else if (e.raidNodeId !== undefined) {
+          const rn = bioNodes.find((n) => n.id === e.raidNodeId);
+          if (!rn || rn.owner === -1 || e.flash > 0 || Math.hypot(player.x - e.x, player.y - e.y) < 95) {
+            e.raidNodeId = undefined;
+          } else {
+            tx = rn.x;
+            ty = rn.y;
+            if (Math.hypot(tx - e.x, ty - e.y) < rn.radius * 0.45) {
+              eSpeed *= 0.25;
+            }
+          }
+        }
+        if (e.infected <= 0 && e.raidNodeId === undefined) {
+          if (e.type === 'spitter') keepDist = 190;
+          else if (e.type === 'healer') keepDist = 260;
+          else if (e.type === 'mirror') keepDist = 150;
         }
 
         const dx = tx - e.x;
@@ -3351,7 +3771,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
             for (const o of enemies) { if (o === e) continue; o.tailCd = Math.max(o.tailCd, 0); }
             const pd = Math.hypot(player.x - e.x, player.y - e.y);
             if (pd < radius + PLAYER.radius && player.iframe <= 0) {
-              applyDamageToPlayer(def.dmg);
+              applyDamageToPlayer(def.dmg, enemyCauseLabel('pulsar', false, e.elite, 'импульс', 'shockwave'));
               const kx = (player.x - e.x) / Math.max(1, pd);
               const ky = (player.y - e.y) / Math.max(1, pd);
               player.x = Math.max(16, Math.min(curWorldW - 16, player.x + kx * 40));
@@ -3451,7 +3871,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           // «Броня чешуёй» (Змея): хвост гасит до 50% урона, но не более 14 единиц
           const maxReduction = Math.min(Math.round(e.dmg * 0.5), Math.floor(tailLen / 20));
           const incoming = genes.has('scales') ? Math.max(2, e.dmg - maxReduction) : e.dmg;
-          applyDamageToPlayer(incoming);
+          applyDamageToPlayer(incoming, enemyCauseLabel(e.type, e.titan, e.elite));
           e.atkCd = 0.8;
         }
         // Заражённый союзник врезается во врагов
@@ -3522,7 +3942,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
                 dmgTail += inDmg;
                 // «Отражение» элиты: часть урона возвращается бойцу вблизи
                 if (e.elite === 'mirrored' && Math.hypot(e.x - player.x, e.y - player.y) < 200 && player.iframe <= 0) {
-                  applyDamageToPlayer(inDmg * 0.15);
+                  applyDamageToPlayer(inDmg * 0.15, enemyCauseLabel(e.type, e.titan, e.elite, 'отражение урона', 'damage reflect'));
                 }
                 // «Поглощение» (Вермис) и «Живой Инкубатор» (Уроборос-Паразит):
                 // тело жертвы прирастает сегментами, гибрид растёт втрое сильнее
@@ -3698,7 +4118,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           }
         }
         if (Math.hypot(p.x - player.x, p.y - player.y) < 6 + PLAYER.radius && player.iframe <= 0) {
-          applyDamageToPlayer(p.dmg);
+          applyDamageToPlayer(p.dmg, enemyCauseLabel(p.sourceType, p.titan, p.elite, 'снаряд', 'projectile'));
           p.life = 0;
         }
         if (p.life <= 0 || p.x < 0 || p.x > curWorldW || p.y < 0 || p.y > curWorldH) {
@@ -3761,7 +4181,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (wlvl.nova > 0 && novaCd <= 0) {
         const safeNovaIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.nova - 1));
         const scMul = genes.has('supercharge') ? 4 : 1;
-        novaCd = (NOVA.cd[safeNovaIdx] * (genes.has('supercharge') ? 1.6 : 1)) / effAtkSpd();
+        novaCd = (NOVA.cd[safeNovaIdx] * biolabNovaCdMul * (genes.has('supercharge') ? 1.6 : 1)) / effAtkSpd();
         const radius = NOVA.radius[safeNovaIdx] * (genes.has('supercharge') ? 2 : 1) * codexBonuses.novaRadiusMul;
         const dmg = NOVA.dmg[safeNovaIdx] * effDmg() * scMul * codexBonuses.explosiveDmgMul;
         sfx.nova();
@@ -3863,27 +4283,28 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         }
       }
 
-      // Споровые цисты (Cysts)
+      // Споровые цисты (Cysts): выкладываются только при движении и взводятся с задержкой
       cystsCd -= dt;
-      if (wlvl.cysts > 0 && cystsCd <= 0) {
+      if (wlvl.cysts > 0 && cystsCd <= 0 && cystMoveDist >= CYSTS.moveDist) {
         const cIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.cysts - 1));
+        cystMoveDist = 0;
         cystsCd = CYSTS.cd[cIdx] / effAtkSpd();
-        const count = CYSTS.maxCysts[cIdx];
+        const perDrop = CYSTS.perDrop[cIdx];
+        const maxActive = CYSTS.maxCysts[cIdx];
         const dmg = CYSTS.dmg[cIdx] * effDmg();
         const r = CYSTS.radius[cIdx];
-        const MAX_CYSTS = 24;
-        for (let k = 0; k < count; k++) {
-          if (liveCysts.length >= MAX_CYSTS) liveCysts.shift();
-          const dropA = Math.atan2(-playerDirY, -playerDirX) + (Math.random() - 0.5) * 1.2;
-          const dropD = 18 + Math.random() * 26;
+        for (let k = 0; k < perDrop; k++) {
+          if (liveCysts.length >= maxActive) liveCysts.shift();
+          const dropA = Math.atan2(-playerDirY, -playerDirX) + (Math.random() - 0.5) * 1.1;
+          const dropD = 18 + Math.random() * 20;
           liveCysts.push({
             x: player.x + Math.cos(dropA) * dropD,
             y: player.y + Math.sin(dropA) * dropD,
             r,
             dmg,
             life: 14,
-            armT: 0,
-            armed: true,
+            armT: CYSTS.armTime,
+            armed: false,
           });
         }
         sfx.cyst();
@@ -3891,8 +4312,15 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       for (let i = liveCysts.length - 1; i >= 0; i--) {
         const cyst = liveCysts[i];
         cyst.life -= dt;
+        if (!cyst.armed) {
+          cyst.armT -= dt;
+          if (cyst.armT <= 0) {
+            cyst.armT = 0;
+            cyst.armed = true;
+          }
+        }
         let explode = cyst.life <= 0;
-        if (!explode) {
+        if (!explode && cyst.armed) {
           for (const e of nearby(cyst.x, cyst.y, cyst.r + 20)) {
             if (Math.hypot(e.x - cyst.x, e.y - cyst.y) < cyst.r + e.radius) {
               explode = true;
@@ -3901,11 +4329,12 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           }
         }
         if (explode) {
+          const blastR = cyst.r * CYSTS.blastMul;
           sfx.nova();
-          overlay.spawnPulse(cyst.x, cyst.y, 0x39ff14, cyst.r * 1.8);
+          overlay.spawnPulse(cyst.x, cyst.y, 0x39ff14, blastR);
           sim.spawnPlayerSpores(toSimX(cyst.x), toSimY(cyst.y), 300);
-          for (const e of nearby(cyst.x, cyst.y, cyst.r * 1.8)) {
-            if (Math.hypot(e.x - cyst.x, e.y - cyst.y) < cyst.r * 1.8 + e.radius) {
+          for (const e of nearby(cyst.x, cyst.y, blastR + 20)) {
+            if (Math.hypot(e.x - cyst.x, e.y - cyst.y) < blastR + e.radius) {
               const inDmg = cyst.dmg * codexBonuses.explosiveDmgMul * enemyDmgBonus(e);
               e.hp -= inDmg;
               e.flash = 0.12;
@@ -3917,8 +4346,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         }
       }
 
-      // Сферы ДНК: вялый дрейф к игроку отовсюду + магнит вблизи
-      const effMagnet = magnetR * (magnetNodeOwned ? 2.5 : 1) * codexBonuses.magnetMul;
+      // Сферы ДНК: магнит притягивает вблизи; вне радиуса сбора нужно подбираться самому
+      const effMagnet = magnetR * (magnetNodeOwned ? 1.6 : 1) * codexBonuses.magnetMul;
       // Консолидация душ: если душ на поле больше 70, объединяем дальние, устраняя мусор
       if (orbs.length > 70) {
         let bestDist = 1e9;
@@ -3969,17 +4398,13 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
             o.vy += ((best.y - o.y) / bestD) * 700 * dt;
             if (bestD < 14) { orbs.splice(i, 1); continue; } // душа украдена
           } else {
-            o.vx += (dx / d) * 30 * dt;
-            o.vy += (dy / d) * 30 * dt;
             o.vx *= Math.max(0, 1 - dt * 4);
             o.vy *= Math.max(0, 1 - dt * 4);
           }
         } else if (eliteMagnetPull(o, dt)) {
           // Магнитная элита (Этап 4.3) тянет эту душу к себе
         } else {
-          // не даём осколкам застревать вдалеке навсегда
-          o.vx += (dx / d) * 30 * dt;
-          o.vy += (dy / d) * 30 * dt;
+          // Сфера остаётся на месте (затухание остаточного импульса)
           o.vx *= Math.max(0, 1 - dt * 4);
           o.vy *= Math.max(0, 1 - dt * 4);
         }
@@ -4001,7 +4426,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           updateResonanceHud();
 
           // Душа съедена: опыт + энергия хвоста + ДНК её генома + биомасса шкалы
-          xp += o.value * xpMul * resonanceMult;
+          xp += o.value * xpMul * mutagenXpMul * dailyXpMul * resonanceMult;
           tailLen = Math.min(maxTail(), tailLen + o.value * TAIL.soulGain);
           sinceSoul = 0;
           sfx.eat();
@@ -4034,7 +4459,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (xp >= xpNext) {
         xp -= xpNext;
         level++;
-        xpNext = 5 + level * 3;
+        xpNext = xpRequiredForLevel(level);
         pendingUps++;
         maxHp = Math.min(220, maxHp + GROWTH.hpPerLvl);
         player.hp = Math.min(maxHp, player.hp + 14);
@@ -4043,10 +4468,9 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         openUpgrades();
       }
 
-      // Смерть игрока: геном забега + портрет организма (см. finishRun)
+      // Смерть игрока: медленный разрыв клетки, затем портрет организма и причина гибели
       if (player.hp <= 0) {
-        player.hp = 0;
-        finishRun(false);
+        beginDeathSequence();
       }
 
       // ---- Physarum живёт вместе с игроком (Этапы 1.2 / 2.2 / 2.3) ----
@@ -4119,29 +4543,33 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         if (e.type === 'brute') simBeacons.push({ x: e.x, y: e.y, radius: 90, kind: 2, ttl: 9, maxTtl: 9 });
         else if (e.type === 'boss') simBeacons.push({ x: e.x, y: e.y, radius: 110, kind: 2, ttl: 9, maxTtl: 9 });
       }
-      // Захват узлов: readback плотности штаммов раз в ~160 мс (Этап 2.1).
-      // Последняя запись - зонд под игроком: свой штамм ускоряет, чужой растворяет
+      // Захват био-башен удержанием зоны + тревоги при атаке монстров на оставленные башни
+      const nodeStep = stepBioNodes(
+        bioNodes,
+        player,
+        enemies,
+        dt,
+        codexBonuses.captureSpeedMul * dailyCaptureSpeedMul,
+        hybridsTaken.has('psi_web'),
+      );
+      for (const n of nodeStep.ownerChanged) onNodeCaptured(n);
+      nodesHeldMax = Math.max(nodesHeldMax, nodeStep.heldCount);
+      for (const n of nodeStep.newlyRaided) {
+        const tn = trNode(n.kind, NODE_NAMES[n.kind], NODE_POS_EFFECTS[n.kind], NODE_NEG_EFFECTS[n.kind]);
+        showToast(
+          `<svg class="bio-icon bio-crimson" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-node-${n.kind}"/></svg> ` +
+          t('node_raided_toast', { name: tn.name }),
+          'warn'
+        );
+      }
+
+      // GPU readback теперь отслеживает только плотность штаммов непосредственно под игроком
       const onNodeStatsCb = (stats: NodeStat[]): void => {
-        stats.forEach((s, i) => {
-          if (i >= bioNodes.length) {
-            trailOwn = s.playerDensity >= STRAIN.densityThreshold;
-            trailEnemy = s.enemyDensity >= STRAIN.densityThreshold;
-            return;
-          }
-          const n = bioNodes[i];
-          if (!n) return;
-          // Пси-Сеть: захват узлов ускорен - сверхразум тянет территорию дистанционно
-          const psiBoost = (hybridsTaken.has('psi_web') ? 1.7 : 1) * codexBonuses.captureSpeedMul;
-          const delta = (s.playerDensity - s.enemyDensity) * 0.05 * psiBoost;
-          n.capture = Math.max(-1, Math.min(1, n.capture + delta));
-          const prev = n.owner;
-          n.owner = n.capture > 0.4 ? 1 : n.capture < -0.4 ? -1 : 0;
-          if (n.owner !== prev) onNodeCaptured(n);
-        });
-        // Статистика территории для генома забега
-        let held = 0;
-        for (const n of bioNodes) if (n.owner === 1) held++;
-        nodesHeldMax = Math.max(nodesHeldMax, held);
+        if (stats.length > bioNodes.length) {
+          const s = stats[bioNodes.length];
+          trailOwn = s.playerDensity >= STRAIN.densityThreshold;
+          trailEnemy = s.enemyDensity >= STRAIN.densityThreshold;
+        }
       };
       // Пси-Сеть: захваченные узлы бьют лазерами по ближайшим врагам
       psiZapT -= dt;
@@ -4273,7 +4701,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
 
       // Тактические статус-пилюли (обновляются только при смене состояния)
       if (statusChipsEl) {
-        const key = `${trailOwn ? 1 : 0}${trailEnemy ? 1 : 0}${neuralLinkActive ? 1 : 0}${bloomBuffT > 0 ? 1 : 0}${relicCarapace && carapaceShieldReady ? 1 : 0}${tailFreeze ? 1 : 0}:${getLocale()}`;
+        const stagnating = idleTime > 2.5;
+        const key = `${trailOwn ? 1 : 0}${trailEnemy ? 1 : 0}${neuralLinkActive ? 1 : 0}${bloomBuffT > 0 ? 1 : 0}${relicCarapace && carapaceShieldReady ? 1 : 0}${ampOwned ? 1 : 0}${stagnating ? 1 : 0}:${getLocale()}`;
         if (key !== lastStatusKey) {
           lastStatusKey = key;
           const pills: string[] = [];
@@ -4283,7 +4712,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           if (neuralLinkActive) pills.push(`<span class="status-pill" style="color:#00ff9d">${pillIco('ico-chip-regen')}${t('status_neural')}</span>`);
           if (bloomBuffT > 0) pills.push(`<span class="status-pill" style="color:var(--lime)">${pillIco('ico-chip-frenzy')}${t('status_bloom')}</span>`);
           if (relicCarapace && carapaceShieldReady) pills.push(`<span class="status-pill" style="color:#00ff9d">${pillIco('ico-chip-shield')}${t('status_carapace')}</span>`);
-          if (tailFreeze) pills.push(`<span class="status-pill" style="color:var(--amber)">${pillIco('ico-chip-armor')}${t('status_freeze')}</span>`);
+          if (ampOwned) pills.push(`<span class="status-pill" style="color:var(--amber)">${pillIco('ico-chip-armor')}${t('status_freeze')}</span>`);
+          if (stagnating) pills.push(`<span class="status-pill" style="color:#ff8599">${pillIco('ico-skull-hazard')}${t('status_stagnation')}</span>`);
           statusChipsEl.innerHTML = pills.join('');
         }
       }
@@ -4361,7 +4791,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     }
 
     // Био-радар чашки Петри: обновление миникарты и направлений
-    if (started && !gameOver) {
+    if (started && !gameOver && !dying) {
       radar.update(
         dt,
         { x: player.x, y: player.y, dirX: playerDirX, dirY: playerDirY },
@@ -4374,9 +4804,9 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       );
     }
 
-    // Био-радар: стрелки к скрытым за экраном вражеским узлам, титанам и гнёздам спор
-    const radarMarkers: { angle: number; dist: number; color: number; icon: 'boss' | 'titan' | 'node' }[] = [];
-    if (started && !gameOver) {
+    // Био-радар: стрелки к скрытым за экраном вражеским узлам, титанам, гнёздам спор и атакуемым башням
+    const radarMarkers: { angle: number; dist: number; color: number; icon: 'boss' | 'titan' | 'node' | 'raid' }[] = [];
+    if (started && !gameOver && !dying) {
       const halfViewW = (overlay.screenWidth / 2) / (camZoom * overlay.scale);
       const halfViewH = (overlay.screenHeight / 2) / (camZoom * overlay.scale);
       for (const a of anomalies) {
@@ -4393,10 +4823,18 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         }
       }
       for (const n of bioNodes) {
-        if (n.owner === 1) continue;
         const dx = n.x - camX;
         const dy = n.y - camY;
-        if (Math.abs(dx) > halfViewW - 30 || Math.abs(dy) > halfViewH - 30) {
+        const offscreen = Math.abs(dx) > halfViewW - 30 || Math.abs(dy) > halfViewH - 30;
+        if (!offscreen) continue;
+        if (n.owner === 1 && n.raided) {
+          radarMarkers.push({
+            angle: Math.atan2(n.y - player.y, n.x - player.x),
+            dist: Math.hypot(n.x - player.x, n.y - player.y),
+            color: 0xff3b4e,
+            icon: 'raid',
+          });
+        } else if (n.owner !== 1) {
           radarMarkers.push({
             angle: Math.atan2(n.y - player.y, n.x - player.x),
             dist: Math.hypot(n.x - player.x, n.y - player.y),
@@ -4426,6 +4864,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       overlay.render(
         {
           player: { x: player.x, y: player.y, r: playerRadius(), tail: visibleTail() },
+          playerDeath: dying ? { progress: Math.min(1, 1 - Math.max(0, dyingT) / DYING_DURATION), x: player.x, y: player.y } : null,
           tailState,
           tailHunger: sinceSoul > 3,
           cam: { x: camX, y: camY, zoom: camZoom, worldW: curWorldW, worldH: curWorldH },
