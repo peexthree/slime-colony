@@ -1,6 +1,7 @@
 // LUMIVORE: Tactical Petri-Dish Radar & Bio-Scanner
 // Высокоточный радар чашки Петри: реальные био-метки врагов, титанов, био-узлов,
 // сканирующий луч с фосфорным послесвечением и индикацией направления.
+import { t } from '../i18n';
 
 export interface RadarNode {
   x: number;
@@ -309,19 +310,19 @@ export class PetriRadar {
     // 7. Обновление бейджа радара
     if (this.badge) {
       if (hasTitan) {
-        this.badge.textContent = 'ТИТАН В СЕКТОРЕ';
+        this.badge.textContent = t('radar_titan');
         this.badge.style.color = '#ffd700';
         this.badge.style.borderColor = 'rgba(255, 215, 0, 0.6)';
         this.badge.style.textShadow = '0 0 8px rgba(255, 215, 0, 0.8)';
       } else if (hasBoss) {
-        this.badge.textContent = 'СТРАЖ ЦИКЛА';
+        this.badge.textContent = t('radar_boss');
         this.badge.style.color = '#ff3b4e';
         this.badge.style.borderColor = 'rgba(255, 59, 78, 0.6)';
         this.badge.style.textShadow = '0 0 8px rgba(255, 59, 78, 0.8)';
       } else {
-        this.badge.textContent = `УГРОЗЫ: ${enemyCountInRange}`;
+        this.badge.textContent = t('radar_threats', { n: enemyCountInRange });
         this.badge.style.color = '#00ff9d';
-        this.badge.style.borderColor = 'rgba(0, 255, 157, 0.3)';
+        this.badge.style.borderColor = 'rgba(0, 255, 157, 0.35)';
         this.badge.style.textShadow = '0 0 6px rgba(0, 255, 157, 0.6)';
       }
     }

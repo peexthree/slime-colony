@@ -15,6 +15,7 @@ export interface Joystick {
   consumeCall(): void;      // сбросить флаг запроса
   dashRequested(): boolean; // true один раз после тапа по «РЫВОК»
   consumeDash(): void;      // сбросить флаг запроса
+  setLabels(callLabel: string, dashLabel: string): void;
   dispose(): void;          // снять слушатели и удалить DOM
 }
 
@@ -241,6 +242,10 @@ export function createJoystick(stage: HTMLElement, canvas: HTMLCanvasElement): J
     consumeCall: () => { callFlag = false; },
     dashRequested: () => dashFlag,
     consumeDash: () => { dashFlag = false; },
+    setLabels: (callLabel: string, dashLabel: string) => {
+      callBtn.textContent = callLabel;
+      dashBtn.textContent = dashLabel;
+    },
     dispose: () => {
       if (disposed) return;
       disposed = true;

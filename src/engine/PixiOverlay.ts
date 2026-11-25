@@ -1,7 +1,7 @@
 // PixiJS v8 слой LUMIVORE: спрайтовые пулы с аддитивным свечением, камера-слежение,
 // визуальная эволюция организма (органы геномов и гибридов), живой декор биома и границы мира
 import { Application, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
-import { EliteMutation, EnemyType, NodeKind, SCALE_FORM, SIM_WIDTH } from './types';
+import { EliteMutation, EnemyType, NodeKind, SCALE_FORM, SIM_HEIGHT, SIM_WIDTH } from './types';
 import { loadBiopunkTextures, loadBiopunkTexturesV2, loadBiopunkTexturesV3, alignTailSegment, updatePredatorPupil, EnemySpriteKey, EnemySpriteV2Key, ParticleSpriteKey, NodeSpriteKey, PlayerSpriteKey } from './svgAssets';
 
 interface PulseRing {
@@ -108,6 +108,12 @@ export interface RenderState {
   anomalies?: AnomalyView[];
   /** Игрок находится в зоне действия нейросети своих захваченных узлов */
   neuralLinkActive?: boolean;
+  /** Готовность барьера «Живой Карапакс» */
+  carapaceReady?: boolean;
+  /** Активен ли «Фазовый рывок» (шлейф) */
+  dashing?: boolean;
+  /** Готовность Кольца Смерти к замыканию */
+  ringReady?: boolean;
 }
 
 /** Радужная текстура свечения: яркое ядро + мягкий ореол */
@@ -163,13 +169,13 @@ const TAIL_PALETTES: Record<'ok' | 'low' | 'crit', [number, number]> = {
   crit: [0xff6b6b, 0xffb0b0],
 };
 
-/** Иконки био-узлов территории */
+/** Короткие обозначения био-узлов (fallback при отсутствии SVG-текстур) */
 const NODE_ICONS: Record<NodeKind, string> = {
-  gen: '🔋',
-  amp: '⚡',
-  magnet: '🧲',
-  mutagen: '🧬',
-  incubator: '💜',
+  gen: '+HP',
+  amp: 'AMP',
+  magnet: 'MAG',
+  mutagen: 'DNA',
+  incubator: '+XP',
 };
 
 export class PixiOverlay {
@@ -194,6 +200,9 @@ export class PixiOverlay {
   private polys: { pts: { x: number; y: number }[]; life: number; color: number }[] = [];
   /** Пятна биомассы на месте погибших врагов */
   private splats: { x: number; y: number; r: number; color: number; life: number; maxLife: number }[] = [];
+  /** Призрачный шлейф Фазового рывка */
+  private afterimages: { x: number; y: number; r: number; life: number; color: number }[] = [];
+  private afterimageCd = 0;
   private shakeT = 0;
   private bokehParticles: { baseX: number; baseY: number; r: number; phase: number; color: number; alpha: number }[] = [];
   private snowParticles: { x: number; y: number; r: number; vy: number; alpha: number }[] = [];
@@ -394,9 +403,9 @@ export class PixiOverlay {
     this.shakeT = Math.max(this.shakeT, duration);
   }
 
-  /** Базовый масштаб видового окна (960px -> screen width) */
+  /** Базовый масштаб видового окна (покрытие экрана с сохранением пропорций) */
   private sx(): number {
-    return this.app.screen.width / SIM_WIDTH;
+    return Math.max(this.app.screen.width / SIM_WIDTH, this.app.screen.height / SIM_HEIGHT);
   }
 
   render(state: RenderState, time: number, dt: number): void {
@@ -448,7 +457,7 @@ export class PixiOverlay {
 
     // Живой декор биома под сущностями: среда, граница арены, циркуляция
     if (state.morph && cam) {
-      this.drawBiome(state.morph, time, s, cam);
+      this.drawBiome(state.morph, time, s, cam, state.player.x, state.player.y);
     }
 
     // Тряска экрана: случайное смещение сцены с мягким затуханием (без укачивания)
@@ -557,13 +566,15 @@ export class PixiOverlay {
             .stroke({ width: 2.8, color: 0xa3e635, alpha: 0.92 });
           this.fxOver.circle(a.x, a.y, a.r * 0.52 * (1 + Math.sin(time * 8) * 0.15))
             .fill({ color: 0xc084fc, alpha: 0.85 });
-          // Дуга здоровья гнезда
+          // Дуга здоровья гнезда с контрастной подложкой
           if (a.hp !== undefined && a.maxHp) {
             const hpFrac = Math.max(0, Math.min(1, a.hp / a.maxHp));
             const hr = a.r + 8;
+            this.fxOver.circle(a.x, a.y, hr)
+              .stroke({ width: 4.5, color: 0x040a10, alpha: 0.72 });
             this.fxOver.moveTo(a.x + Math.cos(-Math.PI / 2) * hr, a.y + Math.sin(-Math.PI / 2) * hr);
             this.fxOver.arc(a.x, a.y, hr, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * hpFrac)
-              .stroke({ width: 3, color: 0x86efac, alpha: 0.9 });
+              .stroke({ width: 3, color: 0x86efac, alpha: 0.94 });
           }
         }
       }
@@ -605,13 +616,14 @@ export class PixiOverlay {
         if (!txt) {
           txt = new Text({
             text: NODE_ICONS[n.kind],
-            style: { fontSize: 14, fill: 0xffffff, fontFamily: 'Segoe UI Emoji, Consolas, monospace' },
+            style: { fontSize: 10, fontWeight: 'bold', fill: 0xffffff, fontFamily: 'JetBrains Mono, Consolas, monospace' },
           });
           txt.anchor.set(0.5);
           txt.alpha = 0.9;
           this.world.addChild(txt);
           this.nodeTexts.push(txt);
         }
+        txt.text = NODE_ICONS[n.kind];
         txt.visible = true;
         txt.position.set(n.x, n.y);
       }
@@ -735,6 +747,64 @@ export class PixiOverlay {
     const px = state.player.x;
     const py = state.player.y;
     const form = state.morph ? SCALE_FORM[state.morph.scaleId] : null;
+    const formGlow = form?.glow ?? 0x66fcf1;
+
+    // Фазовый рывок: призрачные афтер-имиджи за организмом
+    this.afterimageCd -= dt;
+    if (state.dashing && this.afterimageCd <= 0) {
+      this.afterimageCd = 0.028;
+      if (this.afterimages.length > 10) this.afterimages.shift();
+      this.afterimages.push({ x: px, y: py, r: state.player.r, life: 0.28, color: formGlow });
+    }
+    for (let j = this.afterimages.length - 1; j >= 0; j--) {
+      const af = this.afterimages[j];
+      af.life -= dt;
+      if (af.life <= 0) {
+        this.afterimages.splice(j, 1);
+        continue;
+      }
+      const frac = af.life / 0.28;
+      this.fxUnder.circle(af.x, af.y, af.r * (0.75 + frac * 0.45))
+        .fill({ color: af.color, alpha: 0.26 * frac })
+        .stroke({ width: 1.5, color: 0xffffff, alpha: 0.35 * frac });
+    }
+
+    // Телеграф Кольца Смерти: подсказка-связь при сближении головы с ранней траекторией хвоста
+    if (state.ringReady && tn >= 24) {
+      let snapPt: { x: number; y: number } | null = null;
+      let snapD = 68;
+      const limit = tn - 10;
+      for (let i = 0; i < limit; i += 2) {
+        const d = Math.hypot(tail[i].x - px, tail[i].y - py);
+        if (d < snapD) {
+          snapD = d;
+          snapPt = tail[i];
+        }
+      }
+      if (snapPt) {
+        const pulse = 0.55 + Math.sin(time * 14) * 0.35;
+        this.fxOver.moveTo(px, py).lineTo(snapPt.x, snapPt.y)
+          .stroke({ width: 2.2, color: 0xffd166, alpha: 0.55 * pulse });
+        this.fxOver.circle(snapPt.x, snapPt.y, 5.5 + pulse * 2.5)
+          .stroke({ width: 1.8, color: 0xffd166, alpha: 0.8 * pulse });
+      }
+    }
+
+    // Живой Карапакс: защитный био-барьер вокруг организма
+    this.releasePool('carapaceShield');
+    if (state.carapaceReady) {
+      if (this.v3Textures?.overlays.shieldBarrier) {
+        const sp = this.makeSprite('carapaceShield', 0x00ff9d, 'add', this.v3Textures.overlays.shieldBarrier);
+        sp.position.set(px, py);
+        sp.scale.set(((state.player.r + 12) * 2.3) / 256);
+        sp.rotation = time * 0.7;
+        sp.alpha = 0.55 + Math.sin(time * 4) * 0.14;
+      } else {
+        this.fxOver.circle(px, py, state.player.r + 9)
+          .stroke({ width: 2, color: 0x00ff9d, alpha: 0.72 });
+      }
+    }
+
     this.playerGlow.position.set(px, py);
     this.playerGlow.scale.set((state.player.r * 2.3) / 64);
     this.playerGlow.alpha = 0.42 + Math.sin(time * 5) * 0.08;
@@ -927,9 +997,11 @@ export class PixiOverlay {
       if (e.type === 'boss' || e.type === 'brute' || e.elite) {
         const progress = Math.max(0, e.hp / e.maxHp);
         const r = e.radius + 9;
+        this.fxOver.circle(e.x, e.y, r)
+          .stroke({ width: 4, color: 0x040a10, alpha: 0.7 });
         this.fxOver.moveTo(e.x + Math.cos(-Math.PI / 2) * r, e.y + Math.sin(-Math.PI / 2) * r);
         this.fxOver.arc(e.x, e.y, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * progress)
-          .stroke({ width: 2.5, color: ENEMY_HP_ARC_COLOR, alpha: 0.85 });
+          .stroke({ width: 2.6, color: ENEMY_HP_ARC_COLOR, alpha: 0.94 });
       }
 
       if (e.elite) {
@@ -1175,6 +1247,7 @@ export class PixiOverlay {
       sp.visible = true;
       sp.position.set(d.x, d.y);
       sp.tint = d.color;
+      sp.scale.set(1 + Math.max(0, d.life - 0.35) * 0.65);
       sp.alpha = Math.min(1, d.life / 0.35);
     }
     for (let j = this.dmgLive.length; j < this.dmgSprites.length; j++) this.dmgSprites[j].visible = false;
@@ -1263,7 +1336,9 @@ export class PixiOverlay {
     morph: MorphView,
     time: number,
     s: number,
-    cam: { x: number; y: number; zoom: number; worldW: number; worldH: number }
+    cam: { x: number; y: number; zoom: number; worldW: number; worldH: number },
+    px: number,
+    py: number
   ): void {
     const scaleId = morph.scaleId;
     const w = cam.worldW;
@@ -1275,11 +1350,32 @@ export class PixiOverlay {
       : scaleId === 4 ? 0xf97316
       : 0xa855f7;
 
-    // 1. Граница мира: светящаяся био-мембрана
+    // 1. Граница мира: светящаяся био-мембрана + подсветка близости игрока
     this.fxUnder.rect(0, 0, w, h)
       .stroke({ width: 3.5, color: wallCol, alpha: 0.65 + Math.sin(time * 3) * 0.2 });
     this.fxUnder.rect(-10, -10, w + 20, h + 20)
       .stroke({ width: 1.5, color: wallCol, alpha: 0.22 });
+
+    const wallWarnDist = 110;
+    const segSpan = 140;
+    if (px < wallWarnDist) {
+      const intensity = (1 - px / wallWarnDist) * 0.85;
+      this.fxUnder.moveTo(0, Math.max(0, py - segSpan)).lineTo(0, Math.min(h, py + segSpan))
+        .stroke({ width: 6, color: 0xffffff, alpha: intensity * 0.55 });
+    } else if (px > w - wallWarnDist) {
+      const intensity = (1 - (w - px) / wallWarnDist) * 0.85;
+      this.fxUnder.moveTo(w, Math.max(0, py - segSpan)).lineTo(w, Math.min(h, py + segSpan))
+        .stroke({ width: 6, color: 0xffffff, alpha: intensity * 0.55 });
+    }
+    if (py < wallWarnDist) {
+      const intensity = (1 - py / wallWarnDist) * 0.85;
+      this.fxUnder.moveTo(Math.max(0, px - segSpan), 0).lineTo(Math.min(w, px + segSpan), 0)
+        .stroke({ width: 6, color: 0xffffff, alpha: intensity * 0.55 });
+    } else if (py > h - wallWarnDist) {
+      const intensity = (1 - (h - py) / wallWarnDist) * 0.85;
+      this.fxUnder.moveTo(Math.max(0, px - segSpan), h).lineTo(Math.min(w, px + segSpan), h)
+        .stroke({ width: 6, color: 0xffffff, alpha: intensity * 0.55 });
+    }
 
     // Био-реснички по кромкам мембраны
     const segsX = Math.min(50, Math.floor(w / 45));
@@ -1788,6 +1884,8 @@ export class PixiOverlay {
     this.rings.length = 0;
     this.polys.length = 0;
     this.splats.length = 0;
+    this.afterimages.length = 0;
+    this.afterimageCd = 0;
     this.dmgLive.length = 0;
     this.shakeT = 0;
     this.world.position.set(0, 0);

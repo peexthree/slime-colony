@@ -1,6 +1,7 @@
 // Генератор «Портрета организма» - PNG-карточка итогов забега (1280x720).
 // Стиль: неон / биолюминесценция, тёмный фон, моноширинный шрифт.
 // Исключения не бросаются: при любых проблемах рисуем максимум возможного.
+import { getLocale } from '../i18n';
 
 export interface PortraitInput {
   branch:
@@ -40,25 +41,34 @@ type Branch = PortraitInput['branch'];
 
 interface BranchStyle {
   name: string; // крупное имя организма
+  nameEn: string;
   tag: string; // подпись ветки в шапке
+  tagEn: string;
   color: string;
   dim: string; // приглушённый оттенок для глубины
 }
 
 const BRANCHES: Record<Branch, BranchStyle> = {
-  neutral: { name: 'ОСОБЬ', tag: 'ГЕНОМ: БАЗОВЫЙ', color: '#9df5ff', dim: '#264d59' },
-  // чистые геномы
-  vermis: { name: 'ВЕРМИС', tag: 'ГЕНОМ: ВЕРМИС', color: '#66fcf1', dim: '#1d5a55' },
-  chimera: { name: 'ХИМЕРА', tag: 'ГЕНОМ: ХИМЕРА', color: '#ff7b93', dim: '#5f2231' },
-  mycelium: { name: 'МИЦЕЛИЙ', tag: 'ГЕНОМ: МИЦЕЛИЙ', color: '#a3ff6b', dim: '#2c5c1d' },
-  symbiont: { name: 'СИМБИОНТ', tag: 'ГЕНОМ: СИМБИОНТ', color: '#ffd166', dim: '#5f4a1d' },
-  // гибриды
-  plasma_leviathan: { name: 'ПЛАЗМЕННЫЙ ЛЕВИАФАН', tag: 'ГИБРИД: ВЕРМИС+ХИМЕРА', color: '#ff9d5c', dim: '#5f2b12' },
-  ouroboros: { name: 'УРОБОРОС-ПАРАЗИТ', tag: 'ГИБРИД: ВЕРМИС+МИЦЕЛИЙ', color: '#7bffb0', dim: '#1d5c3c' },
-  phase_serpent: { name: 'ФАЗОВЫЙ ЗМЕЙ', tag: 'ГИБРИД: ВЕРМИС+СИМБИОНТ', color: '#9db4ff', dim: '#232d5f' },
-  spore_reactor: { name: 'СПОРОВЫЙ РЕАКТОР', tag: 'ГИБРИД: ХИМЕРА+МИЦЕЛИЙ', color: '#d9ff6b', dim: '#3f5c1d' },
-  ion_colossus: { name: 'ИОННЫЙ КОЛОСС', tag: 'ГИБРИД: ХИМЕРА+СИМБИОНТ', color: '#6bd6ff', dim: '#124d5f' },
-  psi_web: { name: 'ПСИ-СЕТЬ', tag: 'ГИБРИД: МИЦЕЛИЙ+СИМБИОНТ', color: '#c8a2ff', dim: '#3c2460' },
+  neutral: { name: 'ОСОБЬ', nameEn: 'SPECIMEN', tag: 'ГЕНОМ: БАЗОВЫЙ', tagEn: 'GENOME: BASE', color: '#9df5ff', dim: '#264d59' },
+  vermis: { name: 'ВЕРМИС', nameEn: 'VERMIS', tag: 'ГЕНОМ: ВЕРМИС', tagEn: 'GENOME: VERMIS', color: '#66fcf1', dim: '#1d5a55' },
+  chimera: { name: 'ХИМЕРА', nameEn: 'CHIMERA', tag: 'ГЕНОМ: ХИМЕРА', tagEn: 'GENOME: CHIMERA', color: '#ff7b93', dim: '#5f2231' },
+  mycelium: { name: 'МИЦЕЛИЙ', nameEn: 'MYCELIUM', tag: 'ГЕНОМ: МИЦЕЛИЙ', tagEn: 'GENOME: MYCELIUM', color: '#a3ff6b', dim: '#2c5c1d' },
+  symbiont: { name: 'СИМБИОНТ', nameEn: 'SYMBIONT', tag: 'ГЕНОМ: СИМБИОНТ', tagEn: 'GENOME: SYMBIONT', color: '#ffd166', dim: '#5f4a1d' },
+  plasma_leviathan: { name: 'ПЛАЗМЕННЫЙ ЛЕВИАФАН', nameEn: 'PLASMA LEVIATHAN', tag: 'ГИБРИД: ВЕРМИС+ХИМЕРА', tagEn: 'HYBRID: VERMIS+CHIMERA', color: '#ff9d5c', dim: '#5f2b12' },
+  ouroboros: { name: 'УРОБОРОС-ПАРАЗИТ', nameEn: 'OUROBOROS PARASITE', tag: 'ГИБРИД: ВЕРМИС+МИЦЕЛИЙ', tagEn: 'HYBRID: VERMIS+MYCELIUM', color: '#7bffb0', dim: '#1d5c3c' },
+  phase_serpent: { name: 'ФАЗОВЫЙ ЗМЕЙ', nameEn: 'PHASE SERPENT', tag: 'ГИБРИД: ВЕРМИС+СИМБИОНТ', tagEn: 'HYBRID: VERMIS+SYMBIONT', color: '#9db4ff', dim: '#232d5f' },
+  spore_reactor: { name: 'СПОРОВЫЙ РЕАКТОР', nameEn: 'SPORE REACTOR', tag: 'ГИБРИД: ХИМЕРА+МИЦЕЛИЙ', tagEn: 'HYBRID: CHIMERA+MYCELIUM', color: '#d9ff6b', dim: '#3f5c1d' },
+  ion_colossus: { name: 'ИОННЫЙ КОЛОСС', nameEn: 'ION COLOSSUS', tag: 'ГИБРИД: ХИМЕРА+СИМБИОНТ', tagEn: 'HYBRID: CHIMERA+SYMBIONT', color: '#6bd6ff', dim: '#124d5f' },
+  psi_web: { name: 'ПСИ-СЕТЬ', nameEn: 'PSI-WEB', tag: 'ГИБРИД: МИЦЕЛИЙ+СИМБИОНТ', tagEn: 'HYBRID: MYCELIUM+SYMBIONT', color: '#c8a2ff', dim: '#3c2460' },
+};
+
+const WEAPON_LABELS: Record<string, { ru: string; en: string }> = {
+  spikes: { ru: 'ШИПЫ', en: 'SPIKES' },
+  orbs: { ru: 'ОРБИТЫ', en: 'ORBS' },
+  nova: { ru: 'НОВА', en: 'NOVA' },
+  aura: { ru: 'АУРА', en: 'AURA' },
+  mandibles: { ru: 'ЖВАЛЫ', en: 'MANDIBLES' },
+  cysts: { ru: 'ЦИСТЫ', en: 'CYSTS' },
 };
 
 const MONO = "'JetBrains Mono', 'Cascadia Mono', Consolas, 'Courier New', monospace";
@@ -522,8 +532,8 @@ function drawOrganism(ctx: CanvasRenderingContext2D, inp: NormInput, col: RGB, d
 
 // ---------- оформление карточки ----------
 
-function drawRecordBadge(ctx: CanvasRenderingContext2D): void {
-  const label = '★ РЕКОРД';
+function drawRecordBadge(ctx: CanvasRenderingContext2D, en: boolean): void {
+  const label = en ? '★ RECORD' : '★ РЕКОРД';
   ctx.font = `700 20px ${MONO}`;
   setTracking(ctx, 2);
   const w = ctx.measureText(label).width + 44;
@@ -546,60 +556,97 @@ function drawRecordBadge(ctx: CanvasRenderingContext2D): void {
   ctx.textBaseline = 'alphabetic';
 }
 
-function drawHeader(ctx: CanvasRenderingContext2D, style: BranchStyle, record: boolean, scale: number): void {
+function drawHeader(ctx: CanvasRenderingContext2D, style: BranchStyle, record: boolean, scale: number, en: boolean): void {
   const col = hexRgb(style.color);
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   setTracking(ctx, 5);
   ctx.font = `500 17px ${MONO}`;
-  ctx.fillStyle = 'rgba(140,175,185,0.9)';
-  // строка метаданных: тег ветки + масштаб бытия
-  const meta = `ОРГАНИЗМ // ${style.tag} // ШКАЛА: ${scale}/5`;
+  ctx.fillStyle = 'rgba(176,208,218,0.92)';
+  const tagText = en ? style.tagEn : style.tag;
+  const orgWord = en ? 'ORGANISM' : 'ОРГАНИЗМ';
+  const scaleWord = en ? 'SCALE' : 'ШКАЛА';
+  const meta = `${orgWord} // ${tagText} // ${scaleWord}: ${scale}/5`;
   ctx.fillText(meta, 70, 76);
   setTracking(ctx, 2);
-  ctx.font = `700 58px ${MONO}`;
+  ctx.font = `700 54px ${MONO}`;
   ctx.shadowColor = rgba(col, 0.7);
   ctx.shadowBlur = 24;
   ctx.fillStyle = '#f4fdff';
-  ctx.fillText(style.name, 68, 138);
+  const titleText = en ? style.nameEn : style.name;
+  ctx.fillText(titleText, 68, 136, record ? 830 : 1120);
   ctx.shadowBlur = 0;
   // акцентная плашка под названием
   ctx.fillStyle = rgba(col, 0.9);
   ctx.fillRect(70, 150, 150, 3);
   ctx.fillStyle = rgba(col, 0.35);
   ctx.fillRect(228, 150, 90, 3);
-  if (record) drawRecordBadge(ctx);
+  if (record) drawRecordBadge(ctx, en);
 }
 
-function drawStatsPanel(ctx: CanvasRenderingContext2D, stats: NormInput['stats'], col: RGB): void {
+function drawWeaponsStrip(ctx: CanvasRenderingContext2D, weapons: string[], col: RGB, en: boolean): void {
+  if (!weapons.length) return;
+  let wx = 70;
+  const wy = PORTRAIT_H - 96;
+  ctx.font = `700 13px ${MONO}`;
+  setTracking(ctx, 1.5);
+  for (const wId of weapons.slice(0, 6)) {
+    const lbl = WEAPON_LABELS[wId]?.[en ? 'en' : 'ru'] ?? wId.toUpperCase();
+    const bw = ctx.measureText(lbl).width + 24;
+    rrPath(ctx, wx, wy, bw, 30, 8);
+    ctx.fillStyle = rgba(col, 0.14);
+    ctx.fill();
+    ctx.strokeStyle = rgba(col, 0.48);
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.fillStyle = '#eafcff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(lbl, wx + bw / 2, wy + 15);
+    wx += bw + 10;
+  }
+  ctx.textBaseline = 'alphabetic';
+}
+
+function drawStatsPanel(ctx: CanvasRenderingContext2D, stats: NormInput['stats'], col: RGB, en: boolean): void {
   const x = 812;
   const y = 168;
   const w = 398;
   const rowH = 48;
-  const rows: [string, string][] = [
-    ['ВРЕМЯ', fmtTime(stats.time)],
-    ['УБИЙСТВА', fmtNum(stats.kills)],
-    ['УРОВЕНЬ', String(stats.level)],
-    ['МАКС. ХВОСТ', String(stats.tailMax)],
-    ['БИО-УЗЛЫ', String(stats.nodesHeld)],
-    ['УРОН', fmtNum(stats.damage)],
-    ['ОЧКИ БИОЛАБА', fmtNum(stats.points)],
-  ];
+  const rows: [string, string][] = en
+    ? [
+        ['TIME', fmtTime(stats.time)],
+        ['KILLS', fmtNum(stats.kills)],
+        ['LEVEL', String(stats.level)],
+        ['MAX TAIL', String(stats.tailMax)],
+        ['BIO-NODES', String(stats.nodesHeld)],
+        ['DAMAGE', fmtNum(stats.damage)],
+        ['BIOLAB PTS', fmtNum(stats.points)],
+      ]
+    : [
+        ['ВРЕМЯ', fmtTime(stats.time)],
+        ['УБИЙСТВА', fmtNum(stats.kills)],
+        ['УРОВЕНЬ', String(stats.level)],
+        ['МАКС. ХВОСТ', String(stats.tailMax)],
+        ['БИО-УЗЛЫ', String(stats.nodesHeld)],
+        ['УРОН', fmtNum(stats.damage)],
+        ['ОЧКИ БИОЛАБА', fmtNum(stats.points)],
+      ];
   const h = 66 + rows.length * rowH;
   rrPath(ctx, x, y, w, h, 14);
-  ctx.fillStyle = 'rgba(4,12,18,0.78)';
+  ctx.fillStyle = 'rgba(4,12,18,0.84)';
   ctx.fill();
-  ctx.strokeStyle = rgba(col, 0.4);
-  ctx.lineWidth = 1;
+  ctx.strokeStyle = rgba(col, 0.45);
+  ctx.lineWidth = 1.2;
   ctx.stroke();
   // заголовок панели
   setTracking(ctx, 3);
-  ctx.font = `500 13px ${MONO}`;
-  ctx.fillStyle = rgba(col, 0.75);
+  ctx.font = `700 13px ${MONO}`;
+  ctx.fillStyle = rgba(col, 0.88);
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('ТЕЛЕМЕТРИЯ ЗАБЕГА', x + 24, y + 34);
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillText(en ? 'RUN TELEMETRY' : 'ТЕЛЕМЕТРИЯ ЗАБЕГА', x + 24, y + 34);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
   ctx.beginPath();
   ctx.moveTo(x + 16, y + 48);
   ctx.lineTo(x + w - 16, y + 48);
@@ -609,7 +656,7 @@ function drawStatsPanel(ctx: CanvasRenderingContext2D, stats: NormInput['stats']
     const ry = y + 78 + i * rowH;
     setTracking(ctx, 2);
     ctx.font = `500 14px ${MONO}`;
-    ctx.fillStyle = 'rgba(150,180,190,0.75)';
+    ctx.fillStyle = 'rgba(186,214,224,0.88)';
     ctx.textAlign = 'left';
     ctx.fillText(label, x + 24, ry);
     const last = i === rows.length - 1;
@@ -626,13 +673,13 @@ function drawStatsPanel(ctx: CanvasRenderingContext2D, stats: NormInput['stats']
   });
 }
 
-function drawFooter(ctx: CanvasRenderingContext2D): void {
+function drawFooter(ctx: CanvasRenderingContext2D, en: boolean): void {
   setTracking(ctx, 6);
   ctx.font = `500 15px ${MONO}`;
-  ctx.fillStyle = 'rgba(150,190,200,0.55)';
+  ctx.fillStyle = 'rgba(170,208,218,0.68)';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('LUMIVORE // ПОРТРЕТ ОРГАНИЗМА', PORTRAIT_W / 2, PORTRAIT_H - 34);
+  ctx.fillText(en ? 'LUMIVORE // ORGANISM PORTRAIT' : 'LUMIVORE // ПОРТРЕТ ОРГАНИЗМА', PORTRAIT_W / 2, PORTRAIT_H - 34);
 }
 
 /** Неоновые уголки рамки + едва заметная окантовка */
@@ -676,11 +723,13 @@ export function renderPortrait(bg: HTMLCanvasElement | null, input: PortraitInpu
     const dim = hexRgb(style.dim);
     const seed = (inp.stats.time * 1000 + inp.stats.kills * 7 + inp.stats.level * 131 + inp.stats.tailMax * 17) | 0;
     const rng = mulberry32(seed);
+    const en = getLocale() === 'en';
     drawBackground(ctx, bg, rng, col);
     drawOrganism(ctx, inp, col, dim, rng);
-    drawHeader(ctx, style, inp.stats.record, inp.stats.scale);
-    drawStatsPanel(ctx, inp.stats, col);
-    drawFooter(ctx);
+    drawHeader(ctx, style, inp.stats.record, inp.stats.scale, en);
+    drawWeaponsStrip(ctx, inp.weapons, col, en);
+    drawStatsPanel(ctx, inp.stats, col, en);
+    drawFooter(ctx, en);
     drawFrame(ctx, col);
   } catch {
     // рисование не удалось полностью - возвращаем канвас как есть, без исключений

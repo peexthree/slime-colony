@@ -99,6 +99,14 @@ export class WebGPUSim {
     this.readbackBuffer = this.device.createBuffer({ size: MAX_NODES * 8, usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
 
     const module = this.device.createShaderModule({ code: shaderCode });
+    if (typeof module.getCompilationInfo === 'function') {
+      const info = await module.getCompilationInfo();
+      const errors = info.messages.filter((m) => m.type === 'error');
+      if (errors.length > 0) {
+        const detail = errors.map((m) => `L${m.lineNum}:${m.linePos} ${m.message}`).join('; ');
+        throw new Error(`Ошибка компиляции WGSL-шейдера: ${detail}`);
+      }
+    }
 
     const computeLayout = this.device.createBindGroupLayout({
       entries: [

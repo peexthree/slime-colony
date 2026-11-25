@@ -11,603 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/src/biopunk-hud.css" />
   <style>
-    :root {
-      --cyan: #66fcf1;
-      --cyan-dim: #0e6e6b;
-      --violet: #c084fc;
-      --red: #ff3b5c;
-      --ink: #020304;
-      --panel: rgba(2, 6, 8, 0.72);
-      --line: rgba(255, 255, 255, 0.12);
-      --text: #e2e8f0;
-      --text-dim: #7c8ba1;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-    html, body { height: 100%; }
-    body {
-      background: radial-gradient(ellipse at 50% 40%, #05080d 0%, #020304 70%);
-      color: var(--text);
-      font-family: 'JetBrains Mono', Consolas, monospace;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    #stage {
-      position: relative;
-      width: min(98vw, 1440px);
-      aspect-ratio: 16 / 9;
-      border: 1px solid rgba(102, 252, 241, 0.22);
-      border-radius: 14px;
-      overflow: hidden;
-      box-shadow: 0 0 60px rgba(102, 252, 241, 0.07), inset 0 0 80px rgba(0, 0, 0, 0.6);
-      background: #030507;
-    }
-    canvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-    #gpu-canvas { z-index: 1; }
-    /* Мягкий неоновый bloom: без пересвечивания */
-    #bloom-canvas {
-      z-index: 2;
-      mix-blend-mode: screen;
-      opacity: 0.15;
-      filter: blur(6px);
-      transform: scale(1.005);
-      pointer-events: none;
-    }
-    #pixi-canvas { z-index: 3; pointer-events: auto; cursor: crosshair; }
-
-    /* --- HUD --- */
-    .hud-top {
-      position: absolute;
-      z-index: 5;
-      top: 12px; left: 14px; right: 14px;
-      display: flex; justify-content: space-between; align-items: flex-start;
-      gap: 10px;
-      pointer-events: none;
-    }
-    .panel {
-      background: var(--panel);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 9px 14px;
-      font-size: 12px;
-      display: flex; gap: 14px; align-items: center;
-      letter-spacing: 0.04em;
-    }
-    .panel .label { color: var(--text-dim); font-size: 10px; }
-    .cyan { color: var(--cyan); font-weight: 700; }
-    .violet { color: var(--violet); font-weight: 700; }
-
-    #hp-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 190px; }
-    #hp-row { display: flex; justify-content: space-between; align-items: baseline; }
-    #hp-bar {
-      width: 100%; height: 7px;
-      background: rgba(255, 255, 255, 0.07);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    #hp-fill {
-      height: 100%;
-      width: 100%;
-      background: linear-gradient(90deg, #8f1226, #ff5570);
-      box-shadow: 0 0 10px rgba(255, 85, 112, 0.55);
-      border-radius: 4px;
-      transition: width 0.12s linear;
-    }
-
-    #level-group {
-      position: absolute;
-      z-index: 5;
-      left: 14px; bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      pointer-events: none;
-    }
-    #level {
-      font-size: 11px;
-      color: var(--cyan);
-      border: 1px solid rgba(102, 252, 241, 0.4);
-      border-radius: 6px;
-      padding: 3px 9px;
-      background: rgba(2, 6, 8, 0.7);
-      letter-spacing: 0.08em;
-      pointer-events: none;
-      flex-shrink: 0;
-    }
-    #hurt {
-      position: absolute; inset: 0; z-index: 7;
-      box-shadow: inset 0 0 100px rgba(220, 20, 50, 0.45), inset 0 0 40px rgba(255, 30, 60, 0.2);
-      opacity: 0;
-      transition: opacity 0.25s ease-out;
-      pointer-events: none;
-    }
-    #hurt.hit {
-      opacity: 0.35;
-      transition: opacity 0.06s ease-out;
-    }
-    #hurt.low-hp {
-      opacity: 0.55;
-      animation: hurtpulse 2.2s ease-in-out infinite;
-    }
-    @keyframes hurtpulse {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 0.65; }
-    }
-
-    /* --- Хвост-ресурс и био-узлы --- */
-    #tail-row { display: flex; justify-content: space-between; align-items: baseline; }
-    #tail-bar {
-      width: 100%; height: 4px;
-      background: rgba(255, 255, 255, 0.07);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    #tail-fill {
-      height: 100%; width: 100%;
-      background: linear-gradient(90deg, #0e6e6b, #66fcf1);
-      box-shadow: 0 0 8px rgba(102, 252, 241, 0.5);
-      border-radius: 3px;
-      transition: width 0.15s linear;
-    }
-    #hp-wrap[data-state="low"] #tail-fill {
-      background: linear-gradient(90deg, #8a6d1a, #ffd166);
-      box-shadow: 0 0 8px rgba(255, 209, 102, 0.55);
-    }
-    #hp-wrap[data-state="crit"] #tail-fill {
-      background: linear-gradient(90deg, #8f1226, #ff5c5c);
-      box-shadow: 0 0 8px rgba(255, 92, 92, 0.6);
-    }
-    #hp-wrap[data-state="crit"] #tail-bar { animation: tailpulse 0.7s ease-in-out infinite; }
-    @keyframes tailpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    #hp-wrap.hunger #tail-num { color: #ff5c5c; animation: tailblink 0.8s steps(2, jump-none) infinite; }
-    @keyframes tailblink { 50% { opacity: 0.2; } }
-    #nodes-chip { font-size: 13px; letter-spacing: 0.08em; }
-    #branch-chip {
-      font-size: 10px; padding: 2px 8px; border-radius: 5px;
-      border: 1px solid var(--line); color: var(--text-dim); letter-spacing: 0.08em;
-    }
-    #branch-chip[data-branch="vermis"] { color: var(--cyan); border-color: rgba(102, 252, 241, 0.5); }
-    #branch-chip[data-branch="chimera"] { color: #ff7b93; border-color: rgba(255, 123, 147, 0.5); }
-    #branch-chip[data-branch="mycelium"] { color: #a3ff6b; border-color: rgba(163, 255, 107, 0.5); }
-    #branch-chip[data-branch="symbiont"] { color: #ffd166; border-color: rgba(255, 209, 102, 0.5); }
-    #branch-chip[data-branch="hybrid"] { color: #ffffff; border-color: rgba(255, 255, 255, 0.6); }
-
-    /* --- ДНК-матрица: 4 генома (Spore-система) --- */
-    #dna-wrap {
-      position: absolute; z-index: 5;
-      left: 14px; top: 106px;
-      display: flex; flex-direction: column; gap: 4px;
-      background: var(--panel);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 8px 12px;
-      pointer-events: none;
-      min-width: 170px;
-    }
-    .dna-row { display: flex; align-items: center; gap: 7px; font-size: 10px; }
-    .dna-row .dna-ico {
-      width: 16px; height: 16px;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .dna-row .dna-ico svg {
-      width: 14px; height: 14px; display: block;
-      color: inherit;
-    }
-    .dna-row .dna-name { width: 64px; letter-spacing: 0.06em; color: var(--text-dim); }
-    .dna-row .dna-bar {
-      flex: 1; height: 4px; border-radius: 3px;
-      background: rgba(255, 255, 255, 0.07); overflow: hidden;
-    }
-    .dna-row .dna-fill { height: 100%; width: 0%; border-radius: 3px; transition: width 0.2s linear; }
-    .dna-row .dna-lvl { width: 22px; text-align: right; color: var(--text-dim); }
-    .dna-row[data-max="1"] .dna-name { color: var(--text); }
-    .dna-row[data-max="1"] .dna-lvl { color: #ffd166; }
-    #dna-vermis .dna-ico { color: #66fcf1; filter: drop-shadow(0 0 5px rgba(102, 252, 241, 0.7)); }
-    #dna-chimera .dna-ico { color: #ff7b93; filter: drop-shadow(0 0 5px rgba(255, 123, 147, 0.7)); }
-    #dna-mycelium .dna-ico { color: #a3ff6b; filter: drop-shadow(0 0 5px rgba(163, 255, 107, 0.7)); }
-    #dna-symbiont .dna-ico { color: #ffd166; filter: drop-shadow(0 0 5px rgba(255, 209, 102, 0.7)); }
-    #dna-vermis .dna-fill { background: #66fcf1; box-shadow: 0 0 6px rgba(102, 252, 241, 0.6); }
-    #dna-chimera .dna-fill { background: #ff7b93; box-shadow: 0 0 6px rgba(255, 123, 147, 0.6); }
-    #dna-mycelium .dna-fill { background: #a3ff6b; box-shadow: 0 0 6px rgba(163, 255, 107, 0.6); }
-    #dna-symbiont .dna-fill { background: #ffd166; box-shadow: 0 0 6px rgba(255, 209, 102, 0.6); }
-
-    /* --- Шкала бытия и биомасса метаморфоза --- */
-    #scale-hud {
-      position: absolute; z-index: 5;
-      top: 10px; left: 50%; transform: translateX(-50%);
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      pointer-events: none;
-      width: min(340px, 42vw);
-    }
-    #scale-chip {
-      font-size: 10px; letter-spacing: 0.14em; color: #9df5ff;
-      text-shadow: 0 0 12px rgba(102, 252, 241, 0.5);
-    }
-    .scale-bar-row {
-      display: flex; align-items: center; width: 100%; gap: 3px;
-    }
-    .scale-bracket {
-      width: 8px; height: 14px; flex-shrink: 0; color: #9df5ff;
-      filter: drop-shadow(0 0 4px rgba(157, 245, 255, 0.5));
-    }
-    .scale-bracket.right { transform: scaleX(-1); }
-    #bio-bar {
-      flex: 1; height: 4px;
-      background: rgba(255, 255, 255, 0.07);
-      border-radius: 3px; overflow: hidden;
-      border: 1px solid rgba(157, 245, 255, 0.18);
-    }
-    #bio-fill {
-      height: 100%; width: 0%;
-      background: linear-gradient(90deg, #23696e, #9df5ff);
-      box-shadow: 0 0 8px rgba(157, 245, 255, 0.6);
-      transition: width 0.25s linear;
-    }
-    #bio-fill.titan-ready {
-      background: linear-gradient(90deg, #8a6d1a, #ffd166);
-      animation: biopulse 0.8s ease-in-out infinite;
-    }
-    @keyframes biopulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
-
-    /* --- HUD кулдаунов оружий (Этап 5.2) --- */
-    #weapon-hud {
-      position: absolute; z-index: 5;
-      left: 14px; bottom: 34px;
-      display: flex; gap: 7px;
-      pointer-events: none;
-    }
-    .wh {
-      position: relative;
-      width: 40px; height: 46px;
-      display: flex; flex-direction: column; align-items: center; gap: 2px;
-    }
-    .wh-ring {
-      position: relative;
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: conic-gradient(rgba(255, 255, 255, 0.08) 0deg);
-      display: flex; align-items: center; justify-content: center;
-    }
-    .wh-ring::after {
-      content: '';
-      position: absolute; inset: 3px;
-      border-radius: 50%;
-      background: rgba(2, 6, 8, 0.88);
-    }
-    .wh-ico {
-      position: absolute; z-index: 1;
-      width: 16px; height: 16px;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--cyan);
-    }
-    .wh-ico svg {
-      width: 14px; height: 14px; display: block;
-      color: inherit;
-    }
-    .wh-lvl { font-size: 9px; color: var(--text-dim); letter-spacing: 0.04em; }
-    .wh.locked { opacity: 0.35; }
-    .wh.locked .wh-ico svg { filter: none; }
-    .wh.ready .wh-ico svg { filter: drop-shadow(0 0 6px rgba(102, 252, 241, 0.95)); }
-    .chip-ico {
-      width: 14px; height: 14px;
-      display: inline-block; vertical-align: -2px;
-      margin-right: 3px;
-    }
-    .chip-node-ico {
-      width: 13px; height: 13px;
-      display: inline-block; vertical-align: -2px;
-      margin: 0 1px; color: var(--cyan);
-      filter: drop-shadow(0 0 4px rgba(102, 252, 241, 0.6));
-    }
-    .up-card .b-ico { display: inline-block; vertical-align: -2px; margin-right: 4px; }
-    .inline-card-ico {
-      width: 15px; height: 15px;
-      display: inline-block; vertical-align: -2px;
-      color: inherit;
-      filter: drop-shadow(0 0 5px currentColor);
-    }
-    .up-card.branch-vermis { border-color: rgba(102, 252, 241, 0.45); }
-    .up-card.branch-chimera { border-color: rgba(255, 123, 147, 0.45); }
-    .up-card.branch-mycelium { border-color: rgba(163, 255, 107, 0.45); }
-    .up-card.branch-symbiont { border-color: rgba(255, 209, 102, 0.45); }
-    .up-card.hybrid {
-      border-color: rgba(255, 209, 102, 0.75);
-      box-shadow: 0 0 22px rgba(255, 209, 102, 0.18), inset 0 0 18px rgba(255, 209, 102, 0.05);
-    }
-    .up-card.hybrid h3 { color: #ffd166; }
-    .up-card.hybrid p { color: #ffe9b3; }
-    #tailwarn {
-      position: absolute; inset: 0; z-index: 7;
-      box-shadow: inset 0 0 80px rgba(255, 140, 30, 0.28);
-      opacity: 0;
-      transition: opacity 0.3s ease-out;
-      pointer-events: none;
-    }
-    #tailwarn.active {
-      opacity: 0.25;
-    }
-
-    /* --- Модалка апгрейдов --- */
-    #upgrade {
-      position: absolute; inset: 0; z-index: 9;
-      background: rgba(2, 3, 4, 0.78);
-      backdrop-filter: blur(8px);
-      display: none; flex-direction: column;
-      align-items: center; justify-content: center; gap: 14px;
-    }
-    #upgrade.show { display: flex; }
-    #upgrade-title {
-      font-size: 17px; font-weight: 800; letter-spacing: 0.12em;
-      color: var(--cyan);
-      text-shadow: 0 0 18px rgba(102, 252, 241, 0.5);
-    }
-    #cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; max-width: 92vw; }
-    .up-card {
-      width: 190px; min-height: 120px;
-      background: rgba(4, 10, 12, 0.92);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 14px 16px;
-      text-align: left;
-      font-family: inherit;
-      color: #b9c5d6;
-      cursor: pointer;
-      transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
-    }
-    .up-card:hover, .up-card.gp-focus {
-      border-color: var(--cyan);
-      box-shadow: 0 0 18px rgba(102, 252, 241, 0.2);
-      transform: translateY(-2px);
-    }
-    .up-card h3 { font-size: 13px; color: var(--cyan); letter-spacing: 0.06em; margin-bottom: 8px; }
-    .up-card p { font-size: 11px; line-height: 1.5; }
-
-    #help-btn {
-      pointer-events: auto;
-      width: 26px; height: 26px;
-      border-radius: 7px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--line);
-      color: var(--text-dim);
-      font-family: inherit; font-size: 12px; font-weight: 700;
-      cursor: pointer;
-    }
-    #help-btn:hover { color: var(--cyan); border-color: rgba(102, 252, 241, 0.45); }
-
-    /* --- Инструменты --- */
-    .hud-bottom {
-      position: absolute;
-      z-index: 5;
-      bottom: 14px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 8px;
-      pointer-events: auto;
-    }
-    .tool-btn {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--panel);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--line);
-      color: #cbd5e1;
-      padding: 9px 14px;
-      border-radius: 9px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 12px;
-      letter-spacing: 0.03em;
-      transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
-    }
-    .tool-btn svg { width: 15px; height: 15px; flex: none; }
-    .tool-btn .key {
-      color: var(--text-dim); font-size: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 4px; padding: 1px 5px;
-    }
-    .tool-btn .cost { color: var(--text-dim); font-size: 11px; }
-    .tool-btn:hover { border-color: rgba(102, 252, 241, 0.45); }
-    .tool-btn.active {
-      border-color: var(--cyan);
-      color: var(--cyan);
-      box-shadow: 0 0 14px rgba(102, 252, 241, 0.22), inset 0 0 12px rgba(102, 252, 241, 0.06);
-    }
-    .tool-btn.active .key { color: var(--cyan); border-color: rgba(102, 252, 241, 0.5); }
-    .tool-btn.active svg { stroke: var(--cyan); }
-
-    /* --- Декор --- */
-    .corner-deco {
-      position: absolute; z-index: 4;
-      width: 26px; height: 26px;
-      pointer-events: none;
-      color: var(--cyan);
-      opacity: 0.75;
-      filter: drop-shadow(0 0 5px rgba(102, 252, 241, 0.4));
-    }
-    .corner-deco svg { width: 100%; height: 100%; display: block; }
-    .corner-deco.tl { top: 6px; left: 6px; }
-    .corner-deco.tr { top: 6px; right: 6px; transform: scaleX(-1); }
-    .corner-deco.bl { bottom: 6px; left: 6px; transform: scaleY(-1); }
-    .corner-deco.br { bottom: 6px; right: 6px; transform: scale(-1); }
-
-    #scanlines {
-      position: absolute; inset: 0; z-index: 6;
-      background: repeating-linear-gradient(0deg, transparent 2px, rgba(0, 0, 0, 0.04) 4px);
-      pointer-events: none;
-    }
-    #vignette {
-      position: absolute; inset: 0; z-index: 6;
-      background: radial-gradient(ellipse, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
-      pointer-events: none;
-    }
-
-    /* --- Toast --- */
-    #toast {
-      position: absolute; z-index: 8;
-      top: 62px; left: 50%; transform: translateX(-50%) translateY(-6px);
-      background: rgba(6, 18, 28, 0.92);
-      border: 1px solid rgba(102, 252, 241, 0.5);
-      color: #ccfbf7;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 12px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s, transform 0.2s;
-    }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    #toast.toast--info { background: rgba(6, 18, 28, 0.92); border-color: rgba(102, 252, 241, 0.5); color: #ccfbf7; }
-    #toast.toast--success { background: rgba(5, 28, 16, 0.92); border-color: rgba(134, 239, 172, 0.55); color: #bbf7d0; }
-    #toast.toast--warn { background: rgba(34, 22, 4, 0.92); border-color: rgba(250, 204, 21, 0.55); color: #fef08a; }
-    #toast.toast--danger { background: rgba(35, 6, 10, 0.92); border-color: rgba(255, 59, 92, 0.55); color: #ffb3c0; }
-
-    /* --- Финальное модальное окно --- */
-    #modal {
-      position: absolute; inset: 0; z-index: 10;
-      background: rgba(2, 3, 4, 0.85);
-      backdrop-filter: blur(8px);
-      display: none; flex-direction: column;
-      align-items: center; justify-content: center; gap: 14px;
-      text-align: center;
-      overflow-y: auto;
-      padding: 16px;
-    }
-    #modal.show { display: flex; }
-    #modal-title { font-size: 34px; font-weight: 800; letter-spacing: 0.12em; }
-    #modal-title.win { color: var(--cyan); text-shadow: 0 0 24px rgba(102, 252, 241, 0.6); }
-    #modal-title.lose { color: var(--violet); text-shadow: 0 0 24px rgba(192, 132, 252, 0.5); }
-    #modal-sub { color: var(--text-dim); font-size: 13px; letter-spacing: 0.08em; }
-    #restart-btn {
-      margin-top: 8px;
-      background: var(--cyan); color: var(--ink); border: none;
-      padding: 11px 28px; border-radius: 9px;
-      font-family: inherit; font-weight: 700; font-size: 13px;
-      letter-spacing: 0.08em;
-      cursor: pointer;
-      box-shadow: 0 0 20px rgba(102, 252, 241, 0.35);
-    }
-    #restart-btn:hover { filter: brightness(1.12); }
-
-    /* --- Брифинг --- */
-    #intro {
-      position: absolute; inset: 0; z-index: 10;
-      background: rgba(2, 3, 4, 0.82);
-      backdrop-filter: blur(10px);
-      display: none; align-items: center; justify-content: center;
-    }
-    #intro.show { display: flex; }
-    .intro-card {
-      width: min(92%, 560px);
-      max-height: 88vh;
-      overflow: hidden !important;
-      background: linear-gradient(160deg, rgba(8, 18, 28, 0.96), rgba(3, 7, 12, 0.98));
-      border: 1px solid rgba(102, 252, 241, 0.35);
-      border-radius: 14px;
-      padding: 24px 28px;
-      box-shadow: 0 0 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(102, 252, 241, 0.15);
-    }
-    .intro-title {
-      font-size: 28px; font-weight: 800; letter-spacing: 0.14em;
-      color: var(--cyan);
-      text-shadow: 0 0 22px rgba(102, 252, 241, 0.5);
-    }
-    .intro-sub { color: var(--text-dim); font-size: 12px; margin-top: 4px; letter-spacing: 0.06em; }
-    .intro-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-      margin-top: 16px;
-    }
-    .intro-block {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 10px 14px;
-      background: rgba(255, 255, 255, 0.02);
-    }
-    .intro-block h3 { font-size: 11px; color: var(--cyan); letter-spacing: 0.1em; margin-bottom: 5px; }
-    .intro-block p { font-size: 11.5px; line-height: 1.55; color: #b9c5d6; }
-    .intro-block b { color: var(--text); }
-    .intro-actions { margin-top: 16px; display: flex; gap: 10px; justify-content: center; }
-
-    #status { color: var(--text-dim); font-size: 11px; }
-
-    /* --- Экран смерти с геномом (Этап 5.5) --- */
-    #death-stats {
-      display: flex; flex-wrap: wrap; gap: 8px 18px;
-      justify-content: center;
-      font-size: 12px; color: var(--text); letter-spacing: 0.04em;
-    }
-    #death-stats span { white-space: nowrap; }
-    #portrait-canvas {
-      position: static;
-      width: min(90vw, 760px); height: auto;
-      max-height: calc(90vh - 200px);
-      object-fit: contain;
-      border: 1px solid rgba(102, 252, 241, 0.25);
-      border-radius: 10px;
-    }
-    #death-actions { display: flex; gap: 10px; }
-    .ghost-btn {
-      background: rgba(102, 252, 241, 0.08); color: var(--cyan);
-      border: 1px solid rgba(102, 252, 241, 0.4);
-      padding: 11px 20px; border-radius: 9px;
-      font-family: inherit; font-weight: 700; font-size: 13px;
-      letter-spacing: 0.08em; cursor: pointer;
-    }
-    .ghost-btn:hover { background: rgba(102, 252, 241, 0.16); }
-
-    /* --- Биолаб (Этап 6.1) --- */
-    #biolab {
-      position: absolute; inset: 0; z-index: 11;
-      background: rgba(2, 3, 4, 0.88);
-      backdrop-filter: blur(10px);
-      display: none; align-items: center; justify-content: center;
-    }
-    #biolab.show { display: flex; }
-    .biolab-card {
-      width: min(92%, 720px); max-height: 92%; overflow: auto;
-      background: rgba(4, 10, 12, 0.94);
-      border: 1px solid rgba(102, 252, 241, 0.25);
-      border-radius: 14px;
-      padding: 22px 26px;
-      text-align: center;
-    }
-    #biolab-points { color: var(--cyan); font-size: 13px; margin-top: 10px; letter-spacing: 0.06em; }
-    #biolab-list {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 9px;
-      margin-top: 14px; text-align: left;
-    }
-    .bl-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-family: inherit; color: #b9c5d6;
-      cursor: pointer; text-align: left;
-      transition: border-color 0.15s, box-shadow 0.15s;
-    }
-    .bl-card:hover { border-color: rgba(102, 252, 241, 0.5); }
-    .bl-card.afford { border-color: rgba(102, 252, 241, 0.55); box-shadow: 0 0 12px rgba(102, 252, 241, 0.12); }
-    .bl-card.owned { opacity: 0.55; cursor: default; border-color: rgba(163, 255, 107, 0.4); }
-    .bl-card.owned .bl-cost { color: #a3ff6b; }
-    .bl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-    .bl-head h3 { font-size: 12px; color: var(--cyan); letter-spacing: 0.05em; }
-    .bl-cost { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
-    .bl-card p { font-size: 10.5px; line-height: 1.5; margin-top: 5px; }
-    #biolab-close {
-      margin-top: 14px;
-      background: transparent; color: var(--cyan);
-      border: 1px solid rgba(102, 252, 241, 0.4);
-      padding: 10px 26px; border-radius: 9px;
-      font-family: inherit; font-weight: 700; font-size: 12px;
-      letter-spacing: 0.08em; cursor: pointer;
-    }
-    #biolab-close:hover { background: rgba(102, 252, 241, 0.1); }
+    html, body { height: 100%; margin: 0; background: #020304; color: #eaf4f8; }
   </style>
 </head>
 <body>
@@ -1032,7 +436,7 @@
   </symbol>
 
 </svg>
-  <div id="stage">
+  <div id="stage" data-phase="menu">
     <canvas id="gpu-canvas"></canvas>
     <canvas id="bloom-canvas" width="960" height="540"></canvas>
     <canvas id="pixi-canvas"></canvas>
@@ -1041,51 +445,65 @@
       <div class="panel">
         <div id="hp-wrap">
           <div id="hp-row">
-            <span class="label">ЗДОРОВЬЕ</span>
+            <span class="label" id="hud-hp-label">ЗДОРОВЬЕ</span>
             <span id="hp-num" class="cyan">100/100</span>
           </div>
-          <div id="hp-bar" class="bio-hp-vial" style="width: 100%; height: 22px; margin: 2px 0;">
+          <div id="hp-bar" class="bio-hp-vial">
             <div class="vial-track"><div id="hp-fill" class="vial-fill" style="width: 100%;"></div></div>
-            <svg class="vial-frame" viewBox="0 0 320 56"><use href="#ico-hp-vial-frame"/></svg>
+            <svg class="vial-frame" viewBox="0 0 320 56" aria-hidden="true"><use href="#ico-hp-vial-frame"/></svg>
           </div>
           <div id="tail-row">
-            <span class="label">ХВОСТ</span>
+            <span class="label" id="hud-tail-label">ХВОСТ</span>
             <span id="tail-num" class="cyan">14/16</span>
           </div>
           <div id="tail-bar"><div id="tail-fill"></div></div>
         </div>
       </div>
-      <div class="panel">
+      <div class="panel hud-top-right">
         <span id="wave">ЦИКЛ 1</span>
         <span id="timer" class="label">00:00</span>
         <span id="kills" class="violet">x0</span>
         <span id="nodes-chip" title="Захваченные био-узлы">·</span>
         <span id="branch-chip" title="Геном особи">ОСОБЬ</span>
-        <button id="help-btn" title="Руководство особи">?</button>
+        <button id="help-btn" class="hud-icon-btn" type="button" title="Руководство особи" aria-label="Руководство особи">?</button>
+        <button id="pause-btn" class="hud-icon-btn" type="button" title="Пауза (Esc / P)" aria-label="Пауза">
+          <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-pause"/></svg>
+        </button>
       </div>
     </div>
 
     <div id="scale-hud">
       <span id="scale-chip">ШКАЛА 1 — ПЕРВИЧНАЯ КАПЛЯ</span>
       <div class="scale-bar-row">
-        <svg class="scale-bracket left" viewBox="0 0 24 48"><use href="#ico-scale-bracket"/>  </svg>
+        <svg class="scale-bracket left" viewBox="0 0 24 48" aria-hidden="true"><use href="#ico-scale-bracket"/></svg>
         <div id="bio-bar"><div id="bio-fill"></div></div>
-        <svg class="scale-bracket right" viewBox="0 0 24 48"><use href="#ico-scale-bracket"/>  </svg>
+        <svg class="scale-bracket right" viewBox="0 0 24 48" aria-hidden="true"><use href="#ico-scale-bracket"/></svg>
       </div>
     </div>
 
-    <div id="dna-wrap">
-      <div class="dna-row" id="dna-vermis"><span class="dna-ico"><svg viewBox="0 0 32 32"><use href="#ico-vermis"/>  </svg></span><span class="dna-name">ВЕРМИС</span><div class="dna-bar"><div class="dna-fill"></div></div><span class="dna-lvl">0</span></div>
-      <div class="dna-row" id="dna-chimera"><span class="dna-ico"><svg viewBox="0 0 32 32"><use href="#ico-chimera"/>  </svg></span><span class="dna-name">ХИМЕРА</span><div class="dna-bar"><div class="dna-fill"></div></div><span class="dna-lvl">0</span></div>
-      <div class="dna-row" id="dna-mycelium"><span class="dna-ico"><svg viewBox="0 0 32 32"><use href="#ico-mycelium"/>  </svg></span><span class="dna-name">МИЦЕЛИЙ</span><div class="dna-bar"><div class="dna-fill"></div></div><span class="dna-lvl">0</span></div>
-      <div class="dna-row" id="dna-symbiont"><span class="dna-ico"><svg viewBox="0 0 32 32"><use href="#ico-symbiont"/>  </svg></span><span class="dna-name">СИМБИОНТ</span><div class="dna-bar"><div class="dna-fill"></div></div><span class="dna-lvl">0</span></div>
+    <div id="boss-hud" aria-live="polite">
+      <div class="boss-head">
+        <span id="boss-name">СТРАЖ ЦИКЛА</span>
+        <span id="boss-hp-text">850/850</span>
+      </div>
+      <div class="boss-track"><div id="boss-hp-fill"></div></div>
+    </div>
+
+    <div id="hud-left-col">
+      <div id="dna-wrap">
+        <div class="dna-row" id="dna-vermis"><span class="dna-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-vermis"/></svg></span><span class="dna-name">ВЕРМИС</span><div class="dna-bar"><div class="dna-fill"></div></div><span class="dna-lvl">0</span></div>
+        <div class="dna-row" id="dna-chimera"><span class="dna-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-chimera"/></svg></span><span class="dna-name">ХИМЕРА</span><div class="dna-bar"><div class="dna-fill"></div></div><span class="dna-lvl">0</span></div>
+        <div class="dna-row" id="dna-mycelium"><span class="dna-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-mycelium"/></svg></span><span class="dna-name">МИЦЕЛИЙ</span><div class="dna-bar"><div class="dna-fill"></div></div><span class="dna-lvl">0</span></div>
+        <div class="dna-row" id="dna-symbiont"><span class="dna-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-symbiont"/></svg></span><span class="dna-name">СИМБИОНТ</span><div class="dna-bar"><div class="dna-fill"></div></div><span class="dna-lvl">0</span></div>
+      </div>
+      <div id="status-chips" aria-live="polite"></div>
     </div>
 
     <div id="resonance-hud" class="resonance-hud">
       <div class="resonance-top">
-        <svg class="res-glow inline-card-ico" viewBox="0 0 32 32"><use href="#ico-symbiont"/></svg>
+        <svg class="res-glow inline-card-ico" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-symbiont"/></svg>
         <span id="res-mult" class="res-mult">x1.0</span>
-        <span class="res-label">РЕЗОНАНС</span>
+        <span class="res-label" id="res-label">РЕЗОНАНС</span>
         <span id="res-streak" class="res-streak">0</span>
       </div>
       <div class="res-bar-track">
@@ -1093,350 +511,386 @@
       </div>
     </div>
 
-    <div id="toast"></div>
+    <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
-    <div id="upgrade">
+    <div id="upgrade" role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
       <h2 id="upgrade-title">УРОВЕНЬ 2 — ВЫБЕРИТЕ МУТАЦИЮ</h2>
       <div id="cards"></div>
-      <button id="reroll-btn" class="ghost-btn" style="margin-top:12px;">ПЕРЕРОЛЛ (2)</button>
+      <button id="reroll-btn" class="ghost-btn" type="button">ПЕРЕРОЛЛ (2)</button>
     </div>
 
-    <div id="modal">
-      <h1 id="modal-title"></h1>
-      <p id="modal-sub"></p>
-      <div id="death-stats"></div>
-      <canvas id="portrait-canvas" width="1280" height="720"></canvas>
-      <div id="death-actions">
-        <button id="restart-btn">НОВЫЙ ЗАБЕГ</button>
-        <button id="endless-btn" class="ghost-btn" style="display:none">OVERDRIVE ∞</button>
-        <button id="save-portrait" class="ghost-btn"><svg viewBox="0 0 32 32"><use href="#ico-camera-dna"/>  </svg> <span>ПОРТРЕТ PNG</span></button>
-        <button id="biolab-btn" class="ghost-btn"><svg viewBox="0 0 32 32" class="bio-emerald"><use href="#ico-biolab"/>  </svg> <span>БИОЛАБ</span></button>
+    <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="death-card">
+        <svg class="corner tl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner tr" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner bl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner br" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+
+        <div class="death-header">
+          <h1 id="modal-title"></h1>
+          <p id="modal-sub"></p>
+        </div>
+        <div class="death-body">
+          <div id="death-stats"></div>
+          <canvas id="portrait-canvas" width="1280" height="720"></canvas>
+        </div>
+        <div id="death-actions">
+          <button id="restart-btn" type="button">НОВЫЙ ЗАБЕГ</button>
+          <button id="endless-btn" class="ghost-btn" type="button" style="display:none">OVERDRIVE ∞</button>
+          <button id="save-portrait" class="ghost-btn" type="button"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-camera-dna"/></svg> <span>ПОРТРЕТ PNG</span></button>
+          <button id="biolab-btn" class="ghost-btn" type="button"><svg viewBox="0 0 32 32" class="bio-emerald" aria-hidden="true"><use href="#ico-biolab"/></svg> <span>БИОЛАБ</span></button>
+        </div>
       </div>
     </div>
 
-    <div id="biolab">
+    <div id="biolab" role="dialog" aria-modal="true" aria-labelledby="biolab-title">
       <div class="biolab-card">
-        <svg class="corner tl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
-        <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
-        <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
-        <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg>
-        <h1 class="intro-title">БИОЛАБ</h1>
-        <p class="intro-sub">Постоянные мутации между забегами. Очки Биолаба начисляются за выживание и уничтожение роя.</p>
-        <p id="biolab-points"><svg class="bio-icon bio-violet" viewBox="0 0 32 32"><use href="#ico-node-incubator"/>  </svg> 0 ОЧКОВ БИОЛАБА</p>
+        <svg class="corner tl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner tr" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner bl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner br" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+
+        <div class="modal-header-bar">
+          <div>
+            <h1 class="intro-title" id="biolab-title">БИОЛАБ</h1>
+            <p class="intro-sub" id="biolab-sub">Постоянные мутации между забегами. Очки Биолаба начисляются за выживание и уничтожение роя.</p>
+          </div>
+          <button class="modal-x-btn" type="button" data-close-modal="biolab" aria-label="Закрыть">×</button>
+        </div>
+        <p id="biolab-points"><svg class="bio-icon bio-violet" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-node-incubator"/></svg> 0 ОЧКОВ БИОЛАБА</p>
         <div id="biolab-list"></div>
-        <button id="biolab-close">ЗАКРЫТЬ</button>
+        <div class="modal-footer">
+          <button id="biolab-close" class="modal-close-btn" type="button">ЗАКРЫТЬ</button>
+        </div>
       </div>
     </div>
 
-    <div id="intro" class="show">
+    <div id="intro" class="show" role="dialog" aria-modal="true" aria-labelledby="menu-logo-title">
       <div class="intro-card main-menu-card">
-        <svg class="corner tl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        
+        <svg class="corner tl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner tr" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner bl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner br" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+
         <div class="menu-header">
-          <div class="menu-brand-badge">РЕАКТОР «ЕВРОКОРП-3» · СИМУЛЯЦИЯ PHYSARUM</div>
-          <h1 class="intro-title menu-logo">LUMIVORE</h1>
-          <p class="intro-sub menu-tagline">THE LIVING FRACTAL — БИОЭВОЛЮЦИОННЫЙ РОГАЛИК</p>
+          <div class="menu-brand-badge" id="menu-brand-badge">РЕАКТОР «ЕВРОКОРП-3» · СИМУЛЯЦИЯ PHYSARUM</div>
+          <h1 class="intro-title menu-logo" id="menu-logo-title">LUMIVORE</h1>
+          <p class="intro-sub menu-tagline" id="menu-tagline">THE LIVING FRACTAL — БИОЭВОЛЮЦИОННЫЙ РОГАЛИК</p>
           <div id="menu-record-badge" class="menu-record">РЕКОРД: 00:00 · ЗАБЕГОВ 0 · ОЧКИ: 0</div>
         </div>
 
         <div class="menu-btn-group">
-          <button id="intro-start" class="primary-btn">
-            <svg viewBox="0 0 32 32"><polygon points="10,6 26,16 10,26" fill="currentColor"/></svg>
+          <button id="intro-start" class="primary-btn" type="button">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="10,6 26,16 10,26" fill="currentColor"/></svg>
             <span id="start-btn-label">НАЧАТЬ ЗАБЕГ</span>
           </button>
-          <button id="daily-challenge-btn" class="secondary-btn" style="width:100%;border-color:rgba(250,204,21,0.45);color:#fde047;">
-            <svg viewBox="0 0 32 32"><use href="#ico-record-badge"/></svg>
+          <button id="daily-challenge-btn" class="secondary-btn" type="button" style="width:100%;border-color:rgba(250,204,21,0.5);color:#fde047;">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-record-badge"/></svg>
             <span id="daily-challenge-label">ИСПЫТАНИЕ ДНЯ</span>
           </button>
-          
+
           <div class="menu-row-btns">
-            <button id="biolab-open" class="secondary-btn">
-              <svg viewBox="0 0 32 32" class="bio-emerald"><use href="#ico-biolab"/></svg>
+            <button id="biolab-open" class="secondary-btn" type="button">
+              <svg viewBox="0 0 32 32" class="bio-emerald" aria-hidden="true"><use href="#ico-biolab"/></svg>
               <span>БИОЛАБ</span>
             </button>
-            <button id="codex-open" class="secondary-btn">
-              <svg viewBox="0 0 32 32" class="bio-cyan"><use href="#ico-book-codex"/></svg>
+            <button id="codex-open" class="secondary-btn" type="button">
+              <svg viewBox="0 0 32 32" class="bio-cyan" aria-hidden="true"><use href="#ico-book-codex"/></svg>
               <span>КОДЕКС</span>
             </button>
-            <button id="help-modal-open" class="secondary-btn">
-              <svg viewBox="0 0 32 32" class="bio-amber"><use href="#ico-help-question"/></svg>
+            <button id="help-modal-open" class="secondary-btn" type="button">
+              <svg viewBox="0 0 32 32" class="bio-amber" aria-hidden="true"><use href="#ico-help-question"/></svg>
               <span>СПРАВКА</span>
             </button>
-            <button id="settings-open" class="secondary-btn">
-              <svg viewBox="0 0 32 32" class="bio-violet"><use href="#ico-gear-settings"/></svg>
+            <button id="settings-open" class="secondary-btn" type="button">
+              <svg viewBox="0 0 32 32" class="bio-violet" aria-hidden="true"><use href="#ico-gear-settings"/></svg>
               <span>НАСТРОЙКИ</span>
             </button>
           </div>
         </div>
 
         <div class="menu-controls-strip">
-          <div class="ctrl-chip"><span class="key">МЫШЬ</span> <span class="action">НАВЕДЕНИЕ</span></div>
-          <div class="ctrl-chip"><span class="key">WASD</span> <span class="action">ДВИЖЕНИЕ</span></div>
-          <div class="ctrl-chip"><span class="key">SHIFT / ПКМ</span> <span class="action">РЫВОК</span></div>
-          <div class="ctrl-chip"><span class="key">ПРОБЕЛ</span> <span class="action">ЗОВ</span></div>
-          <div class="ctrl-chip"><span class="key">ESC</span> <span class="action">ПАУЗА</span></div>
+          <div class="ctrl-chip"><span class="key" id="ctrl-k-mouse">МЫШЬ</span> <span class="action" id="ctrl-a-aim">НАВЕДЕНИЕ</span></div>
+          <div class="ctrl-chip"><span class="key" id="ctrl-k-wasd">WASD</span> <span class="action" id="ctrl-a-move">ДВИЖЕНИЕ</span></div>
+          <div class="ctrl-chip"><span class="key" id="ctrl-k-dash">SHIFT / ПКМ</span> <span class="action" id="ctrl-a-dash">РЫВОК</span></div>
+          <div class="ctrl-chip"><span class="key" id="ctrl-k-call">ПРОБЕЛ</span> <span class="action" id="ctrl-a-call">ЗОВ</span></div>
+          <div class="ctrl-chip"><span class="key" id="ctrl-k-pause">ESC</span> <span class="action" id="ctrl-a-pause">ПАУЗА</span></div>
         </div>
       </div>
     </div>
 
-    <div id="codex">
+    <div id="codex" role="dialog" aria-modal="true" aria-labelledby="codex-title-el">
       <div class="codex-card">
-        <svg class="corner tl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        
+        <svg class="corner tl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner tr" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner bl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner br" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+
         <div class="codex-header">
           <div>
-            <h2 class="codex-title">БЕСТИАРИЙ И КОДЕКС ГИБРИДОВ</h2>
-            <p class="intro-sub">Каталог организмов роя, штаммов ДНК и Великих Гибридов реактора «ЕвроКорп-3».</p>
+            <h2 class="codex-title" id="codex-title-el">БЕСТИАРИЙ И КОДЕКС ГИБРИДОВ</h2>
+            <p class="intro-sub" id="codex-sub">Каталог организмов роя, штаммов ДНК и Великих Гибридов реактора «ЕвроКорп-3».</p>
           </div>
-          <div id="codex-stats" class="codex-stats-pill">ОТКРЫТО: 0 / 22</div>
+          <div class="codex-header-right">
+            <div id="codex-stats" class="codex-stats-pill">ОТКРЫТО: 0 / 22</div>
+            <button class="modal-x-btn" type="button" data-close-modal="codex" aria-label="Закрыть">×</button>
+          </div>
         </div>
 
-        <div class="codex-filter-tabs">
-          <button class="codex-tab active" data-cat="all">ВСЕ (22)</button>
-          <button class="codex-tab" data-cat="enemy">ВРАГИ РОЯ (12)</button>
-          <button class="codex-tab" data-cat="hybrid">ВЕЛИКИЕ ГИБРИДЫ (6)</button>
-          <button class="codex-tab" data-cat="branch">ШТАММЫ ДНК (4)</button>
+        <div class="codex-filter-tabs" role="tablist" aria-label="Фильтр Кодекса">
+          <button class="codex-tab active" type="button" role="tab" aria-selected="true" data-cat="all">ВСЕ (22)</button>
+          <button class="codex-tab" type="button" role="tab" aria-selected="false" data-cat="enemy">ВРАГИ РОЯ (12)</button>
+          <button class="codex-tab" type="button" role="tab" aria-selected="false" data-cat="hybrid">ВЕЛИКИЕ ГИБРИДЫ (6)</button>
+          <button class="codex-tab" type="button" role="tab" aria-selected="false" data-cat="branch">ШТАММЫ ДНК (4)</button>
         </div>
 
         <div id="codex-grid" class="codex-grid"></div>
 
         <div class="codex-footer">
           <div class="codex-page-nav">
-            <button id="codex-prev-btn" class="nav-btn">◀ ПРЕДЫДУЩАЯ</button>
+            <button id="codex-prev-btn" class="nav-btn" type="button">◀ ПРЕДЫДУЩАЯ</button>
             <span id="codex-page-info">СТРАНИЦА 1 / 4</span>
-            <button id="codex-next-btn" class="nav-btn">СЛЕДУЮЩАЯ ▶</button>
+            <button id="codex-next-btn" class="nav-btn" type="button">СЛЕДУЮЩАЯ ▶</button>
           </div>
-          <button id="codex-close" class="modal-close-btn">ЗАКРЫТЬ</button>
+          <button id="codex-close" class="modal-close-btn" type="button">ЗАКРЫТЬ</button>
         </div>
       </div>
     </div>
 
-    <div id="help-modal">
+    <div id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title-el">
       <div class="help-card">
-        <svg class="corner tl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        
+        <svg class="corner tl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner tr" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner bl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner br" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+
         <div class="help-header">
-          <h2 class="help-title">РУКОВОДСТВО ОРГАНИЗМА</h2>
-          <div class="help-tabs">
-            <button class="help-tab active" data-tab="basics">ОСНОВЫ</button>
-            <button class="help-tab" data-tab="dna">ДНК И ЭВОЛЮЦИЯ</button>
-            <button class="help-tab" data-tab="world">МИР И ШТАММЫ</button>
-          </div>
+          <h2 class="help-title" id="help-title-el">РУКОВОДСТВО ОРГАНИЗМА</h2>
+          <button class="modal-x-btn" type="button" data-close-modal="help" aria-label="Закрыть">×</button>
         </div>
 
-        <div class="help-content" id="help-content-basics">
+        <div class="help-tabs" role="tablist" aria-label="Разделы руководства">
+          <button class="help-tab active" id="htab-basics" type="button" role="tab" aria-selected="true" data-tab="basics">ОСНОВЫ</button>
+          <button class="help-tab" id="htab-dna" type="button" role="tab" aria-selected="false" data-tab="dna">ДНК И ЭВОЛЮЦИЯ</button>
+          <button class="help-tab" id="htab-world" type="button" role="tab" aria-selected="false" data-tab="world">МИР И ШТАММЫ</button>
+        </div>
+
+        <div class="help-content" id="help-content-basics" role="tabpanel" aria-labelledby="htab-basics">
           <div class="help-grid">
             <div class="help-box">
-              <h3>ХВОСТ-ОРУЖИЕ</h3>
-              <p>Хвост — ваше тело, биомасса и оружие. Движение сжигает сегменты, сферы ДНК восстанавливают длину. Если хвост истощится при полной неподвижности, голод начнёт сжигать HP.</p>
+              <h3 id="help-b1-t">ХВОСТ-ОРУЖИЕ</h3>
+              <p id="help-b1-p">Хвост — ваше тело, биомасса и оружие. Движение сжигает сегменты, сферы ДНК восстанавливают длину. Если хвост истощится при полной неподвижности, голод начнёт сжигать HP.</p>
             </div>
             <div class="help-box">
-              <h3>КОЛЬЦО СМЕРТИ</h3>
-              <p>Замкните траекторию хвоста вокруг толпы. Контур мгновенно схлопывается и поражает всё внутри, включая Гнёзда спор. Чем длиннее хвост, тем выше урон.</p>
+              <h3 id="help-b2-t">КОЛЬЦО СМЕРТИ</h3>
+              <p id="help-b2-p">Замкните траекторию хвоста вокруг толпы. Контур мгновенно схлопывается и поражает всё внутри, включая Гнёзда спор. Чем длиннее хвост, тем выше урон.</p>
             </div>
             <div class="help-box">
-              <h3>ФАЗОВЫЙ РЫВОК</h3>
-              <p><b>Shift</b> или <b>ПКМ</b> — мгновенное скольжение сквозь врагов. Дарует кратковременную неуязвимость и сеет за собой плотный споровый след.</p>
+              <h3 id="help-b3-t">ФАЗОВЫЙ РЫВОК</h3>
+              <p id="help-b3-p"><b>Shift</b> или <b>ПКМ</b> — мгновенное скольжение сквозь врагов. Дарует кратковременную неуязвимость и сеет за собой плотный споровый след.</p>
             </div>
             <div class="help-box">
-              <h3>ФЕРОМОННЫЙ ЗОВ</h3>
-              <p><b>Пробел</b> — токсин-маяк в точке курсора. Рой разбегается в ужасе, вражеский штамм выжигается. Перезарядка 15 с. Доступно 6 видов оружия, включая жвала и цисты.</p>
+              <h3 id="help-b4-t">ФЕРОМОННЫЙ ЗОВ</h3>
+              <p id="help-b4-p"><b>Пробел</b> — токсин-маяк в точке курсора. Рой разбегается в ужасе, вражеский штамм выжигается. Перезарядка 15 с. Доступно 6 видов оружия, включая жвала и цисты.</p>
             </div>
           </div>
         </div>
 
-        <div class="help-content" id="help-content-dna" style="display:none;">
+        <div class="help-content" id="help-content-dna" role="tabpanel" aria-labelledby="htab-dna" hidden>
           <div class="help-grid">
             <div class="help-box">
-              <h3>4 ГЕНОМА ДНК</h3>
-              <p><span class="bio-cyan">Вермис</span> (хлыст и длина хвоста), <span class="bio-magenta">Химера</span> (плазма и взрывы), <span class="bio-lime">Мицелий</span> (споры и нейрозахват), <span class="bio-amber">Симбионт</span> (магнетизм и скорость).</p>
+              <h3 id="help-d1-t">4 ГЕНОМА ДНК</h3>
+              <p id="help-d1-p"><span class="bio-cyan">Вермис</span> (хлыст и длина хвоста), <span class="bio-magenta">Химера</span> (плазма и взрывы), <span class="bio-lime">Мицелий</span> (споры и нейрозахват), <span class="bio-amber">Симбионт</span> (магнетизм и скорость).</p>
             </div>
             <div class="help-box">
-              <h3>ВЕЛИКИЕ ГИБРИДЫ</h3>
-              <p>3+3 уровня ДНК в двух ветках открывают карту слияния: Плазменный Левиафан, Уроборос-Паразит, Фазовый Змей, Споровый Реактор, Ионный Колосс, Пси-Сеть.</p>
+              <h3 id="help-d2-t">ВЕЛИКИЕ ГИБРИДЫ</h3>
+              <p id="help-d2-p">3+3 уровня ДНК в двух ветках открывают карту слияния: Плазменный Левиафан, Уроборос-Паразит, Фазовый Змей, Споровый Реактор, Ионный Колосс, Пси-Сеть.</p>
             </div>
             <div class="help-box">
-              <h3>МЕТАМОРФОЗ И ШКАЛЫ</h3>
-              <p>Заполните шкалу биомассы до 100% и победите Титана масштаба. Мир физически расширится, палитра сменится, а урон хлыста навсегда вырастет на +35%.</p>
+              <h3 id="help-d3-t">МЕТАМОРФОЗ И ШКАЛЫ</h3>
+              <p id="help-d3-p">Заполните шкалу биомассы до 100% и победите Титана масштаба. Мир физически расширится, палитра сменится, а урон хлыста навсегда вырастет на +35%.</p>
             </div>
             <div class="help-box">
-              <h3>ПАТОЛОГИИ И ОРГАНЕЛЛЫ</h3>
-              <p><b>Патологии</b> (с алой каймой) дают огромную мощь ценой суровых штрафов. <b>Прото-органеллы</b> наделяют особь автономными защитными системами.</p>
+              <h3 id="help-d4-t">ПАТОЛОГИИ И ОРГАНЕЛЛЫ</h3>
+              <p id="help-d4-p"><b>Патологии</b> (с алой каймой) дают огромную мощь ценой суровых штрафов. <b>Прото-органеллы</b> наделяют особь автономными защитными системами.</p>
             </div>
           </div>
         </div>
 
-        <div class="help-content" id="help-content-world" style="display:none;">
+        <div class="help-content" id="help-content-world" role="tabpanel" aria-labelledby="htab-world" hidden>
           <div class="help-grid">
             <div class="help-box">
-              <h3>ПОЛЕ PHYSARUM</h3>
-              <p>Ваш штамм ускоряет особь (+25%) и регенерирует хвост. Вражеский штамм ускоряет таяние хвоста в 1.8 раза. На каждой Шкале бытия палитра полей меняется.</p>
+              <h3 id="help-w1-t">ПОЛЕ PHYSARUM</h3>
+              <p id="help-w1-p">Ваш штамм ускоряет особь (+25%) и регенерирует хвост. Вражеский штамм ускоряет таяние хвоста в 1.8 раза. На каждой Шкале бытия палитра полей меняется.</p>
             </div>
             <div class="help-box">
-              <h3>БИО-УЗЛЫ И НЕЙРОСЕТЬ</h3>
-              <p>Узлы захватываются плотностью штамма (7 на старте, +4 за каждый масштаб): Генератор (+HP / ускоряет врагов), Усилитель (хвост не тает / -20% урона), Магнит (сбор / кража сфер), Мутаген (±1 карта), Инкубатор (+XP / выводок). 2+ ваших узла образуют регенерирующую нейросеть.</p>
+              <h3 id="help-w2-t">БИО-УЗЛЫ И НЕЙРОСЕТЬ</h3>
+              <p id="help-w2-p">Узлы захватываются плотностью штамма (7 на старте, +4 за каждый масштаб): Генератор (+HP / ускоряет врагов), Усилитель (хвост не тает / -20% урона), Магнит (сбор / кража сфер), Мутаген (±1 карта), Инкубатор (+XP / выводок). 2+ ваших узла образуют регенерирующую нейросеть.</p>
             </div>
             <div class="help-box">
-              <h3>РАДАР И АНОМАЛИИ</h3>
-              <p>Чашка Петри в углу отслеживает рой, элитных особей, стражей цикла, Титанов, узлы и аномалии: Кислотный прилив, Гнездо спор и Вспышку митоза.</p>
+              <h3 id="help-w3-t">РАДАР И АНОМАЛИИ</h3>
+              <p id="help-w3-p">Чашка Петри в углу отслеживает рой, элитных особей, стражей цикла, Титанов, узлы и аномалии: Кислотный прилив, Гнездо спор и Вспышку митоза.</p>
             </div>
             <div class="help-box">
-              <h3>РЕЗОНАНС И БИОЛАБ</h3>
-              <p>Быстрый сбор сфер ДНК разгоняет <b>Симбиотический Резонанс</b> до x3.0 опыта и биомассы. Очки Биолаба и бонусы Кодекса сохраняются между забегами.</p>
+              <h3 id="help-w4-t">РЕЗОНАНС И БИОЛАБ</h3>
+              <p id="help-w4-p">Быстрый сбор сфер ДНК разгоняет <b>Симбиотический Резонанс</b> до x3.0 опыта и биомассы. Очки Биолаба и бонусы Кодекса сохраняются между забегами.</p>
             </div>
           </div>
         </div>
 
-        <button id="help-close" class="modal-close-btn">ЗАКРЫТЬ</button>
+        <div class="modal-footer">
+          <button id="help-close" class="modal-close-btn" type="button">ЗАКРЫТЬ</button>
+        </div>
       </div>
     </div>
 
-    <div id="settings-modal">
+    <div id="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title-el">
       <div class="settings-card">
-        <svg class="corner tl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <svg class="corner tr" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <svg class="corner bl" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
-        <svg class="corner br" viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner tl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner tr" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner bl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
+        <svg class="corner br" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
 
         <div class="settings-header">
-          <div class="settings-header-left">
-            <svg class="settings-title-ico bio-violet" viewBox="0 0 32 32"><use href="#ico-gear-settings"/></svg>
-            <h2 class="settings-title">НАСТРОЙКИ КОМФОРТА И ЗВУКА</h2>
+          <div class="settings-header-text">
+            <div class="settings-header-left">
+              <svg class="settings-title-ico bio-violet" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-gear-settings"/></svg>
+              <h2 class="settings-title" id="settings-title-el">НАСТРОЙКИ КОМФОРТА И ЗВУКА</h2>
+            </div>
+            <span class="settings-subtitle" id="settings-subtitle-el">ВИЗУАЛЬНАЯ БЕЗОПАСНОСТЬ И БИОАКУСТИКА</span>
           </div>
-          <span class="settings-subtitle">ВИЗУАЛЬНАЯ БЕЗОПАСНОСТЬ И БИОАКУСТИКА</span>
+          <button class="modal-x-btn" type="button" data-close-modal="settings" aria-label="Закрыть">×</button>
         </div>
 
         <div class="settings-grid">
           <div class="settings-row">
             <div class="settings-info">
-              <span class="settings-name">ВСПЫШКИ ЭКРАНА</span>
-              <span class="settings-hint">Смягчает или отключает световые импульсы при уроне</span>
+              <span class="settings-name" id="set-flashes-name">ВСПЫШКИ ЭКРАНА</span>
+              <span class="settings-hint" id="set-flashes-hint">Смягчает или отключает световые импульсы при уроне</span>
             </div>
             <div class="settings-options" id="opt-flashes">
-              <button class="settings-btn active" data-val="soft">МЯГКИЕ</button>
-              <button class="settings-btn" data-val="off">ВЫКЛ</button>
+              <button class="settings-btn active" type="button" data-val="soft" data-i18n="opt_soft">МЯГКИЕ</button>
+              <button class="settings-btn" type="button" data-val="off" data-i18n="opt_off">ВЫКЛ</button>
             </div>
           </div>
 
           <div class="settings-row">
             <div class="settings-info">
-              <span class="settings-name">ТРЯСКА КАМЕРЫ</span>
-              <span class="settings-hint">Микро-толчки камеры при взрывах и получении урона</span>
+              <span class="settings-name" id="set-shake-name">ТРЯСКА КАМЕРЫ</span>
+              <span class="settings-hint" id="set-shake-hint">Микро-толчки камеры при взрывах и получении урона</span>
             </div>
             <div class="settings-options" id="opt-shake">
-              <button class="settings-btn active" data-val="subtle">СЛАБАЯ</button>
-              <button class="settings-btn" data-val="off">ВЫКЛ</button>
-              <button class="settings-btn" data-val="full">ПОЛНАЯ</button>
+              <button class="settings-btn active" type="button" data-val="subtle" data-i18n="opt_subtle">СЛАБАЯ</button>
+              <button class="settings-btn" type="button" data-val="off" data-i18n="opt_off">ВЫКЛ</button>
+              <button class="settings-btn" type="button" data-val="full" data-i18n="opt_full">ПОЛНАЯ</button>
             </div>
           </div>
 
           <div class="settings-row">
             <div class="settings-info">
-              <span class="settings-name">ГЛУБИНА МИКРОМИРА (ПАРАЛЛАКС)</span>
-              <span class="settings-hint">Плавающие вне фокуса клетки боке и планктонная взвесь</span>
+              <span class="settings-name" id="set-parallax-name">ГЛУБИНА МИКРОМИРА</span>
+              <span class="settings-hint" id="set-parallax-hint">Плавающие вне фокуса клетки боке и планктонная взвесь</span>
             </div>
             <div class="settings-options" id="opt-parallax">
-              <button class="settings-btn active" data-val="on">ВКЛ</button>
-              <button class="settings-btn" data-val="off">ВЫКЛ</button>
+              <button class="settings-btn active" type="button" data-val="on" data-i18n="opt_on">ВКЛ</button>
+              <button class="settings-btn" type="button" data-val="off" data-i18n="opt_off">ВЫКЛ</button>
             </div>
           </div>
 
           <div class="settings-row">
             <div class="settings-info">
-              <span class="settings-name">КАЧЕСТВО WEBGPU</span>
-              <span class="settings-hint">Плотность роя частиц и постобработка bloom</span>
+              <span class="settings-name" id="set-quality-name">КАЧЕСТВО WEBGPU</span>
+              <span class="settings-hint" id="set-quality-hint">Плотность роя частиц и постобработка bloom</span>
             </div>
             <div class="settings-options" id="opt-quality">
-              <button class="settings-btn" data-val="low">НИЗКОЕ</button>
-              <button class="settings-btn active" data-val="medium">СРЕДНЕЕ</button>
-              <button class="settings-btn" data-val="high">ВЫСОКОЕ</button>
+              <button class="settings-btn" type="button" data-val="low" data-i18n="opt_low">НИЗКОЕ</button>
+              <button class="settings-btn active" type="button" data-val="medium" data-i18n="opt_medium">СРЕДНЕЕ</button>
+              <button class="settings-btn" type="button" data-val="high" data-i18n="opt_high">ВЫСОКОЕ</button>
             </div>
           </div>
 
           <div class="settings-row">
             <div class="settings-info">
-              <span class="settings-name">ЯЗЫК / LANGUAGE</span>
-              <span class="settings-hint">Локализация интерфейса</span>
+              <span class="settings-name" id="set-lang-name">ЯЗЫК / LANGUAGE</span>
+              <span class="settings-hint" id="set-lang-hint">Локализация интерфейса</span>
             </div>
             <div class="settings-options" id="opt-lang">
-              <button class="settings-btn active" data-val="ru">RU</button>
-              <button class="settings-btn" data-val="en">EN</button>
+              <button class="settings-btn active" type="button" data-val="ru">RU</button>
+              <button class="settings-btn" type="button" data-val="en">EN</button>
             </div>
           </div>
 
           <div class="settings-row">
             <div class="settings-info">
-              <span class="settings-name">ГРОМКОСТЬ МУЗЫКИ (СИНТЕЗАТОР)</span>
+              <label class="settings-name" for="slider-bgm" id="set-bgm-name">ГРОМКОСТЬ МУЗЫКИ</label>
               <span class="settings-hint" id="bgm-vol-label">60%</span>
             </div>
-            <input type="range" id="slider-bgm" class="bio-slider" min="0" max="100" value="60">
+            <input type="range" id="slider-bgm" class="bio-slider" min="0" max="100" value="60" />
           </div>
 
           <div class="settings-row">
             <div class="settings-info">
-              <span class="settings-name">ГРОМКОСТЬ ЭФФЕКТОВ (SFX)</span>
+              <label class="settings-name" for="slider-sfx" id="set-sfx-name">ГРОМКОСТЬ ЭФФЕКТОВ (SFX)</label>
               <span class="settings-hint" id="sfx-vol-label">80%</span>
             </div>
-            <input type="range" id="slider-sfx" class="bio-slider" min="0" max="100" value="80">
+            <input type="range" id="slider-sfx" class="bio-slider" min="0" max="100" value="80" />
           </div>
 
           <div class="settings-row">
             <div class="settings-info">
-              <span class="settings-name">РЕЗЕРВНОЕ КОПИРОВАНИЕ</span>
-              <span class="settings-hint">Биолаб, Кодекс, Достижения (JSON)</span>
+              <span class="settings-name" id="set-backup-name">РЕЗЕРВНОЕ КОПИРОВАНИЕ</span>
+              <span class="settings-hint" id="set-backup-hint">Биолаб, Кодекс, Достижения (JSON)</span>
             </div>
             <div class="settings-options">
-              <button id="export-save-btn" class="settings-btn">ЭКСПОРТ СЕЙВА</button>
-              <button id="import-save-btn" class="settings-btn">ИМПОРТ СЕЙВА</button>
+              <button id="export-save-btn" class="settings-btn" type="button">ЭКСПОРТ СЕЙВА</button>
+              <button id="import-save-btn" class="settings-btn" type="button">ИМПОРТ СЕЙВА</button>
               <input type="file" id="import-save-file" accept="application/json" style="display:none" />
             </div>
           </div>
         </div>
 
-        <button id="settings-close" class="modal-close-btn">СОХРАНИТЬ И ЗАКРЫТЬ</button>
+        <div class="modal-footer">
+          <button id="settings-close" class="modal-close-btn" type="button">СОХРАНИТЬ И ЗАКРЫТЬ</button>
+        </div>
       </div>
     </div>
 
-    <div id="level-group">
-      <div id="level">УР. 1</div>
-      <div id="xp-conduit-hud" class="bio-xp-conduit" style="width: 170px; height: 24px;">
-        <div class="conduit-track"><div id="xp-conduit-fill" class="conduit-fill" style="width: 0%;"></div></div>
-        <svg class="conduit-frame" viewBox="0 0 320 44"><use href="#ico-xp-conduit"/></svg>
+    <div id="hud-bottom-left">
+      <div id="weapon-hud">
+        <div class="wh" id="wh-spikes"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-weapon-spikes"/></svg></span></div><span class="wh-lvl">ур.1</span></div>
+        <div class="wh" id="wh-orbs"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-weapon-orbs"/></svg></span></div><span class="wh-lvl">—</span></div>
+        <div class="wh" id="wh-nova"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-weapon-nova"/></svg></span></div><span class="wh-lvl">—</span></div>
+        <div class="wh" id="wh-aura"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-weapon-aura"/></svg></span></div><span class="wh-lvl">—</span></div>
+        <div class="wh" id="wh-mandibles"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-fury"/></svg></span></div><span class="wh-lvl">—</span></div>
+        <div class="wh" id="wh-cysts"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-node-incubator"/></svg></span></div><span class="wh-lvl">—</span></div>
+        <div class="wh skill" id="wh-dash"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-ambush"/></svg></span></div><span class="wh-lvl">SHIFT</span></div>
+        <div class="wh skill" id="wh-call"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-skill-call"/></svg></span></div><span class="wh-lvl">SPACE</span></div>
+        <div class="wh skill" id="wh-ring"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-hybrid-ouroboros"/></svg></span></div><span class="wh-lvl">КОЛЬЦО</span></div>
+      </div>
+      <div id="level-group">
+        <div id="level">УР. 1</div>
+        <div id="xp-conduit-hud" class="bio-xp-conduit">
+          <div class="conduit-track"><div id="xp-conduit-fill" class="conduit-fill" style="width: 0%;"></div></div>
+          <svg class="conduit-frame" viewBox="0 0 320 44" aria-hidden="true"><use href="#ico-xp-conduit"/></svg>
+        </div>
       </div>
     </div>
-    <div id="petri-radar-hud" class="petri-radar" style="position: absolute; right: 18px; bottom: 18px; z-index: 5; pointer-events: none; width: 124px; height: 124px;">
-      <canvas id="radar-canvas" width="248" height="248" style="position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 50%;"></canvas>
-      <svg class="radar-frame" viewBox="0 0 160 160"><use href="#ico-petri-radar"/></svg>
-      <div id="radar-badge" style="position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: 0.1em; color: #00ff9d; background: rgba(2,6,10,0.88); border: 1px solid rgba(0,255,157,0.3); padding: 1px 6px; border-radius: 4px; white-space: nowrap; text-shadow: 0 0 6px rgba(0,255,157,0.6);">УГРОЗЫ: 0</div>
+
+    <div id="petri-radar-hud" class="petri-radar">
+      <canvas id="radar-canvas" width="248" height="248"></canvas>
+      <svg class="radar-frame" viewBox="0 0 160 160" aria-hidden="true"><use href="#ico-petri-radar"/></svg>
+      <div id="radar-badge">УГРОЗЫ: 0</div>
     </div>
-    <div id="weapon-hud">
-      <div class="wh" id="wh-spikes"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-weapon-spikes"/>  </svg></span></div><span class="wh-lvl">ур.1</span></div>
-      <div class="wh" id="wh-orbs"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-weapon-orbs"/>  </svg></span></div><span class="wh-lvl">нет</span></div>
-      <div class="wh" id="wh-nova"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-weapon-nova"/>  </svg></span></div><span class="wh-lvl">нет</span></div>
-      <div class="wh" id="wh-aura"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-weapon-aura"/>  </svg></span></div><span class="wh-lvl">нет</span></div>
-      <div class="wh" id="wh-mandibles"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-fury"/>  </svg></span></div><span class="wh-lvl">нет</span></div>
-      <div class="wh" id="wh-cysts"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-node-incubator"/>  </svg></span></div><span class="wh-lvl">нет</span></div>
-      <div class="wh" id="wh-dash"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-ambush"/>  </svg></span></div><span class="wh-lvl">рывок</span></div>
-      <div class="wh" id="wh-call"><div class="wh-ring"><span class="wh-ico"><svg viewBox="0 0 32 32"><use href="#ico-skill-call"/>  </svg></span></div><span class="wh-lvl">зов</span></div>
-    </div>
+
     <div id="hurt"></div>
     <div id="tailwarn"></div>
 
-    <div class="corner-deco tl"><svg viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg></div>
-    <div class="corner-deco tr"><svg viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg></div>
-    <div class="corner-deco bl"><svg viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg></div>
-    <div class="corner-deco br"><svg viewBox="0 0 48 48"><use href="#ico-corner-frame"/>  </svg></div>
-    <div id="scanlines"></div>
-    <div id="vignette"></div>
+    <div class="corner-deco tl" aria-hidden="true"><svg viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg></div>
+    <div class="corner-deco tr" aria-hidden="true"><svg viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg></div>
+    <div class="corner-deco bl" aria-hidden="true"><svg viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg></div>
+    <div class="corner-deco br" aria-hidden="true"><svg viewBox="0 0 48 48"><use href="#ico-corner-frame"/></svg></div>
+    <div id="scanlines" aria-hidden="true"></div>
+    <div id="vignette" aria-hidden="true"></div>
   </div>
   <script type="module" src="/src/main.ts"></script>
 </body>

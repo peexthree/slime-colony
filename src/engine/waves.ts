@@ -1,3 +1,5 @@
+import { getLocale } from '../i18n';
+
 // Режиссёр событий волн: не просто «плотнее», а сценарные моменты (Этап 4.2)
 export type EnemyTypeShort = 'grub' | 'runner' | 'brute';
 
@@ -28,7 +30,8 @@ interface ActiveEffect {
   burstPending: boolean;
 }
 
-const ANNOUNCE_NAMES: Record<EnemyTypeShort, string> = { grub: 'Личинки', runner: 'Бегуны', brute: 'Громилы' };
+const ANNOUNCE_NAMES_RU: Record<EnemyTypeShort, string> = { grub: 'Личинки', runner: 'Бегуны', brute: 'Громилы' };
+const ANNOUNCE_NAMES_EN: Record<EnemyTypeShort, string> = { grub: 'Grubs', runner: 'Runners', brute: 'Brutes' };
 
 /** Расписание сценарных событий: срабатывают однократно по времени забега */
 export const WAVE_EVENTS: { time: number; event: WaveEvent }[] = [
@@ -101,7 +104,8 @@ export class WaveDirector {
       this.active.left -= dt;
       if (this.active.kind === 'void' && this.active.left <= 0 && this.active.burstPending) {
         this.active.burstPending = false;
-        this.hooks.announce('<span class="wave-event-banner bio-orange"><svg viewBox="0 0 32 32"><use href="#ico-damage-nova"/></svg> ПРОРЫВ РОЯ</span>');
+        const msg = getLocale() === 'en' ? 'SWARM BREACH' : 'ПРОРЫВ РОЯ';
+        this.hooks.announce(`<span class="wave-event-banner bio-orange"><svg viewBox="0 0 32 32"><use href="#ico-damage-nova"/></svg> ${msg}</span>`);
         for (let k = 0; k < 12; k++) this.queue.push({ type: 'grub', side: null });
       }
       if (this.active.left <= 0) this.active = null;
@@ -110,31 +114,38 @@ export class WaveDirector {
 
   private fire(event: WaveEvent): void {
     const p = this.hooks.playerPos();
+    const en = getLocale() === 'en';
     switch (event.kind) {
       case 'swarm': {
-        this.hooks.announce('<span class="wave-event-banner bio-cyan"><svg viewBox="0 0 32 32"><use href="#ico-wave-tide"/></svg> ВОЛНА: ' + ANNOUNCE_NAMES[event.type] + ' x' + event.count + '</span>');
+        const names = en ? ANNOUNCE_NAMES_EN : ANNOUNCE_NAMES_RU;
+        const prefix = en ? 'WAVE' : 'ВОЛНА';
+        this.hooks.announce(`<span class="wave-event-banner bio-cyan"><svg viewBox="0 0 32 32"><use href="#ico-wave-tide"/></svg> ${prefix}: ${names[event.type]} x${event.count}</span>`);
         for (let k = 0; k < event.count; k++) {
           this.queue.push({ type: event.type, side: this.active?.side ?? null });
         }
         break;
       }
       case 'ambush': {
-        this.hooks.announce('<span class="wave-event-banner bio-magenta"><svg viewBox="0 0 32 32"><use href="#ico-ambush"/></svg> ЗАСАДА СО ВСЕХ СТОРОН</span>');
+        const txt = en ? 'AMBUSH FROM ALL SIDES' : 'ЗАСАДА СО ВСЕХ СТОРОН';
+        this.hooks.announce(`<span class="wave-event-banner bio-magenta"><svg viewBox="0 0 32 32"><use href="#ico-ambush"/></svg> ${txt}</span>`);
         this.hooks.ringAround('runner', 14, p.x, p.y, 230);
         break;
       }
       case 'void': {
-        this.hooks.announce('<span class="wave-event-banner bio-violet"><svg viewBox="0 0 32 32"><use href="#ico-pause"/></svg> ЗАТИШЬЕ: спавн остановлен</span>');
+        const txt = en ? 'STILLNESS: spawning halted' : 'ЗАТИШЬЕ: спавн остановлен';
+        this.hooks.announce(`<span class="wave-event-banner bio-violet"><svg viewBox="0 0 32 32"><use href="#ico-pause"/></svg> ${txt}</span>`);
         this.active = { kind: 'void', speedMul: 1, side: null, left: event.duration, burstPending: true };
         break;
       }
       case 'berserker': {
-        this.hooks.announce('<span class="wave-event-banner bio-crimson"><svg viewBox="0 0 32 32"><use href="#ico-fury"/></svg> ЯРОСТЬ РОЯ: ускорение врагов</span>');
+        const txt = en ? 'SWARM FRENZY: foes accelerated' : 'ЯРОСТЬ РОЯ: ускорение врагов';
+        this.hooks.announce(`<span class="wave-event-banner bio-crimson"><svg viewBox="0 0 32 32"><use href="#ico-fury"/></svg> ${txt}</span>`);
         this.active = { kind: 'berserker', speedMul: event.speedMul, side: null, left: event.duration, burstPending: false };
         break;
       }
       case 'feast': {
-        this.hooks.announce('<span class="wave-event-banner bio-lime"><svg viewBox="0 0 32 32"><use href="#ico-feast"/></svg> ПИР: выброс сфер ДНК</span>');
+        const txt = en ? 'FEAST: DNA orb eruption' : 'ПИР: выброс сфер ДНК';
+        this.hooks.announce(`<span class="wave-event-banner bio-lime"><svg viewBox="0 0 32 32"><use href="#ico-feast"/></svg> ${txt}</span>`);
         for (let k = 0; k < event.orbCount; k++) {
           const a = Math.random() * Math.PI * 2;
           const r = 60 + Math.random() * 200;
@@ -143,7 +154,9 @@ export class WaveDirector {
         break;
       }
       case 'migration': {
-        this.hooks.announce('<span class="wave-event-banner bio-amber"><svg viewBox="0 0 24 48"><use href="#ico-scale-bracket"/></svg> МИГРАЦИЯ РОЯ: ' + (event.dir === 'right' ? 'справа' : 'слева') + '</span>');
+        const dirTxt = en ? (event.dir === 'right' ? 'from right' : 'from left') : (event.dir === 'right' ? 'справа' : 'слева');
+        const prefix = en ? 'SWARM MIGRATION' : 'МИГРАЦИЯ РОЯ';
+        this.hooks.announce(`<span class="wave-event-banner bio-amber"><svg viewBox="0 0 24 48"><use href="#ico-scale-bracket"/></svg> ${prefix}: ${dirTxt}</span>`);
         this.active = { kind: 'migration', speedMul: 1, side: event.dir === 'right' ? 1 : 3, left: event.duration, burstPending: false };
         break;
       }

@@ -195,12 +195,12 @@ fn updateAgents(@builtin(global_invocation_id) id: vec3<u32>) {
   // Отражение от границ поля со случайным шумом и сдвиг по камере (мировой якорь)
   a.x = a.x - params.camDeltaX;
   a.y = a.y - params.camDeltaY;
-  let wF = params.width;
-  let hF = params.height;
-  if (a.x < 1.0) { a.x = a.x + wF - 2.0; }
-  if (a.x >= wF - 1.0) { a.x = a.x - wF + 2.0; }
-  if (a.y < 1.0) { a.y = a.y + hF - 2.0; }
-  if (a.y >= hF - 1.0) { a.y = a.y - hF + 2.0; }
+  let fieldW = params.width;
+  let fieldH = params.height;
+  if (a.x < 1.0) { a.x = a.x + fieldW - 2.0; }
+  if (a.x >= fieldW - 1.0) { a.x = a.x - fieldW + 2.0; }
+  if (a.y < 1.0) { a.y = a.y + fieldH - 2.0; }
+  if (a.y >= fieldH - 1.0) { a.y = a.y - fieldH + 2.0; }
 
   let noise = (rnd2 - 0.5) * 1.2;
   if (a.x < 2.0 || a.x >= params.width - 2.0) {

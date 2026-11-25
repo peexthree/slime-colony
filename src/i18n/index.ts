@@ -25,8 +25,17 @@ export function setLocale(lang: Locale): void {
   try {
     localStorage.setItem(STORAGE_KEY, lang);
   } catch {}
+  if (typeof document !== 'undefined') {
+    document.documentElement.lang = lang;
+  }
 }
 
-export function t(key: I18nKey): string {
-  return DICTS[currentLocale][key] ?? DICTS.ru[key] ?? key;
+export function t(key: I18nKey, vars?: Record<string, string | number>): string {
+  let out = DICTS[currentLocale][key] ?? DICTS.ru[key] ?? key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      out = out.replaceAll(`{${k}}`, String(v));
+    }
+  }
+  return out;
 }
