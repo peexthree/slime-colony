@@ -56,8 +56,11 @@ export function createJoystick(stage: HTMLElement, canvas: HTMLCanvasElement): J
     'pointer-events:none', 'z-index:60', 'display:none',
   ].join(';');
 
+  const makeActionInner = (href: string, vb: string, label: string): string =>
+    `<svg width="24" height="24" viewBox="${vb}" aria-hidden="true" style="pointer-events:none;flex-shrink:0;"><use href="#${href}"/></svg><span class="tj-lbl" style="font-size:9px;line-height:1;">${label}</span>`;
+
   const callBtn = document.createElement('div');
-  callBtn.textContent = 'ЗОВ';
+  callBtn.innerHTML = makeActionInner('ico-skill-call', '0 0 32 32', 'ЗОВ');
   const callGlow = 'box-shadow:0 0 18px rgba(170,80,255,0.45), inset 0 0 12px rgba(170,80,255,0.25)';
   callBtn.style.cssText = [
     'position:fixed',
@@ -69,14 +72,14 @@ export function createJoystick(stage: HTMLElement, canvas: HTMLCanvasElement): J
     'background:rgba(120,50,210,0.28)',
     callGlow,
     'color:#e8d5ff', 'font:bold 12px/1 monospace', 'letter-spacing:1px',
-    'display:none', 'align-items:center', 'justify-content:center',
+    'display:none', 'flex-direction:column', 'gap:2px', 'align-items:center', 'justify-content:center',
     'user-select:none', '-webkit-user-select:none', '-webkit-tap-highlight-color:transparent',
     'touch-action:none', 'cursor:pointer',
     'pointer-events:auto', 'z-index:60',
   ].join(';');
 
   const dashBtn = document.createElement('div');
-  dashBtn.textContent = 'РЫВОК';
+  dashBtn.innerHTML = makeActionInner('ico-skill-dash', '0 0 64 64', 'РЫВОК');
   const dashGlow = 'box-shadow:0 0 18px rgba(102,252,241,0.45), inset 0 0 12px rgba(102,252,241,0.25)';
   dashBtn.style.cssText = [
     'position:fixed',
@@ -88,7 +91,7 @@ export function createJoystick(stage: HTMLElement, canvas: HTMLCanvasElement): J
     'background:rgba(14,110,107,0.35)',
     dashGlow,
     'color:#66fcf1', 'font:bold 10px/1 monospace', 'letter-spacing:1px',
-    'display:none', 'align-items:center', 'justify-content:center',
+    'display:none', 'flex-direction:column', 'gap:2px', 'align-items:center', 'justify-content:center',
     'user-select:none', '-webkit-user-select:none', '-webkit-tap-highlight-color:transparent',
     'touch-action:none', 'cursor:pointer',
     'pointer-events:auto', 'z-index:60',
@@ -243,8 +246,10 @@ export function createJoystick(stage: HTMLElement, canvas: HTMLCanvasElement): J
     dashRequested: () => dashFlag,
     consumeDash: () => { dashFlag = false; },
     setLabels: (callLabel: string, dashLabel: string) => {
-      callBtn.textContent = callLabel;
-      dashBtn.textContent = dashLabel;
+      const cSpan = callBtn.querySelector('.tj-lbl');
+      if (cSpan) cSpan.textContent = callLabel; else callBtn.textContent = callLabel;
+      const dSpan = dashBtn.querySelector('.tj-lbl');
+      if (dSpan) dSpan.textContent = dashLabel; else dashBtn.textContent = dashLabel;
     },
     dispose: () => {
       if (disposed) return;

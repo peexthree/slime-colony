@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><radialGradient id="ac_web" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#f0abfc"/><stop offset="58%" stop-color="#a855f7"/><stop offset="100%" stop-color="#3b0764"/></radialGradient><radialGradient id="ac_shell" cx="40%" cy="30%" r="70%"><stop offset="0%" stop-color="#fde68a"/><stop offset="58%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#92400e"/></radialGradient><radialGradient id="ac_egg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#d9f99d"/><stop offset="58%" stop-color="#65a30d"/><stop offset="100%" stop-color="#14532d"/></radialGradient></defs><!-- Sticky silk anchor web -->
+           <path d="M26 156 Q80 144 128 198 Q176 144 230 156 Q190 218 128 232 Q66 218 26 156 Z" fill="url(#ac_web)" opacity="0.45" stroke="#160e26" stroke-width="5"/>
+           <!-- Main cocoon pod -->
+           <path d="M128 24 C178 24 208 78 202 146 C196 196 168 224 128 224 C88 224 60 196 54 146 C48 78 78 24 128 24 Z" fill="url(#ac_shell)" stroke="#160e26" stroke-width="8"/>
+           <!-- Silk wrappings -->
+           <path d="M62 104 Q128 132 194 98" stroke="#78350f" stroke-width="7" stroke-linecap="round" opacity="0.5"/>
+           <path d="M56 152 Q128 182 200 148" stroke="#78350f" stroke-width="7" stroke-linecap="round" opacity="0.5"/>
+           <path d="M74 64 Q128 84 182 62" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity="0.5"/>
+           <!-- Translucent egg window -->
+           <ellipse cx="128" cy="128" rx="44" ry="52" fill="#451a03" opacity="0.35"/>
+           <circle cx="114" cy="116" r="18" fill="url(#ac_egg)" stroke="#160e26" stroke-width="5"/>
+           <circle cx="144" cy="134" r="16" fill="url(#ac_egg)" stroke="#160e26" stroke-width="5"/>
+           <circle cx="118" cy="150" r="14" fill="url(#ac_egg)" stroke="#160e26" stroke-width="5"/>
+           <!-- Highlights -->
+           <ellipse cx="108" cy="110" rx="6" ry="3.5" fill="#fff" opacity="0.85" transform="rotate(-30 108 110)"/>
+           <ellipse cx="139" cy="128" rx="5" ry="3" fill="#fff" opacity="0.85" transform="rotate(-30 139 128)"/>
+           <!-- Top crown opening -->
+           <ellipse cx="128" cy="30" rx="26" ry="10" fill="#fef3c7" stroke="#160e26" stroke-width="6"/></svg>

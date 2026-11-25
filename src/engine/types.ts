@@ -21,7 +21,7 @@ export interface Beacon {
 /** Тип бонуса био-узла территории */
 export type NodeKind = 'gen' | 'amp' | 'magnet' | 'mutagen' | 'incubator';
 
-/** Узел территории: захватывается плотностью штаммов, даёт бонус владельцу */
+/** Узел территории: захватывается удержанием зоны, даёт бафф владельцу */
 export interface BioNode {
   id: number;
   x: number;
@@ -30,6 +30,11 @@ export interface BioNode {
   owner: -1 | 0 | 1;
   capture: number;
   kind: NodeKind;
+  contested?: boolean;
+  raided?: boolean;
+  playerInside?: boolean;
+  enemyCount?: number;
+  warnCooldown?: number;
 }
 
 /** Феромон-зов (пробел): токсин-маяк пугает рой и отбрасывает врагов */
@@ -98,18 +103,18 @@ export interface EnemyDef {
 }
 
 export const ENEMIES: Record<EnemyType, EnemyDef> = {
-  grub:     { hp: 12,  speed: 38, dmg: 8,  radius: 7,  xp: 1,  color: 0xc084fc, tail: 6,  dna: 'vermis' },
-  runner:   { hp: 9,   speed: 66, dmg: 10, radius: 6,  xp: 2,  color: 0xe879f9, tail: 8,  dna: 'symbiont' },
-  brute:    { hp: 62,  speed: 24, dmg: 16, radius: 12, xp: 6,  color: 0xa855f7, tail: 10, dna: 'mycelium' },
-  boss:     { hp: 850, speed: 20, dmg: 24, radius: 22, xp: 40, color: 0xd946ef, tail: 18, dna: 'vermis' },
+  grub:     { hp: 13,  speed: 44, dmg: 9,  radius: 7,  xp: 1,  color: 0xc084fc, tail: 6,  dna: 'vermis' },
+  runner:   { hp: 10,  speed: 74, dmg: 11, radius: 6,  xp: 2,  color: 0xe879f9, tail: 8,  dna: 'symbiont' },
+  brute:    { hp: 66,  speed: 26, dmg: 17, radius: 12, xp: 6,  color: 0xa855f7, tail: 10, dna: 'mycelium' },
+  boss:     { hp: 920, speed: 22, dmg: 25, radius: 22, xp: 40, color: 0xd946ef, tail: 18, dna: 'vermis' },
   // --- Экосистема: организмы с уникальным поведением ---
-  splitter: { hp: 30,  speed: 40, dmg: 8,  radius: 9,  xp: 3,  color: 0xd8b4fe, tail: 8,  dna: 'mycelium' },  // при смерти -> 2 бегуна
-  spitter:  { hp: 20,  speed: 48, dmg: 6,  radius: 7,  xp: 3,  color: 0xf0abfc, tail: 7,  dna: 'chimera' },   // держит дистанцию, плюёт ядом
-  healer:   { hp: 26,  speed: 44, dmg: 6,  radius: 7,  xp: 4,  color: 0x86efac, tail: 6,  dna: 'mycelium' },  // лечит ближних - приоритетная цель
-  pulsar:   { hp: 55,  speed: 0,  dmg: 14, radius: 14, xp: 8,  color: 0xfb7185, tail: 0,  dna: 'chimera' },   // стоит и бьёт кольцами
-  mirror:   { hp: 140, speed: 58, dmg: 14, radius: 10, xp: 12, color: 0xfda4af, tail: 12, dna: 'symbiont' }, // отражает геном игрока
-  colony:   { hp: 150, speed: 18, dmg: 14, radius: 16, xp: 15, color: 0xc4b5fd, tail: 10, dna: 'vermis' },   // матка + выводок
-  brood:    { hp: 6,   speed: 62, dmg: 6,  radius: 4,  xp: 1,  color: 0xe9d5ff, tail: 4,  dna: 'vermis' },   // выводок колонии
+  splitter: { hp: 32,  speed: 44, dmg: 9,  radius: 9,  xp: 3,  color: 0xd8b4fe, tail: 8,  dna: 'mycelium' },  // при смерти -> 2 бегуна
+  spitter:  { hp: 22,  speed: 52, dmg: 8,  radius: 7,  xp: 3,  color: 0xf0abfc, tail: 7,  dna: 'chimera' },   // держит дистанцию, плюёт ядом
+  healer:   { hp: 28,  speed: 46, dmg: 6,  radius: 7,  xp: 4,  color: 0x86efac, tail: 6,  dna: 'mycelium' },  // лечит ближних - приоритетная цель
+  pulsar:   { hp: 60,  speed: 0,  dmg: 15, radius: 14, xp: 8,  color: 0xfb7185, tail: 0,  dna: 'chimera' },   // стоит и бьёт кольцами
+  mirror:   { hp: 150, speed: 62, dmg: 15, radius: 10, xp: 12, color: 0xfda4af, tail: 12, dna: 'symbiont' }, // отражает геном игрока
+  colony:   { hp: 165, speed: 20, dmg: 15, radius: 16, xp: 15, color: 0xc4b5fd, tail: 10, dna: 'vermis' },   // матка + выводок
+  brood:    { hp: 7,   speed: 68, dmg: 6,  radius: 4,  xp: 1,  color: 0xe9d5ff, tail: 4,  dna: 'vermis' },   // выводок колонии
 };
 
 /** Мутации элитных врагов (Этап 4.3) */
@@ -125,76 +130,91 @@ export const ELITE = {
 
 /** Время появления новых организмов в спавн-таблице */
 export const SPAWN_TABLE: { since: number; type: EnemyType; chance: number }[] = [
-  { since: 40,  type: 'splitter', chance: 0.10 },
-  { since: 60,  type: 'spitter',  chance: 0.10 },
-  { since: 80,  type: 'healer',   chance: 0.08 },
-  { since: 100, type: 'pulsar',   chance: 0.06 },
-  { since: 150, type: 'colony',   chance: 0.05 },
-  { since: 240, type: 'mirror',   chance: 0.04 },
+  { since: 35,  type: 'splitter', chance: 0.10 },
+  { since: 55,  type: 'spitter',  chance: 0.11 },
+  { since: 75,  type: 'healer',   chance: 0.08 },
+  { since: 95,  type: 'pulsar',   chance: 0.06 },
+  { since: 145, type: 'colony',   chance: 0.05 },
+  { since: 230, type: 'mirror',   chance: 0.04 },
 ];
+
+/** Минимальный уровень игрока для открытия каждого оружия и максимум слотов */
+export const MAX_EQUIPPED_WEAPONS = 4;
+export const WEAPON_UNLOCK_LEVEL: Record<WeaponId, number> = {
+  spikes: 1,
+  mandibles: 3,
+  orbs: 5,
+  aura: 7,
+  nova: 9,
+  cysts: 11,
+};
 
 /** Шипы: авто-выстрел в ближайшую цель. Таблицы по уровням 1..4 */
 export const SPIKES = {
-  cd:    [1.15, 1.05, 0.95, 0.85],
-  dmg:   [10, 12, 15, 18],
-  count: [1, 2, 2, 3],
+  cd:    [1.35, 1.18, 1.02, 0.88],
+  dmg:   [9, 12, 16, 21],
+  count: [1, 1, 2, 3],
 } as const;
 
-/** Молния-орбиты: сферы вращаются вокруг игрока */
+/** Молния-орбиты: сферы вращаются вокруг игрока (открываются с 5 ур.) */
 export const ORBS = {
-  count:  [2, 3, 4, 5],
-  dmg:    [8, 10, 12, 15],
-  radius: [55, 62, 70, 78],
-  speed:  2.4,
-  orbCd:  0.4,
+  count:  [1, 2, 3, 4],
+  dmg:    [7, 10, 13, 17],
+  radius: [50, 56, 63, 70],
+  speed:  2.3,
+  orbCd:  0.45,
 } as const;
 
-/** Нова-импульс: периодический взрыв-кольцо с отбросом */
+/** Нова-импульс: периодический взрыв-кольцо с отбросом (открывается с 9 ур.) */
 export const NOVA = {
-  cd:     [5, 4.6, 4.2, 3.8],
-  dmg:    [24, 30, 36, 44],
-  radius: [90, 100, 112, 124],
+  cd:     [6.5, 5.8, 5.1, 4.4],
+  dmg:    [20, 27, 35, 45],
+  radius: [80, 92, 104, 118],
 } as const;
 
-/** Токсин-аура: постоянный урон вокруг игрока */
+/** Токсин-аура: постоянный урон вокруг игрока (открывается с 7 ур.) */
 export const AURA = {
-  dps:    [6, 9, 12, 16],
-  radius: [45, 52, 60, 70],
+  dps:    [5, 8, 12, 17],
+  radius: [38, 45, 53, 62],
   tick:   0.25,
 } as const;
 
-/** Жвалы: рассекающий фронтальный укус перед организмом */
+/** Жвалы: рассекающий фронтальный укус перед организмом (открываются с 3 ур.) */
 export const MANDIBLES = {
-  cd:     [1.6, 1.4, 1.2, 1.0],
-  dmg:    [28, 38, 52, 68],
-  range:  [58, 66, 75, 86],
-  arc:    Math.PI * 0.65, // ~117 градусов сектор удара
+  cd:     [1.7, 1.45, 1.25, 1.05],
+  dmg:    [22, 30, 40, 52],
+  range:  [54, 62, 70, 80],
+  arc:    Math.PI * 0.62, // ~112 градусов сектор удара
 } as const;
 
-/** Споровые цисты: коконы-мины, оставляемые хвостом */
+/** Споровые цисты: коконы-мины, сбрасываются только при движении (открываются с 11 ур.) */
 export const CYSTS = {
-  cd:       [3.2, 2.7, 2.2, 1.8],
-  dmg:      [32, 45, 60, 80],
-  radius:   [48, 54, 60, 68],
-  maxCysts: [3, 4, 5, 6],
+  cd:       [3.8, 3.3, 2.8, 2.3],
+  dmg:      [18, 25, 34, 44],
+  radius:   [34, 40, 46, 52],
+  maxCysts: [3, 4, 5, 7],
+  perDrop:  [1, 1, 1, 2],
+  moveDist: 85,
+  armTime:  0.55,
+  blastMul: 1.3,
 } as const;
 
 /** Фазовый рывок (Dash) */
 export const DASH = {
-  cd: 3.5,
+  cd: 3.8,
   duration: 0.22,
-  speedMul: 3.4,
+  speedMul: 3.3,
   iframe: 0.35,
 } as const;
 
 export const WEAPON_MAX_LVL = 4;
-export const STAT_MAX_STACKS = 5;
+export const STAT_MAX_STACKS = 3;
 
 export const PLAYER = {
   hp: 100,
-  speed: 122,
+  speed: 120,
   radius: 6,
-  magnet: 90,
+  magnet: 66,
 } as const;
 
 export const PROJ_SPEED = 330;
@@ -216,8 +236,8 @@ export const TAIL = {
   minLen: 6,
   baseMax: 16,
   maxPerLvl: 2,      // ёмкость хвоста растёт с уровнем
-  moveCost: 1.2,     // сегментов в секунду при движении (умножается на размер)
-  idleCost: 1.0,     // сегментов в секунду без движения (метаболизм формы)
+  moveCost: 1.25,    // сегментов в секунду при движении (умножается на размер)
+  idleCost: 1.75,    // сегментов в секунду без движения (метаболизм формы — поощряет движение)
   soulGain: 0.9,     // сегментов за единицу ценности души
   dpsBase: 2,
   dpsPerSeg: 0.35,   // хвост бьёт тем сильнее, чем он длиннее
@@ -270,11 +290,11 @@ export interface ScaleTheme {
 
 /** 5 масштабов бытия: от капли до фрактала. Зумаут — кульминация шкалы */
 export const SCALES: ScaleTheme[] = [
-  { id: 1, name: 'ПЕРВИЧНАЯ КАПЛЯ', sub: 'Микромир: капля биомассы в реакторе зонда «ЕвроКорп-3»', zoom: 1.0, enemyHpMul: 1.0, enemyDmgMul: 1.0, enemySizeMul: 1.0, enemySpeedMul: 1.0, biomassGoal: 120 },
-  { id: 2, name: 'КРОВЕНОСНЫЙ ТРАКТ', sub: 'Ткань носителя: пульсирующие стенки сосуда', zoom: 0.85, enemyHpMul: 2.0, enemyDmgMul: 1.6, enemySizeMul: 1.45, enemySpeedMul: 1.12, biomassGoal: 240 },
-  { id: 3, name: 'ВНУТРЕННИЙ ОКЕАН', sub: 'Орган: чёрная желчь и биолюминесцентная взвесь', zoom: 0.72, enemyHpMul: 3.8, enemyDmgMul: 2.4, enemySizeMul: 2.0, enemySpeedMul: 1.25, biomassGoal: 380 },
-  { id: 4, name: 'КОНТИНЕНТАЛЬНЫЙ РАЗЛОМ', sub: 'Планета Ξ-9: магматическая кора полушария', zoom: 0.60, enemyHpMul: 6.5, enemyDmgMul: 3.5, enemySizeMul: 2.7, enemySpeedMul: 1.4, biomassGoal: 560 },
-  { id: 5, name: 'ФРАКТАЛ БЕСКОНЕЧНОСТИ', sub: 'Метаматематика: выход за пределы биологии', zoom: 0.50, enemyHpMul: 11.0, enemyDmgMul: 4.8, enemySizeMul: 3.5, enemySpeedMul: 1.55, biomassGoal: 760 },
+  { id: 1, name: 'ПЕРВИЧНАЯ КАПЛЯ', sub: 'Микромир: капля биомассы в реакторе зонда «ЕвроКорп-3»', zoom: 1.0, enemyHpMul: 1.0, enemyDmgMul: 1.0, enemySizeMul: 1.0, enemySpeedMul: 1.0, biomassGoal: 130 },
+  { id: 2, name: 'КРОВЕНОСНЫЙ ТРАКТ', sub: 'Ткань носителя: пульсирующие стенки сосуда', zoom: 0.85, enemyHpMul: 2.1, enemyDmgMul: 1.65, enemySizeMul: 1.45, enemySpeedMul: 1.14, biomassGoal: 270 },
+  { id: 3, name: 'ВНУТРЕННИЙ ОКЕАН', sub: 'Орган: чёрная желчь и биолюминесцентная взвесь', zoom: 0.72, enemyHpMul: 4.0, enemyDmgMul: 2.5, enemySizeMul: 2.0, enemySpeedMul: 1.28, biomassGoal: 440 },
+  { id: 4, name: 'КОНТИНЕНТАЛЬНЫЙ РАЗЛОМ', sub: 'Планета Ξ-9: магматическая кора полушария', zoom: 0.60, enemyHpMul: 6.8, enemyDmgMul: 3.6, enemySizeMul: 2.7, enemySpeedMul: 1.42, biomassGoal: 660 },
+  { id: 5, name: 'ФРАКТАЛ БЕСКОНЕЧНОСТИ', sub: 'Метаматематика: выход за пределы биологии', zoom: 0.50, enemyHpMul: 11.5, enemyDmgMul: 5.0, enemySizeMul: 3.5, enemySpeedMul: 1.58, biomassGoal: 920 },
 ];
 
 export const METAMORPH = {

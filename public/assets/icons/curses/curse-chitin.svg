@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><linearGradient id="cc_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e9d5ff"/><stop offset="52%" stop-color="#9333ea"/><stop offset="100%" stop-color="#3b0764"/></linearGradient></defs><!-- Left cracked shell half -->
+           <path d="M29 10 L12 18 V34 C12 46 20 53 29 56 L26 42 L31 32 L25 22 Z" fill="url(#cc_a)" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <!-- Right cracked shell half shifted slightly -->
+           <path d="M36 10 L53 18 V34 C53 46 45 53 36 56 L39 42 L33 32 L39 22 Z" fill="url(#cc_a)" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <!-- Glowing crack lightning -->
+           <path d="M32 10 L29 22 L35 32 L29 42 L33 56" stroke="#fb7185" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+           <polygon points="52,11 58,8 56,16" fill="#f43f5e" stroke="#160e26" stroke-width="2"/></svg>

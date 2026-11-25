@@ -45,11 +45,11 @@ export const EN_SCALES: Record<number, { name: string; sub: string }> = {
 };
 
 export const EN_NODES: Record<NodeKind, { name: string; pos: string; neg: string }> = {
-  gen: { name: 'GENERATOR', pos: '+2 HP/s', neg: 'faster foes' },
-  amp: { name: 'AMPLIFIER', pos: 'no tail melt', neg: '-20% dmg' },
-  magnet: { name: 'MAGNET', pos: 'pickup x2.5', neg: 'orb theft' },
-  mutagen: { name: 'MUTAGEN', pos: '+1 card', neg: '-1 card' },
-  incubator: { name: 'INCUBATOR', pos: '+50% XP', neg: 'swarm brood' },
+  gen: { name: 'GENERATOR', pos: '+1.5 HP/s', neg: 'faster foes' },
+  amp: { name: 'AMPLIFIER', pos: '-40% melt +12% dmg', neg: '-20% dmg' },
+  magnet: { name: 'MAGNET', pos: 'pickup x1.6', neg: 'orb theft' },
+  mutagen: { name: 'MUTAGEN', pos: '+1 card, +15% XP', neg: '-1 card' },
+  incubator: { name: 'INCUBATOR', pos: '+35% XP', neg: 'swarm brood' },
 };
 
 export const EN_CHALLENGES: Record<string, string> = {
@@ -60,18 +60,18 @@ export const EN_CHALLENGES: Record<string, string> = {
 };
 
 export const EN_BIOLAB: Record<string, { name: string; effect: string }> = {
-  start_orbs: { name: '«TEMPEST»', effect: 'Start with Electro-Orbs instead of initial Spikes' },
-  start_aura: { name: '«PLAGUE»', effect: 'Start with Toxic Aura, but -20 max HP' },
-  start_tail_xl: { name: '«MACRO-TAIL»', effect: 'Start with double initial tail length' },
-  start_nova2: { name: '«DETONATION»', effect: 'Start with Level 2 Nova Pulse' },
-  perm_regen: { name: 'Regeneration', effect: '+0.3 HP/s permanently' },
-  perm_magnet: { name: 'Magnetism', effect: '+25% DNA orb pickup radius permanently' },
+  start_orbs: { name: '«TEMPEST»', effect: 'Start with Electro-Orbs (lv.1) instead of Spikes' },
+  start_aura: { name: '«PLAGUE»', effect: 'Start with Toxic Aura (lv.1) instead of Spikes, −15 max HP' },
+  start_tail_xl: { name: '«MACRO-TAIL»', effect: '+6 starting tail segments' },
+  start_nova2: { name: '«DETONATION»', effect: 'Start with Nova Pulse (lv.1) instead of Spikes, +15% cooldown' },
+  perm_regen: { name: 'Regeneration', effect: '+0.25 HP/s permanently' },
+  perm_magnet: { name: 'Magnetism', effect: '+20% DNA orb pickup radius' },
   unlock_vermis: { name: 'Synthesis «VERMIS»', effect: 'Start each run with Vermis DNA Level 1' },
   unlock_chimera: { name: 'Synthesis «CHIMERA»', effect: 'Start each run with Chimera DNA Level 1' },
   unlock_mycelium: { name: 'Synthesis «MYCELIUM»', effect: 'Start each run with Mycelium DNA Level 1' },
   unlock_symbiont: { name: 'Synthesis «SYMBIONT»', effect: 'Start each run with Symbiont DNA Level 1' },
-  perm_dmg: { name: 'Mutagenic Aggression', effect: '+10% outgoing damage permanently' },
-  perm_armor: { name: 'Chitin Membrane', effect: '-15% incoming damage permanently' },
+  perm_dmg: { name: 'Mutagenic Aggression', effect: '+8% outgoing damage' },
+  perm_armor: { name: 'Chitin Membrane', effect: '−10% incoming damage' },
 };
 
 export const EN_CODEX: Record<string, { name: string; lore: string; bonus: string }> = {
@@ -198,8 +198,8 @@ export const EN_UPGRADES: Record<string, { title: string; desc: string }> = {
   'aura+': { title: 'Toxic Aura', desc: 'Wider aura radius and higher damage per second' },
   mandibles0: { title: 'Ravenous Mandibles', desc: 'Frontal cone slash tearing enemies ahead of you' },
   'mandibles+': { title: 'Ravenous Mandibles', desc: 'Longer reach, wider cleave, and higher damage' },
-  cysts0: { title: 'Spore Cysts', desc: 'Organic mines dropped behind you that detonate on contact' },
-  'cysts+': { title: 'Spore Cysts', desc: 'More cysts per cluster, bigger blast radius and damage' },
+  cysts0: { title: 'Spore Cysts', desc: 'Organic mines secreted behind you while moving; arm in 0.55s and detonate on contact' },
+  'cysts+': { title: 'Spore Cysts', desc: 'More active cysts, larger radius, and higher blast damage' },
   curse_predator: { title: 'APEX PREDATOR', desc: '2.2x damage and +4 HP heal on elites/bosses, but tail melts 3x faster' },
   curse_chitin: { title: 'TITAN CHITIN', desc: '+120 max HP and +1.5s invulnerability, but -30% movement speed' },
   curse_hunger: { title: 'ETERNAL HUNGER', desc: '2x pickup radius & +40% attack speed, but starving (>3s without orbs) drains 3 HP/s' },

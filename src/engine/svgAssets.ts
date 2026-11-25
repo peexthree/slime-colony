@@ -387,3 +387,4 @@ export async function loadBiopunkTextures() {
 
 export * from './svgAssetsV2';
 export * from './svgAssetsV3';
+export * from './svgAssetsV4';

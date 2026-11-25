@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><linearGradient id="ao_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="52%" stop-color="#10b981"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs><circle cx="128" cy="128" r="98" stroke="url(#ao_a)" stroke-width="18" opacity="0.88"/>
+           <circle cx="128" cy="128" r="98" stroke="#160e26" stroke-width="4" stroke-dasharray="16 10"/>
+           <!-- Serpent head biting tail at top -->
+           <path d="M112 18 L148 28 L116 44 Z" fill="#fde047" stroke="#160e26" stroke-width="5.5" stroke-linejoin="round"/>
+           <circle cx="126" cy="27" r="4" fill="#160e26"/>
+           <circle cx="128" cy="128" r="76" stroke="#6ee7b7" stroke-width="3" stroke-dasharray="8 12" opacity="0.7"/></svg>

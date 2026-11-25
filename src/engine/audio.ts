@@ -147,6 +147,13 @@ export class Sfx {
     this.tone('sawtooth', 160, 60, 0.22, 0.12);
   }
 
+  /** Растворение / гибель организма */
+  death(): void {
+    this.burst(0.65, 0.26, 220, 0.5);
+    this.tone('sawtooth', 220, 42, 0.9, 0.2);
+    this.tone('sine', 110, 28, 1.15, 0.24, 0.08);
+  }
+
   nova(): void {
     this.tone('sine', 70, 34, 0.55, 0.34);
     this.tone('triangle', 230, 115, 0.35, 0.14);

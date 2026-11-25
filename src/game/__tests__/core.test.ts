@@ -1,10 +1,22 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { segIsect, polyArea, inPoly } from '../ringOfDeath';
 import { SpatialHashGrid } from '../spatialHash';
-import { mulberry32 } from '../../engine/challenge';
+import { canUnlockWeapon, canUpgradeWeapon, equippedWeaponCount, requiredLevelForWeapon, xpRequiredForLevel } from '../progression';
+import { stepBioNodes } from '../bioNodes';
+import { getDailyChallenge, isDailyCompleted, markDailyCompleted, mulberry32 } from '../../engine/challenge';
 import { ACHIEVEMENTS } from '../../engine/achievements';
-import { HYBRIDS, SCALES, DNA_LEVELS } from '../../engine/types';
-import { loadBiolab, recordRun } from '../../engine/biolab';
+import { BioNode, HYBRIDS, MAX_EQUIPPED_WEAPONS, SCALES, DNA_LEVELS, WeaponId } from '../../engine/types';
+import {
+  MAX_ACTIVE_BIOLAB,
+  addBiolabPoints,
+  disableAllBiolab,
+  getActiveIds,
+  isActive,
+  loadBiolab,
+  purchase,
+  recordRun,
+  toggleModule,
+} from '../../engine/biolab';
 import { CODEX_ENTRIES, getCodexBonuses } from '../../engine/codex';
 import { recordLeaderboardEntry, getTopForBranch } from '../../engine/leaderboard';
 import { WaveDirector } from '../../engine/waves';
@@ -164,5 +176,128 @@ describe('Biolab, Codex, Leaderboard & WaveDirector', () => {
     });
     wd.update(0.1, 65);
     expect(announced.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Progression Level Gates & Caps', () => {
+  it('enforces level gates per weapon and 4-slot cap', () => {
+    const wlvl: Record<WeaponId, number> = {
+      spikes: 1, mandibles: 0, orbs: 0, aura: 0, nova: 0, cysts: 0,
+    };
+    expect(equippedWeaponCount(wlvl)).toBe(1);
+    expect(canUnlockWeapon('mandibles', wlvl, 2)).toBe(false);
+    expect(canUnlockWeapon('mandibles', wlvl, 3)).toBe(true);
+    expect(canUnlockWeapon('cysts', wlvl, 9)).toBe(false);
+    expect(canUnlockWeapon('cysts', wlvl, 11)).toBe(true);
+
+    wlvl.mandibles = 1;
+    wlvl.orbs = 1;
+    wlvl.aura = 1;
+    expect(equippedWeaponCount(wlvl)).toBe(MAX_EQUIPPED_WEAPONS);
+    expect(canUnlockWeapon('nova', wlvl, 20)).toBe(false);
+    expect(canUnlockWeapon('cysts', wlvl, 20)).toBe(false);
+
+    expect(canUpgradeWeapon('spikes', 1, 2)).toBe(false);
+    expect(canUpgradeWeapon('spikes', 1, 3)).toBe(true);
+    expect(canUpgradeWeapon('spikes', 2, 5)).toBe(false);
+    expect(canUpgradeWeapon('spikes', 2, 6)).toBe(true);
+    expect(requiredLevelForWeapon('cysts', 1)).toBe(11);
+  });
+
+  it('grows XP curve smoothly and monotonically', () => {
+    let prev = xpRequiredForLevel(1);
+    expect(prev).toBeGreaterThan(10);
+    for (let lvl = 2; lvl <= 15; lvl++) {
+      const next = xpRequiredForLevel(lvl);
+      expect(next).toBeGreaterThan(prev);
+      prev = next;
+    }
+  });
+});
+
+describe('Bio-Node Zone Hold & Contesting', () => {
+  const makeNode = (): BioNode => ({
+    id: 0,
+    x: 200,
+    y: 200,
+    radius: 68,
+    owner: 0,
+    capture: 0,
+    kind: 'gen',
+  });
+
+  it('captures node when player holds empty zone, pauses on contest, and drains when raided', () => {
+    const node = makeNode();
+    const res1 = stepBioNodes([node], { x: 200, y: 200 }, [], 4.0, 1, false);
+    expect(node.owner).toBe(1);
+    expect(node.capture).toBe(1);
+    expect(res1.ownerChanged).toContain(node);
+
+    const beforeContest = node.capture;
+    stepBioNodes([node], { x: 200, y: 200 }, [{ x: 210, y: 200, hp: 10, infected: 0 }], 1.0, 1, false);
+    expect(node.contested).toBe(true);
+    expect(node.capture).toBe(beforeContest);
+
+    const resRaid = stepBioNodes([node], { x: 800, y: 800 }, [
+      { x: 205, y: 200, hp: 10, infected: 0 },
+      { x: 195, y: 205, hp: 10, infected: 0 },
+    ], 1.0, 1, false);
+    expect(node.raided).toBe(true);
+    expect(resRaid.newlyRaided).toContain(node);
+    expect(node.capture).toBeLessThan(1);
+
+    stepBioNodes([node], { x: 800, y: 800 }, [
+      { x: 205, y: 200, hp: 10, infected: 0 },
+      { x: 195, y: 205, hp: 10, infected: 0 },
+      { x: 200, y: 210, hp: 10, infected: 0 },
+    ], 4.0, 1, false);
+    expect(node.owner).toBe(0);
+  });
+});
+
+describe('Biolab Toggles, Slot Cap & Daily Completion', () => {
+  beforeEach(() => {
+    mockLocalStorage();
+  });
+
+  it('enforces 4 active slots, exclusive categories, toggles and disableAllBiolab', () => {
+    addBiolabPoints(500);
+    expect(purchase('start_orbs')).toBe(true);
+    expect(purchase('start_aura')).toBe(true);
+    expect(isActive('start_orbs')).toBe(true);
+    expect(isActive('start_aura')).toBe(false);
+
+    const swapRes = toggleModule('start_aura');
+    expect(swapRes.ok).toBe(true);
+    expect(swapRes.swappedId).toBe('start_orbs');
+    expect(isActive('start_aura')).toBe(true);
+    expect(isActive('start_orbs')).toBe(false);
+
+    expect(purchase('unlock_vermis')).toBe(true);
+    expect(purchase('perm_regen')).toBe(true);
+    expect(purchase('perm_magnet')).toBe(true);
+    expect(purchase('perm_dmg')).toBe(true);
+    expect(getActiveIds().length).toBe(MAX_ACTIVE_BIOLAB);
+    expect(isActive('perm_dmg')).toBe(false);
+
+    const limitRes = toggleModule('perm_dmg');
+    expect(limitRes.ok).toBe(false);
+    expect(limitRes.reason).toBe('limit');
+
+    disableAllBiolab();
+    expect(getActiveIds().length).toBe(0);
+  });
+
+  it('tracks daily challenge modifiers and once-per-day completion', () => {
+    const ch = getDailyChallenge(Date.UTC(2026, 4, 15));
+    expect(ch.goalTimeSec).toBe(180);
+    expect(ch.goalScale).toBe(2);
+    expect(ch.bonusPoints).toBe(50);
+    expect(ch.modifiers.xpMul).toBeGreaterThan(0);
+
+    expect(isDailyCompleted(ch.dayKey)).toBe(false);
+    expect(markDailyCompleted(ch.dayKey)).toBe(true);
+    expect(isDailyCompleted(ch.dayKey)).toBe(true);
+    expect(markDailyCompleted(ch.dayKey)).toBe(false);
   });
 });

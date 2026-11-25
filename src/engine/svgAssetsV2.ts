@@ -411,8 +411,18 @@ export const PLAYER_SPRITES = {
 </svg>`
 } as const;
 
+export const HYBRID_SPRITES = {
+  plasma_leviathan: HYBRID_EMBLEMS.plasmaLeviathan.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
+  ouroboros: HYBRID_EMBLEMS.ouroboros.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
+  phase_serpent: HYBRID_EMBLEMS.phaseSerpent.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
+  spore_reactor: HYBRID_EMBLEMS.sporeReactor.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
+  ion_colossus: HYBRID_EMBLEMS.ionColossus.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
+  psi_web: HYBRID_EMBLEMS.psiWeb.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
+} as const;
+
 export type EnemySpriteV2Key = keyof typeof ENEMY_SPRITES_V2;
 export type PlayerSpriteKey = keyof typeof PLAYER_SPRITES;
+export type HybridSpriteKey = keyof typeof HYBRID_SPRITES;
 
 /**
  * Конвертирует SVG-строку в PixiJS v8 Texture через Data URI.
@@ -422,12 +432,12 @@ export const svgToTextureV2 = svgToTexture;
 
 /**
  * Предзагрузка недостающих 5 врагов (healer, mirror, colony, splitter, brood),
- * снаряда projNeedle и ядра playerNucleus. Можно слить с текстурами из Pack v1:
- *   const allEnemies = { ...v1.enemies, ...v2.enemies };
+ * снаряда projNeedle, ядра playerNucleus и эмблем 6 Великих Гибридов.
  */
 export async function loadBiopunkTexturesV2() {
   const enemies = {} as Record<EnemySpriteV2Key, Texture>;
   const player = {} as Record<PlayerSpriteKey, Texture>;
+  const hybrids = {} as Record<HybridSpriteKey, Texture>;
 
   await Promise.all([
     ...(Object.keys(ENEMY_SPRITES_V2) as EnemySpriteV2Key[]).map(async (key) => {
@@ -436,7 +446,10 @@ export async function loadBiopunkTexturesV2() {
     ...(Object.keys(PLAYER_SPRITES) as PlayerSpriteKey[]).map(async (key) => {
       player[key] = await svgToTextureV2(PLAYER_SPRITES[key]);
     }),
+    ...(Object.keys(HYBRID_SPRITES) as HybridSpriteKey[]).map(async (key) => {
+      hybrids[key] = await svgToTextureV2(HYBRID_SPRITES[key]);
+    }),
   ]);
 
-  return { enemies, player };
+  return { enemies, player, hybrids };
 }

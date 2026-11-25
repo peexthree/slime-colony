@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><linearGradient id="stmag_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fb7185"/><stop offset="52%" stop-color="#e11d48"/><stop offset="100%" stop-color="#881337"/></linearGradient><linearGradient id="stmag_b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e2e8f0"/><stop offset="100%" stop-color="#94a3b8"/></linearGradient></defs><path d="M14 14 V34 C14 46 22 54 32 54 C42 54 50 46 50 34 V14 H39 V34 C39 39 36 43 32 43 C28 43 25 39 25 34 V14 Z" fill="url(#stmag_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <rect x="14" y="12" width="11" height="10" rx="2" fill="url(#stmag_b)" stroke="#160e26" stroke-width="3"/>
+           <rect x="39" y="12" width="11" height="10" rx="2" fill="url(#stmag_b)" stroke="#160e26" stroke-width="3"/>
+           <path d="M26 7 Q32 3 38 7" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+           <circle cx="32" cy="15" r="3.5" fill="#4ade80" stroke="#160e26" stroke-width="2"/></svg>

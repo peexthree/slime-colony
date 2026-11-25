@@ -105,7 +105,7 @@ export class WaveDirector {
       if (this.active.kind === 'void' && this.active.left <= 0 && this.active.burstPending) {
         this.active.burstPending = false;
         const msg = getLocale() === 'en' ? 'SWARM BREACH' : 'ПРОРЫВ РОЯ';
-        this.hooks.announce(`<span class="wave-event-banner bio-orange"><svg viewBox="0 0 32 32"><use href="#ico-damage-nova"/></svg> ${msg}</span>`);
+        this.hooks.announce(`<span class="wave-event-banner bio-orange"><svg viewBox="0 0 64 64"><use href="#ico-wave-breach"/></svg> ${msg}</span>`);
         for (let k = 0; k < 12; k++) this.queue.push({ type: 'grub', side: null });
       }
       if (this.active.left <= 0) this.active = null;
@@ -133,7 +133,7 @@ export class WaveDirector {
       }
       case 'void': {
         const txt = en ? 'STILLNESS: spawning halted' : 'ЗАТИШЬЕ: спавн остановлен';
-        this.hooks.announce(`<span class="wave-event-banner bio-violet"><svg viewBox="0 0 32 32"><use href="#ico-pause"/></svg> ${txt}</span>`);
+        this.hooks.announce(`<span class="wave-event-banner bio-violet"><svg viewBox="0 0 64 64"><use href="#ico-wave-void"/></svg> ${txt}</span>`);
         this.active = { kind: 'void', speedMul: 1, side: null, left: event.duration, burstPending: true };
         break;
       }
@@ -156,7 +156,7 @@ export class WaveDirector {
       case 'migration': {
         const dirTxt = en ? (event.dir === 'right' ? 'from right' : 'from left') : (event.dir === 'right' ? 'справа' : 'слева');
         const prefix = en ? 'SWARM MIGRATION' : 'МИГРАЦИЯ РОЯ';
-        this.hooks.announce(`<span class="wave-event-banner bio-amber"><svg viewBox="0 0 24 48"><use href="#ico-scale-bracket"/></svg> ${prefix}: ${dirTxt}</span>`);
+        this.hooks.announce(`<span class="wave-event-banner bio-amber"><svg viewBox="0 0 64 64"><use href="#ico-wave-migration"/></svg> ${prefix}: ${dirTxt}</span>`);
         this.active = { kind: 'migration', speedMul: 1, side: event.dir === 'right' ? 1 : 3, left: event.duration, burstPending: false };
         break;
       }

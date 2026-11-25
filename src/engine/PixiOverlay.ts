@@ -1,8 +1,8 @@
 // PixiJS v8 слой LUMIVORE: спрайтовые пулы с аддитивным свечением, камера-слежение,
 // визуальная эволюция организма (органы геномов и гибридов), живой декор биома и границы мира
 import { Application, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
-import { EliteMutation, EnemyType, NodeKind, SCALE_FORM, SIM_HEIGHT, SIM_WIDTH } from './types';
-import { loadBiopunkTextures, loadBiopunkTexturesV2, loadBiopunkTexturesV3, alignTailSegment, updatePredatorPupil, EnemySpriteKey, EnemySpriteV2Key, ParticleSpriteKey, NodeSpriteKey, PlayerSpriteKey } from './svgAssets';
+import { EliteMutation, EnemyType, HybridId, NodeKind, SCALE_FORM, SIM_HEIGHT, SIM_WIDTH } from './types';
+import { loadBiopunkTextures, loadBiopunkTexturesV2, loadBiopunkTexturesV3, loadBiopunkTexturesV4, BiopunkTexturesV4, alignTailSegment, updatePredatorPupil, EnemySpriteKey, EnemySpriteV2Key, ParticleSpriteKey, NodeSpriteKey, PlayerSpriteKey, HybridSpriteKey } from './svgAssets';
 
 interface PulseRing {
   x: number;
@@ -42,6 +42,10 @@ export interface NodeView {
   owner: -1 | 0 | 1;
   capture: number;
   kind: NodeKind;
+  contested?: boolean;
+  raided?: boolean;
+  playerInside?: boolean;
+  enemyCount?: number;
 }
 
 export interface AnomalyView {
@@ -93,11 +97,13 @@ export interface RenderState {
   orbit: { count: number; cx: number; cy: number; radius: number; angle: number } | null;
   aura: { x: number; y: number; r: number } | null;
   /** Споровые цисты (мины хвоста) */
-  cysts?: { x: number; y: number; r: number }[];
+  cysts?: { x: number; y: number; r: number; armed?: boolean }[];
   /** Удары жвалами (рассекающие конусы) */
   mandibleSwipes?: { x: number; y: number; dirX: number; dirY: number; range: number; arc: number; life: number }[];
   /** Маркеры био-радара на краях экрана (узлы и боссы) */
-  radarMarkers?: { angle: number; dist: number; color: number; icon: 'node' | 'boss' | 'titan' }[];
+  radarMarkers?: { angle: number; dist: number; color: number; icon: 'node' | 'boss' | 'titan' | 'raid' }[];
+  /** Анимация гибели организма (progress 0..1) */
+  playerDeath?: { progress: number; x: number; y: number } | null;
   /** Дуги Тесла-сети (Ионный Колосс): одноразовые линии на кадр */
   arcs: { x1: number; y1: number; x2: number; y2: number; color: number }[];
   /** Лазеры Пси-сети: лучи захваченных узлов */
@@ -169,6 +175,16 @@ const TAIL_PALETTES: Record<'ok' | 'low' | 'crit', [number, number]> = {
   crit: [0xff6b6b, 0xffb0b0],
 };
 
+/** Оттенки свечения эмблем Великих Гибридов вокруг организма */
+const HYBRID_TINTS: Record<string, number> = {
+  plasma_leviathan: 0xff6b2b,
+  ouroboros: 0x00ff9d,
+  phase_serpent: 0x66fcf1,
+  spore_reactor: 0x39ff14,
+  ion_colossus: 0xffb800,
+  psi_web: 0xb55cff,
+};
+
 /** Короткие обозначения био-узлов (fallback при отсутствии SVG-текстур) */
 const NODE_ICONS: Record<NodeKind, string> = {
   gen: '+HP',
@@ -185,12 +201,15 @@ export class PixiOverlay {
   private particleTextures?: Record<ParticleSpriteKey, Texture>;
   private nodeTextures?: Record<NodeSpriteKey, Texture>;
   private playerTextures?: Record<PlayerSpriteKey, Texture>;
+  private hybridTextures?: Record<HybridSpriteKey, Texture>;
   /** Мир: контейнер для камеры (перемещение и зум происходят здесь) */
   private world = new Container();
   private bgBokeh = new Container();   // глубина микромира: плавающие вне фокуса клетки боке (Sprite pool)
   private fxUnder = new Graphics();    // биом, мембраны границ и ауры под сущностями
+  private floorLayer = new Container(); // напольные аномалии, споровые цисты, ауры гибридов, крылья под сущностями
   private entityLayer = new Container();
   private organLayer = new Graphics(); // морфология организма: жвалы, шипы, усики, кристаллы
+  private morphOverLayer = new Container(); // мультяшные оверлеи морфологии, элит, слэша жвал и маркеров
   private fxOver = new Graphics();     // полоски HP, вспышки, кольца, лазеры, телеграфы
   private fgSnow = new Container();    // планктонная взвесь / морской снег перед линзой (Sprite pool)
   private bokehSprites: Sprite[] = [];
@@ -207,9 +226,12 @@ export class PixiOverlay {
   private bokehParticles: { baseX: number; baseY: number; r: number; phase: number; color: number; alpha: number }[] = [];
   private snowParticles: { x: number; y: number; r: number; vy: number; alpha: number }[] = [];
 
+  private hybridCrest!: Sprite;
+  private hybridAura!: Sprite;
   private playerGlow!: Sprite;
   private playerCore!: Sprite;
   private v3Textures?: Awaited<ReturnType<typeof loadBiopunkTexturesV3>>;
+  private v4Textures?: BiopunkTexturesV4;
   private predatorEyeContainer1 = new Container();
   private predatorEyeContainer2 = new Container();
   private predatorEyeSprite!: Sprite;
@@ -220,6 +242,7 @@ export class PixiOverlay {
   private pools = new Map<string, Sprite[]>();
   private poolCursor = new Map<string, number>();
   private nodeTexts: Text[] = [];
+  private nodeStatusTexts: Text[] = [];
   /** Всплывающие цифры урона: спрайтовый пул с кэшированными текстурами */
   private dmgSprites: Sprite[] = [];
   private dmgTextureCache = new Map<string, Texture>();
@@ -270,11 +293,14 @@ export class PixiOverlay {
       const bioTex = await loadBiopunkTextures();
       const bioTexV2 = await loadBiopunkTexturesV2();
       const bioTexV3 = await loadBiopunkTexturesV3();
+      const bioTexV4 = await loadBiopunkTexturesV4();
       this.enemyTextures = { ...bioTex.enemies, ...bioTexV2.enemies };
       this.particleTextures = bioTex.particles;
       this.nodeTextures = bioTex.nodes;
       this.playerTextures = bioTexV2.player;
+      this.hybridTextures = bioTexV2.hybrids;
       this.v3Textures = bioTexV3;
+      this.v4Textures = bioTexV4;
     } catch (e) {
       console.warn('Failed to load biopunk vector textures, falling back to glowTex', e);
     }
@@ -320,10 +346,23 @@ export class PixiOverlay {
     this.app.stage.addChild(this.world);
     this.world.addChild(this.bgBokeh);
     this.world.addChild(this.fxUnder);
+    this.world.addChild(this.floorLayer);
     this.world.addChild(this.entityLayer);
     this.world.addChild(this.organLayer);
+    this.world.addChild(this.morphOverLayer);
     this.world.addChild(this.fxOver);
     this.world.addChild(this.fgSnow);
+
+    this.hybridAura = new Sprite(this.glowTex);
+    this.hybridAura.anchor.set(0.5);
+    this.hybridAura.visible = false;
+    this.floorLayer.addChild(this.hybridAura);
+
+    this.hybridCrest = new Sprite(this.glowTex);
+    this.hybridCrest.anchor.set(0.5);
+    this.hybridCrest.blendMode = 'add';
+    this.hybridCrest.visible = false;
+    this.entityLayer.addChild(this.hybridCrest);
 
     this.playerGlow = this.makeSprite('player', 0x66fcf1, 'add');
     this.playerCore = this.makeSprite('playerCore', 0xffffff, 'normal');
@@ -343,7 +382,7 @@ export class PixiOverlay {
   }
 
   /** O(1): после releasePool курсор с нуля, каждый take занимает следующий слот */
-  private makeSprite(poolKey: string, tint: number, blend: 'add' | 'normal', customTex?: Texture): Sprite {
+  private makeSprite(poolKey: string, tint: number, blend: 'add' | 'normal', customTex?: Texture, parent: Container = this.entityLayer): Sprite {
     const pool = this.pools.get(poolKey) ?? [];
     this.pools.set(poolKey, pool);
     const idx = this.poolCursor.get(poolKey) ?? 0;
@@ -355,11 +394,14 @@ export class PixiOverlay {
       if (s.texture !== targetTex) {
         s.texture = targetTex;
       }
+      if (s.parent !== parent) {
+        parent.addChild(s);
+      }
     } else {
       s = new Sprite(targetTex);
       s.anchor.set(0.5);
       s.visible = false;
-      this.entityLayer.addChild(s);
+      parent.addChild(s);
       pool.push(s);
     }
     s.visible = true;
@@ -483,18 +525,31 @@ export class PixiOverlay {
     }
 
     // Споровые цисты (мины на земле)
+    this.releasePool('cystMine');
     if (state.cysts) {
       for (const cy of state.cysts) {
-        const pulse = 1 + Math.sin(time * 6 + cy.x) * 0.12;
-        this.fxUnder.circle(cy.x, cy.y, cy.r * pulse)
-          .fill({ color: 0x86efac, alpha: 0.18 })
-          .stroke({ width: 2, color: 0x39ff14, alpha: 0.85 });
-        this.fxUnder.circle(cy.x, cy.y, cy.r * 0.45)
-          .fill({ color: 0xffffff, alpha: 0.75 });
+        const armed = cy.armed !== false;
+        const pulse = armed ? 1 + Math.sin(time * 6 + cy.x) * 0.12 : 0.85;
+        if (this.v4Textures?.sporeCystMine) {
+          this.fxUnder.circle(cy.x, cy.y, cy.r * pulse)
+            .fill({ color: armed ? 0x86efac : 0x94a3b8, alpha: armed ? 0.12 : 0.06 })
+            .stroke({ width: armed ? 1.6 : 1.2, color: armed ? 0x39ff14 : 0x94a3b8, alpha: armed ? 0.58 : 0.35 });
+          const spCy = this.makeSprite('cystMine', armed ? 0xffffff : 0xb0bec5, 'normal', this.v4Textures.sporeCystMine, this.floorLayer);
+          spCy.position.set(cy.x, cy.y);
+          spCy.scale.set((cy.r * 2.15 * pulse) / 256);
+          spCy.rotation = Math.sin(time * 2 + cy.x) * 0.15;
+          spCy.alpha = armed ? 0.96 : 0.48;
+        } else {
+          this.fxUnder.circle(cy.x, cy.y, cy.r * pulse)
+            .fill({ color: armed ? 0x86efac : 0x94a3b8, alpha: armed ? 0.18 : 0.08 })
+            .stroke({ width: armed ? 2 : 1.4, color: armed ? 0x39ff14 : 0x94a3b8, alpha: armed ? 0.85 : 0.5 });
+          this.fxUnder.circle(cy.x, cy.y, cy.r * 0.42)
+            .fill({ color: 0xffffff, alpha: armed ? 0.78 : 0.32 });
+        }
       }
     }
 
-    // Аура токсина под сущностями в мировых координатах (Wave 3: мембрана с биением ресничек)
+    // Аура токсина под сущностями в мировых коордих (Wave 3: мембрана с биением ресничек)
     this.releasePool('auraCilia');
     if (state.aura) {
       if (this.v3Textures?.vfx.auraCiliaMembrane) {
@@ -511,6 +566,7 @@ export class PixiOverlay {
     }
 
     // Биологические аномалии среды (Кислотный прилив, Вспышка митоза, Гнездо спор)
+    this.releasePool('anomaly');
     if (state.anomalies) {
       for (const a of state.anomalies) {
         if (a.kind === 'acid') {
@@ -524,24 +580,31 @@ export class PixiOverlay {
             this.fxUnder.circle(a.x, a.y, shrinkR)
               .stroke({ width: 1.5, color: 0xff7b93, alpha: 0.65 });
           } else {
-            // Активная кислотная зона: багряно-кислотное озеро с кипящими пузырями
+            // Активная кислотная зона: багряно-кислотное озеро с мультяшным спрайтом
             const fade = Math.min(1, a.life / 1.5);
             const wobble = 1 + Math.sin(time * 4 + a.x) * 0.03;
             this.fxUnder.circle(a.x, a.y, a.r * wobble)
-              .fill({ color: 0x7f1d1d, alpha: 0.28 * fade })
-              .stroke({ width: 2.5, color: 0xff2a85, alpha: 0.68 * fade });
-            this.fxUnder.circle(a.x, a.y, a.r * 0.72)
-              .fill({ color: 0xbe123c, alpha: 0.14 * fade });
-            // Кипящие пузыри
-            for (let b = 0; b < 7; b++) {
-              const phase = (time * 0.9 + b * 0.142 + a.x * 0.01) % 1;
-              const ang = b * 1.9 + Math.floor(time * 0.9 + b * 0.142) * 0.7;
-              const dist = a.r * (0.2 + ((b * 0.37) % 0.65));
-              const bx = a.x + Math.cos(ang) * dist;
-              const by = a.y + Math.sin(ang) * dist;
-              const br = 3 + phase * 8;
-              this.fxUnder.circle(bx, by, br)
-                .stroke({ width: 1.4, color: 0xfb7185, alpha: (1 - phase) * 0.7 * fade });
+              .fill({ color: 0x365314, alpha: 0.18 * fade })
+              .stroke({ width: 2.5, color: 0xa3e635, alpha: 0.65 * fade });
+            if (this.v4Textures?.anomalies.acid) {
+              const spAcid = this.makeSprite('anomaly', 0xffffff, 'normal', this.v4Textures.anomalies.acid, this.floorLayer);
+              spAcid.position.set(a.x, a.y);
+              spAcid.scale.set((a.r * 2.05 * wobble) / 256);
+              spAcid.rotation = time * 0.16;
+              spAcid.alpha = 0.74 * fade;
+            } else {
+              this.fxUnder.circle(a.x, a.y, a.r * 0.72)
+                .fill({ color: 0xbe123c, alpha: 0.14 * fade });
+              for (let b = 0; b < 7; b++) {
+                const phase = (time * 0.9 + b * 0.142 + a.x * 0.01) % 1;
+                const ang = b * 1.9 + Math.floor(time * 0.9 + b * 0.142) * 0.7;
+                const dist = a.r * (0.2 + ((b * 0.37) % 0.65));
+                const bx = a.x + Math.cos(ang) * dist;
+                const by = a.y + Math.sin(ang) * dist;
+                const br = 3 + phase * 8;
+                this.fxUnder.circle(bx, by, br)
+                  .stroke({ width: 1.4, color: 0xfb7185, alpha: (1 - phase) * 0.7 * fade });
+              }
             }
           }
         } else if (a.kind === 'bloom') {
@@ -550,9 +613,15 @@ export class PixiOverlay {
           this.fxUnder.circle(a.x, a.y, a.r * pulse)
             .fill({ color: 0x10b981, alpha: 0.08 * fade })
             .stroke({ width: 2, color: 0x66fcf1, alpha: 0.5 * fade });
+          if (this.v4Textures?.anomalies.bloom) {
+            const spBloom = this.makeSprite('anomaly', 0xffffff, 'normal', this.v4Textures.anomalies.bloom, this.floorLayer);
+            spBloom.position.set(a.x, a.y);
+            spBloom.scale.set((Math.min(180, a.r * 0.75) * pulse) / 256);
+            spBloom.rotation = time * 0.35;
+            spBloom.alpha = 0.78 * fade;
+          }
         } else if (a.kind === 'cocoon') {
           const pulse = 1 + Math.sin(time * 5.2) * 0.11;
-          // Корневые жилы вокруг кокона
           for (let v = 0; v < 6; v++) {
             const ang = (v * Math.PI * 2) / 6 + 0.3;
             const len = a.r * (1.8 + Math.sin(time * 3 + v) * 0.2);
@@ -560,12 +629,19 @@ export class PixiOverlay {
               .lineTo(a.x + Math.cos(ang) * len, a.y + Math.sin(ang) * len)
               .stroke({ width: 2.2, color: 0x84cc16, alpha: 0.55 });
           }
-          // Внешняя мембрана гнезда спор и пульсирующее ядро
-          this.fxOver.circle(a.x, a.y, a.r * pulse)
-            .fill({ color: 0x365314, alpha: 0.68 })
-            .stroke({ width: 2.8, color: 0xa3e635, alpha: 0.92 });
-          this.fxOver.circle(a.x, a.y, a.r * 0.52 * (1 + Math.sin(time * 8) * 0.15))
-            .fill({ color: 0xc084fc, alpha: 0.85 });
+          if (this.v4Textures?.anomalies.cocoon) {
+            const spCoc = this.makeSprite('anomaly', 0xffffff, 'normal', this.v4Textures.anomalies.cocoon, this.entityLayer);
+            spCoc.position.set(a.x, a.y);
+            spCoc.scale.set((a.r * 2.4 * pulse) / 256, (a.r * 2.4 / pulse) / 256);
+            spCoc.rotation = Math.sin(time * 2.5 + a.x) * 0.08;
+            spCoc.alpha = 0.98;
+          } else {
+            this.fxOver.circle(a.x, a.y, a.r * pulse)
+              .fill({ color: 0x365314, alpha: 0.68 })
+              .stroke({ width: 2.8, color: 0xa3e635, alpha: 0.92 });
+            this.fxOver.circle(a.x, a.y, a.r * 0.52 * (1 + Math.sin(time * 8) * 0.15))
+              .fill({ color: 0xc084fc, alpha: 0.85 });
+          }
           // Дуга здоровья гнезда с контрастной подложкой
           if (a.hp !== undefined && a.maxHp) {
             const hpFrac = Math.max(0, Math.min(1, a.hp / a.maxHp));
@@ -580,37 +656,70 @@ export class PixiOverlay {
       }
     }
 
-    // ---- Узлы территории: мягкое свечение + кольцо владельца + дуга захвата ----
+    // ---- Узлы территории (башни): зона удержания + прогресс энергии + тревога отвоевания ----
     this.releasePool('nodeGlow');
     this.releasePool('nodeIco');
     for (let i = 0; i < state.nodes.length; i++) {
       const n = state.nodes[i];
-      const col = n.owner === 1 ? 0x66fcf1 : n.owner === -1 ? 0xc084fc : 0x5a7186;
-      const pulse = 0.8 + Math.sin(time * 2.4 + i * 1.7) * 0.2;
-      const glow = this.makeSprite('nodeGlow', col, 'add');
+      const isRaided = Boolean(n.raided);
+      const isContested = Boolean(n.contested);
+      const isPlayerIn = Boolean(n.playerInside);
+      const zoneCol = isRaided ? 0xff3b5c
+        : isContested ? 0xffb800
+        : n.owner === 1 ? 0x66fcf1
+        : n.owner === -1 ? 0xff3b5c
+        : isPlayerIn ? 0x66fcf1
+        : 0x7c8ea6;
+      const coreCol = n.owner === 1 ? 0x66fcf1 : n.owner === -1 ? 0xff3b5c : 0x94a3b8;
+      const pulse = 0.94 + Math.sin(time * 2.8 + i * 1.7) * 0.06;
+      const coreR = 22;
+
+      const glow = this.makeSprite('nodeGlow', zoneCol, 'add');
       glow.position.set(n.x, n.y);
-      glow.scale.set((n.radius * 3.4) / 64);
-      glow.alpha = 0.16 + (n.owner !== 0 ? 0.12 : 0) + pulse * 0.06;
+      glow.scale.set((n.radius * 2.3) / 64);
+      glow.alpha = isRaided ? (0.24 + Math.sin(time * 8) * 0.08) : isPlayerIn ? 0.24 : (n.owner !== 0 ? 0.18 : 0.1);
 
-      this.fxOver.circle(n.x, n.y, n.radius * pulse)
-        .stroke({ width: 1.5, color: col, alpha: 0.5 });
+      // Чёткая область удержания вокруг башни
+      this.fxUnder.circle(n.x, n.y, n.radius * pulse)
+        .fill({ color: zoneCol, alpha: isPlayerIn ? 0.11 : isRaided ? 0.12 : n.owner === 1 ? 0.07 : 0.045 })
+        .stroke({ width: isPlayerIn || isRaided || isContested ? 2.4 : 1.5, color: zoneCol, alpha: isPlayerIn || isRaided ? 0.85 : 0.45 });
 
-      // Дуга прогресса захвата
+      // Кольцо ядра башни
+      this.fxOver.circle(n.x, n.y, coreR)
+        .fill({ color: 0x040b12, alpha: 0.72 })
+        .stroke({ width: 1.8, color: coreCol, alpha: 0.85 });
+
+      // Энергетический поток от игрока при зарядке башни
+      if (isPlayerIn && !state.playerDeath) {
+        this.fxOver.moveTo(state.player.x, state.player.y).lineTo(n.x, n.y)
+          .stroke({ width: isContested ? 1.5 : 2.6, color: isContested ? 0xffb800 : 0x66fcf1, alpha: 0.72 });
+      }
+      // Тревожное кольцо при попытке монстров отбить башню
+      if (isRaided) {
+        const warnWave = ((time * 1.6 + i * 0.3) % 1);
+        this.fxOver.circle(n.x, n.y, coreR + warnWave * (n.radius - coreR))
+          .stroke({ width: 2.2, color: 0xff3b5c, alpha: (1 - warnWave) * 0.85 });
+      }
+
+      // Дуга прогресса энергии (-1..+1) вокруг ядра башни
       const cf = Math.min(1, Math.abs(n.capture));
-      if (cf > 0.02) {
-        this.fxOver.moveTo(n.x + Math.cos(-Math.PI / 2) * (n.radius + 5), n.y + Math.sin(-Math.PI / 2) * (n.radius + 5));
-        this.fxOver.arc(n.x, n.y, n.radius + 5, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * cf)
-          .stroke({ width: 3, color: n.capture > 0 ? 0x66fcf1 : 0xc084fc, alpha: 0.85 });
+      if (cf > 0.01) {
+        const arcR = coreR + 5;
+        this.fxOver.circle(n.x, n.y, arcR)
+          .stroke({ width: 3.5, color: 0x050c14, alpha: 0.7 });
+        this.fxOver.moveTo(n.x + Math.cos(-Math.PI / 2) * arcR, n.y + Math.sin(-Math.PI / 2) * arcR);
+        this.fxOver.arc(n.x, n.y, arcR, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * cf)
+          .stroke({ width: 3.2, color: n.capture >= 0 ? 0x66fcf1 : 0xff3b5c, alpha: 0.94 });
       }
 
       // Векторная био-иконка типа узла
       const nodeTex = this.nodeTextures?.[n.kind];
       if (nodeTex) {
-        const ico = this.makeSprite('nodeIco', col, 'normal', nodeTex);
+        const ico = this.makeSprite('nodeIco', coreCol, 'normal', nodeTex);
         ico.position.set(n.x, n.y);
         const tw = nodeTex.width || 32;
-        ico.scale.set((n.radius * 1.1) / tw);
-        ico.alpha = 0.95;
+        ico.scale.set((coreR * 1.25) / tw);
+        ico.alpha = 0.96;
       } else {
         let txt = this.nodeTexts[i];
         if (!txt) {
@@ -627,9 +736,40 @@ export class PixiOverlay {
         txt.visible = true;
         txt.position.set(n.x, n.y);
       }
+
+      // Читаемый статус над башней при захвате, бое или атаке монстров
+      let stTxt = this.nodeStatusTexts[i];
+      if (!stTxt) {
+        stTxt = new Text({
+          text: '',
+          style: { fontSize: 10, fontWeight: 'bold', fill: 0xffffff, fontFamily: 'JetBrains Mono, Consolas, monospace' },
+        });
+        stTxt.anchor.set(0.5);
+        this.world.addChild(stTxt);
+        this.nodeStatusTexts.push(stTxt);
+      }
+      if (isRaided) {
+        stTxt.text = `! ${Math.max(0, Math.round(n.capture * 100))}%`;
+        stTxt.style.fill = 0xff6b81;
+        stTxt.visible = true;
+        stTxt.position.set(n.x, n.y - coreR - 14);
+      } else if (isContested) {
+        stTxt.text = '⚔';
+        stTxt.style.fill = 0xffd166;
+        stTxt.visible = true;
+        stTxt.position.set(n.x, n.y - coreR - 14);
+      } else if (isPlayerIn && n.owner !== 1) {
+        stTxt.text = `${Math.max(0, Math.round(((n.capture + 1) * 0.5) * 100))}%`;
+        stTxt.style.fill = 0x66fcf1;
+        stTxt.visible = true;
+        stTxt.position.set(n.x, n.y - coreR - 14);
+      } else {
+        stTxt.visible = false;
+      }
     }
     const hideFrom = this.nodeTextures ? 0 : state.nodes.length;
     for (let j = hideFrom; j < this.nodeTexts.length; j++) this.nodeTexts[j].visible = false;
+    for (let j = state.nodes.length; j < this.nodeStatusTexts.length; j++) this.nodeStatusTexts[j].visible = false;
 
     // Нейросеть колонии: живые синаптические био-аксоны между захваченными узлами игрока
     const ownedNodes: NodeView[] = [];
@@ -685,6 +825,8 @@ export class PixiOverlay {
     this.releasePool('ptail_stinger');
     const tail = state.player.tail;
     const tn = tail.length;
+    const deathP = state.playerDeath ? Math.max(0, Math.min(1, state.playerDeath.progress)) : 0;
+    const isDying = Boolean(state.playerDeath);
     const [tc1, tc2] = TAIL_PALETTES[state.tailState];
     const critPulse = state.tailState === 'crit' ? 0.55 + Math.abs(Math.sin(time * 9)) * 0.45 : 1;
     const tipBlink = state.tailHunger && Math.sin(time * 12) > 0;
@@ -692,10 +834,12 @@ export class PixiOverlay {
     const step = tn > 70 ? Math.ceil(tn / 70) : 1;
     for (let i = 0; i < tn; i += step) {
       const frac = (tn - 1 - i) / Math.max(1, tn - 1);
-      const segR = state.player.r * (0.95 - 0.65 * frac);
-      let alpha = (0.78 * (1 - frac * 0.45) + 0.14) * critPulse;
+      const segFade = isDying ? Math.max(0, 1 - Math.max(0, deathP * 1.4 - (1 - frac) * 0.4)) : 1;
+      if (segFade <= 0.02) continue;
+      const segR = state.player.r * (0.95 - 0.65 * frac) * (isDying ? (0.4 + 0.6 * segFade) : 1);
+      let alpha = (0.78 * (1 - frac * 0.45) + 0.14) * critPulse * segFade;
       if (i === 0 && tipBlink) alpha *= 0.12;
-      const tint = (i / step) % 2 === 0 ? tc1 : tc2;
+      const tint = isDying ? 0xff3b5c : (i / step) % 2 === 0 ? tc1 : tc2;
 
       // Тангенс сочленения: вектор к голове
       const prevX = i < tn - 1 ? tail[i + 1].x : state.player.x;
@@ -706,9 +850,10 @@ export class PixiOverlay {
       const tnx = -tdy / tLen;
       const tny = tdx / tLen;
 
-      // Синусоидальная био-волна плавания глубоководного угря
+      // Синусоидальная био-волна плавания глубоководного угря (при смерти сегменты распадаются в стороны)
       const waveAmp = Math.sin((1 - frac) * Math.PI) * Math.min(7, state.player.r * 0.55);
-      const waveOffset = Math.sin(time * 7 - (tn - 1 - i) * 0.28) * waveAmp;
+      const scatter = isDying ? Math.sin(i * 2.1) * deathP * 26 : 0;
+      const waveOffset = Math.sin(time * 7 - (tn - 1 - i) * 0.28) * waveAmp + scatter;
       const finalX = tail[i].x + tnx * waveOffset;
       const finalY = tail[i].y + tny * waveOffset;
       const alignPrevX = prevX + tnx * waveOffset * 0.8;
@@ -806,9 +951,14 @@ export class PixiOverlay {
     }
 
     this.playerGlow.position.set(px, py);
-    this.playerGlow.scale.set((state.player.r * 2.3) / 64);
-    this.playerGlow.alpha = 0.42 + Math.sin(time * 5) * 0.08;
-    if (form) this.playerGlow.tint = form.glow;
+    const deathCoreScale = isDying
+      ? (deathP < 0.22 ? 1 + deathP * 2.2 : Math.max(0, 1.48 - (deathP - 0.22) * 1.9))
+      : 1;
+    const deathCoreAlpha = isDying ? Math.max(0, 1 - Math.max(0, deathP - 0.18) / 0.65) : 1;
+    this.playerGlow.scale.set(((state.player.r * 2.3) / 64) * deathCoreScale);
+    this.playerGlow.alpha = (0.42 + Math.sin(time * 5) * 0.08) * deathCoreAlpha;
+    if (isDying) this.playerGlow.tint = 0xff3b5c;
+    else if (form) this.playerGlow.tint = form.glow;
 
     // Живое ядро клетки Светляка с вращающимися органеллами
     const nucTex = this.playerTextures?.playerNucleus;
@@ -817,14 +967,53 @@ export class PixiOverlay {
     }
     this.playerCore.position.set(px, py);
     const nucW = nucTex?.width || 128;
-    this.playerCore.scale.set((state.player.r * 1.9) / nucW);
-    this.playerCore.rotation = time * 0.35;
-    if (form) this.playerCore.tint = form.core;
+    this.playerCore.scale.set(((state.player.r * 1.9) / nucW) * deathCoreScale);
+    this.playerCore.rotation = time * (isDying ? 3.5 : 0.35);
+    this.playerCore.alpha = deathCoreAlpha;
+    if (isDying) this.playerCore.tint = 0xff7b93;
+    else if (form) this.playerCore.tint = form.core;
+
+    // Анимация гибели организма: разлом мембраны, распад на светящиеся фрагменты и ударная волна
+    if (isDying) {
+      const rBase = state.player.r;
+      if (deathP < 0.72) {
+        const crackAlpha = Math.sin(Math.min(1, deathP / 0.72) * Math.PI);
+        for (let c = 0; c < 7; c++) {
+          const ang = c * 0.9 + deathP * 1.2;
+          const len = rBase * (0.9 + deathP * 2.2);
+          this.fxOver.moveTo(px, py)
+            .lineTo(px + Math.cos(ang) * len, py + Math.sin(ang) * len)
+            .stroke({ width: 2.6, color: c % 2 === 0 ? 0xff3b5c : 0xffd166, alpha: crackAlpha * 0.95 });
+        }
+      }
+      if (deathP >= 0.15) {
+        const burstT = Math.min(1, (deathP - 0.15) / 0.85);
+        const burstAlpha = Math.max(0, 1 - burstT);
+        const waveR = rBase + burstT * 115;
+        this.fxOver.circle(px, py, waveR)
+          .stroke({ width: 3.2 * burstAlpha + 0.5, color: 0xff3b5c, alpha: burstAlpha * 0.9 });
+        this.fxOver.circle(px, py, waveR * 0.62)
+          .stroke({ width: 2.0 * burstAlpha + 0.4, color: 0xc084fc, alpha: burstAlpha * 0.75 });
+        for (let k = 0; k < 14; k++) {
+          const ang = (k / 14) * Math.PI * 2 + 0.21;
+          const spd = 28 + (k % 3) * 24;
+          const fx = px + Math.cos(ang) * (burstT * spd * 2.4);
+          const fy = py + Math.sin(ang) * (burstT * spd * 2.4);
+          const fr = Math.max(1.2, (5 - (k % 3)) * burstAlpha);
+          this.fxOver.circle(fx, fy, fr)
+            .fill({ color: k % 2 === 0 ? 0x66fcf1 : 0xff3b5c, alpha: burstAlpha * 0.92 });
+        }
+      }
+    }
 
     // Визуальная эволюция: челюсти, шипы, споры, кристаллы, крылья и ауры гибридов
-    if (state.morph) {
+    this.releasePool('morphFloor');
+    this.releasePool('morphOver');
+    if (state.morph && !isDying) {
       this.drawOrgans(state, time, s, px, py);
     } else {
+      this.hybridAura.visible = false;
+      this.hybridCrest.visible = false;
       this.predatorEyeContainer1.visible = false;
       this.predatorEyeContainer2.visible = false;
     }
@@ -834,6 +1023,7 @@ export class PixiOverlay {
     this.releasePool('enemyCore');
     this.releasePool('etail');
     this.releasePool('eliteHalo');
+    this.releasePool('eliteMutation');
     this.releasePool('enemyShield');
     for (const e of state.enemies) {
       const isDead = e.hp <= 0;
@@ -924,10 +1114,14 @@ export class PixiOverlay {
         scaleY *= 0.88;
       }
 
-      const sp = this.makeSprite('enemy', enemyTint, 'normal', tex);
+      const isCartoonBoss = e.type === 'boss' && !e.titan && !!this.v4Textures?.boss;
+      const spTint = isCartoonBoss
+        ? (isDead ? 0xff3b5c : hitFlash ? 0xff94a8 : e.infected ? 0x67e8f9 : spored ? 0x86efac : 0xffffff)
+        : enemyTint;
+      const sp = this.makeSprite('enemy', spTint, 'normal', tex);
       sp.position.set(e.x, e.y);
       sp.scale.set(scaleX, scaleY);
-      sp.alpha = 0.95;
+      sp.alpha = 0.96;
 
       // Ориентация и вращение сущностей по вектору движения
       let rot = 0;
@@ -949,14 +1143,16 @@ export class PixiOverlay {
       } else if (e.type === 'pulsar') {
         rot = time * 2.8;
       } else if (e.type === 'boss' || e.titan) {
-        rot = Math.sin(time * 0.9) * 0.15;
+        rot = Math.sin(time * 0.9) * (isCartoonBoss ? 0.09 : 0.15);
       }
       sp.rotation = rot;
 
-      const core = this.makeSprite('enemyCore', enemyCoreTint, 'normal');
-      core.position.set(e.x, e.y);
-      core.scale.set((e.radius * 0.65) / 64);
-      core.alpha = 0.85;
+      if (!isCartoonBoss) {
+        const core = this.makeSprite('enemyCore', enemyCoreTint, 'normal');
+        core.position.set(e.x, e.y);
+        core.scale.set((e.radius * 0.65) / 64);
+        core.alpha = 0.85;
+      }
 
       // Визуальный телеграф атак врагов (предупреждения перед ударом)
       if (state.player && e.infected <= 0 && !isDead) {
@@ -983,15 +1179,24 @@ export class PixiOverlay {
         }
       }
 
-      // Хвостик врага: масштаб хвоста соразмерен радиусу врага
+      // Хвостик врага: мультяшные сегменты (или fallback glowTex)
       const et = e.tail;
       const en = et.length;
+      const tailSegTex = this.v4Textures?.enemyTailSegment;
       for (let i = 0; i < en; i++) {
         const frac = (en - 1 - i) / Math.max(1, en - 1);
-        const seg = this.makeSprite('etail', ENEMY_COLORS[e.type], 'normal');
-        seg.position.set(et[i].x, et[i].y);
-        seg.scale.set((e.radius * (0.85 - 0.55 * frac)) / 64);
-        seg.alpha = 0.55 * (1 - frac) + 0.12;
+        const nextPt = i + 1 < en ? et[i + 1] : e;
+        if (tailSegTex) {
+          const seg = this.makeSprite('etail', isDead ? 0xff3b5c : 0xffffff, 'normal', tailSegTex);
+          alignTailSegment(seg, et[i].x, et[i].y, nextPt.x, nextPt.y);
+          seg.scale.set((e.radius * (0.9 - 0.52 * frac)) / 64);
+          seg.alpha = 0.82 * (1 - frac * 0.65);
+        } else {
+          const seg = this.makeSprite('etail', ENEMY_COLORS[e.type], 'normal');
+          seg.position.set(et[i].x, et[i].y);
+          seg.scale.set((e.radius * (0.85 - 0.55 * frac)) / 64);
+          seg.alpha = 0.55 * (1 - frac) + 0.12;
+        }
       }
 
       if (e.type === 'boss' || e.type === 'brute' || e.elite) {
@@ -1019,74 +1224,95 @@ export class PixiOverlay {
         }
 
         // Уникальный визуальный био-силуэт каждой мутации
-        switch (e.elite) {
-          case 'armored': {
-            // Бронированный: 4 вращающихся хитиновых щита-сегмента
-            const plates = 4;
-            const plateR = e.radius + 7;
-            for (let k = 0; k < plates; k++) {
-              const ang = time * 1.3 + (k * Math.PI * 2) / plates;
-              this.fxOver.moveTo(e.x + Math.cos(ang - 0.42) * plateR, e.y + Math.sin(ang - 0.42) * plateR);
-              this.fxOver.arc(e.x, e.y, plateR, ang - 0.42, ang + 0.42)
-                .stroke({ width: 3.5, color: 0xf59e0b, alpha: 0.92 });
-            }
-            break;
+        const eliteTex = this.v4Textures?.elites[e.elite];
+        if (eliteTex) {
+          const spMut = this.makeSprite('eliteMutation', 0xffffff, 'normal', eliteTex, this.morphOverLayer);
+          spMut.position.set(e.x, e.y);
+          const pulseScale = e.elite === 'enraged' ? 1 + Math.sin(time * 10) * 0.08 : 1;
+          spMut.scale.set(((e.radius + 14) * 2.35 * pulseScale) / 256);
+          spMut.alpha = 0.92;
+          switch (e.elite) {
+            case 'armored':
+              spMut.rotation = time * 0.9;
+              break;
+            case 'enraged':
+              spMut.rotation = time * 1.6;
+              break;
+            case 'necromancer':
+              spMut.rotation = -time * 0.8;
+              break;
+            case 'magnetic':
+              spMut.rotation = -time * 2.2;
+              break;
+            case 'mirrored':
+              spMut.rotation = time * 1.1;
+              break;
           }
-          case 'enraged': {
-            // Разъярённый: 6 пульсирующих алых био-шипов
-            const spikes = 6;
-            const spikePulse = 1 + Math.sin(time * 12) * 0.28;
-            for (let k = 0; k < spikes; k++) {
-              const ang = time * 2.5 + (k * Math.PI * 2) / spikes;
-              const inR = e.radius + 2;
-              const outR = e.radius + 13 * spikePulse;
-              this.fxOver.moveTo(e.x + Math.cos(ang) * inR, e.y + Math.sin(ang) * inR)
-                .lineTo(e.x + Math.cos(ang) * outR, e.y + Math.sin(ang) * outR)
-                .stroke({ width: 2.4, color: 0xff1744, alpha: 0.95 });
+        } else {
+          switch (e.elite) {
+            case 'armored': {
+              const plates = 4;
+              const plateR = e.radius + 7;
+              for (let k = 0; k < plates; k++) {
+                const ang = time * 1.3 + (k * Math.PI * 2) / plates;
+                this.fxOver.moveTo(e.x + Math.cos(ang - 0.42) * plateR, e.y + Math.sin(ang - 0.42) * plateR);
+                this.fxOver.arc(e.x, e.y, plateR, ang - 0.42, ang + 0.42)
+                  .stroke({ width: 3.5, color: 0xf59e0b, alpha: 0.92 });
+              }
+              break;
             }
-            this.fxOver.circle(e.x, e.y, e.radius + 4)
-              .stroke({ width: 1.5, color: 0xff3b5c, alpha: 0.65 });
-            break;
-          }
-          case 'necromancer': {
-            // Некромант: чумная аура миазмов и 3 блуждающие споры смерти
-            const necroR = e.radius + 9;
-            this.fxOver.circle(e.x, e.y, necroR)
-              .stroke({ width: 1.8, color: 0x10b981, alpha: 0.85 });
-            for (let k = 0; k < 3; k++) {
-              const ang = -time * 3.2 + (k * Math.PI * 2) / 3;
-              const wx = e.x + Math.cos(ang) * (necroR + 4);
-              const wy = e.y + Math.sin(ang) * (necroR + 4);
-              this.fxOver.circle(wx, wy, 3.2).fill({ color: 0x86efac, alpha: 0.95 });
+            case 'enraged': {
+              const spikes = 6;
+              const spikePulse = 1 + Math.sin(time * 12) * 0.28;
+              for (let k = 0; k < spikes; k++) {
+                const ang = time * 2.5 + (k * Math.PI * 2) / spikes;
+                const inR = e.radius + 2;
+                const outR = e.radius + 13 * spikePulse;
+                this.fxOver.moveTo(e.x + Math.cos(ang) * inR, e.y + Math.sin(ang) * inR)
+                  .lineTo(e.x + Math.cos(ang) * outR, e.y + Math.sin(ang) * outR)
+                  .stroke({ width: 2.4, color: 0xff1744, alpha: 0.95 });
+              }
+              this.fxOver.circle(e.x, e.y, e.radius + 4)
+                .stroke({ width: 1.5, color: 0xff3b5c, alpha: 0.65 });
+              break;
             }
-            break;
-          }
-          case 'magnetic': {
-            // Магнитный: вихревая воронка с притягивающимися квантами пыли
-            const vortexR = e.radius + 12;
-            this.fxOver.circle(e.x, e.y, vortexR)
-              .stroke({ width: 1.5, color: 0x38bdf8, alpha: 0.7 });
-            for (let k = 0; k < 4; k++) {
-              const phase = ((time * 2.2 + k * 0.25) % 1);
-              const r = e.radius + 18 * (1 - phase);
-              const ang = time * 4.5 + k * (Math.PI / 2) + phase * 2.2;
-              this.fxOver.circle(e.x + Math.cos(ang) * r, e.y + Math.sin(ang) * r, 2.2)
-                .fill({ color: 0x7dd3fc, alpha: 0.85 * phase });
+            case 'necromancer': {
+              const necroR = e.radius + 9;
+              this.fxOver.circle(e.x, e.y, necroR)
+                .stroke({ width: 1.8, color: 0x10b981, alpha: 0.85 });
+              for (let k = 0; k < 3; k++) {
+                const ang = -time * 3.2 + (k * Math.PI * 2) / 3;
+                const wx = e.x + Math.cos(ang) * (necroR + 4);
+                const wy = e.y + Math.sin(ang) * (necroR + 4);
+                this.fxOver.circle(wx, wy, 3.2).fill({ color: 0x86efac, alpha: 0.95 });
+              }
+              break;
             }
-            break;
-          }
-          case 'mirrored': {
-            // Зеркальный: преломляющие призматические треугольники
-            const prismR = e.radius + 8;
-            const prismPulse = 1 + Math.sin(time * 5.5) * 0.15;
-            for (let k = 0; k < 3; k++) {
-              const ang = time * 1.8 + (k * Math.PI * 2) / 3;
-              const px = e.x + Math.cos(ang) * (prismR * prismPulse);
-              const py = e.y + Math.sin(ang) * (prismR * prismPulse);
-              this.fxOver.moveTo(px, py - 4.5).lineTo(px + 4, py + 3.5).lineTo(px - 4, py + 3.5).closePath()
-                .stroke({ width: 1.6, color: 0xe0e7ff, alpha: 0.95 });
+            case 'magnetic': {
+              const vortexR = e.radius + 12;
+              this.fxOver.circle(e.x, e.y, vortexR)
+                .stroke({ width: 1.5, color: 0x38bdf8, alpha: 0.7 });
+              for (let k = 0; k < 4; k++) {
+                const phase = ((time * 2.2 + k * 0.25) % 1);
+                const r = e.radius + 18 * (1 - phase);
+                const ang = time * 4.5 + k * (Math.PI / 2) + phase * 2.2;
+                this.fxOver.circle(e.x + Math.cos(ang) * r, e.y + Math.sin(ang) * r, 2.2)
+                  .fill({ color: 0x7dd3fc, alpha: 0.85 * phase });
+              }
+              break;
             }
-            break;
+            case 'mirrored': {
+              const prismR = e.radius + 8;
+              const prismPulse = 1 + Math.sin(time * 5.5) * 0.15;
+              for (let k = 0; k < 3; k++) {
+                const ang = time * 1.8 + (k * Math.PI * 2) / 3;
+                const px = e.x + Math.cos(ang) * (prismR * prismPulse);
+                const py = e.y + Math.sin(ang) * (prismR * prismPulse);
+                this.fxOver.moveTo(px, py - 4.5).lineTo(px + 4, py + 3.5).lineTo(px - 4, py + 3.5).closePath()
+                  .stroke({ width: 1.6, color: 0xe0e7ff, alpha: 0.95 });
+              }
+              break;
+            }
           }
         }
       }
@@ -1270,35 +1496,56 @@ export class PixiOverlay {
     }
 
     // Рассекающие удары жвал (мандибулы)
+    this.releasePool('mandibleSlash');
     if (state.mandibleSwipes) {
       for (const ms of state.mandibleSwipes) {
         const a = Math.min(1, ms.life / 0.16);
-        const startAng = Math.atan2(ms.dirY, ms.dirX) - ms.arc / 2;
-        const endAng = Math.atan2(ms.dirY, ms.dirX) + ms.arc / 2;
-        this.fxOver.arc(ms.x, ms.y, ms.range, startAng, endAng)
-          .stroke({ width: 4.5 * a, color: 0xffd166, alpha: 0.9 * a });
-        this.fxOver.arc(ms.x, ms.y, ms.range * 0.8, startAng + 0.1, endAng - 0.1)
-          .stroke({ width: 2.0 * a, color: 0xffffff, alpha: 0.75 * a });
+        const dirAng = Math.atan2(ms.dirY, ms.dirX);
+        if (this.v4Textures?.mandiblesSlash) {
+          const spSlash = this.makeSprite('mandibleSlash', 0xffffff, 'normal', this.v4Textures.mandiblesSlash, this.morphOverLayer);
+          spSlash.position.set(ms.x + Math.cos(dirAng) * (ms.range * 0.35), ms.y + Math.sin(dirAng) * (ms.range * 0.35));
+          spSlash.rotation = dirAng;
+          spSlash.scale.set((ms.range * 1.3) / 256);
+          spSlash.alpha = a;
+        } else {
+          const startAng = dirAng - ms.arc / 2;
+          const endAng = dirAng + ms.arc / 2;
+          this.fxOver.arc(ms.x, ms.y, ms.range, startAng, endAng)
+            .stroke({ width: 4.5 * a, color: 0xffd166, alpha: 0.9 * a });
+          this.fxOver.arc(ms.x, ms.y, ms.range * 0.8, startAng + 0.1, endAng - 0.1)
+            .stroke({ width: 2.0 * a, color: 0xffffff, alpha: 0.75 * a });
+        }
       }
     }
 
     // Био-радар: стрелки-маркеры направления на удалённые узлы и боссов
+    this.releasePool('radarArrow');
     if (state.radarMarkers && state.player) {
       for (const rm of state.radarMarkers) {
         const markerDist = 95;
         const mx = state.player.x + Math.cos(rm.angle) * markerDist;
         const my = state.player.y + Math.sin(rm.angle) * markerDist;
-        const tipX = mx + Math.cos(rm.angle) * 12;
-        const tipY = my + Math.sin(rm.angle) * 12;
-        const leftX = mx + Math.cos(rm.angle + 2.4) * 8;
-        const leftY = my + Math.sin(rm.angle + 2.4) * 8;
-        const rightX = mx + Math.cos(rm.angle - 2.4) * 8;
-        const rightY = my + Math.sin(rm.angle - 2.4) * 8;
-        this.fxOver.moveTo(tipX, tipY).lineTo(leftX, leftY).lineTo(rightX, rightY).closePath()
-          .fill({ color: rm.color, alpha: 0.95 });
-        if (rm.icon === 'boss' || rm.icon === 'titan') {
-          this.fxOver.circle(mx, my, 5 + Math.sin(time * 8) * 2)
-            .stroke({ width: 2, color: 0xff3b5c, alpha: 0.9 });
+        if (this.v4Textures?.uiRadarArrow) {
+          const spArr = this.makeSprite('radarArrow', 0xffffff, 'normal', this.v4Textures.uiRadarArrow, this.morphOverLayer);
+          spArr.position.set(mx, my);
+          spArr.rotation = rm.angle + Math.PI / 2;
+          spArr.scale.set((rm.icon === 'boss' || rm.icon === 'titan' || rm.icon === 'raid' ? 28 : 22) / 64);
+          spArr.alpha = 0.95;
+          this.fxOver.circle(mx, my, rm.icon === 'boss' || rm.icon === 'titan' || rm.icon === 'raid' ? 12 + Math.sin(time * 8) * 2 : 10)
+            .stroke({ width: 1.8, color: rm.icon === 'raid' ? 0xffb800 : rm.color, alpha: 0.88 });
+        } else {
+          const tipX = mx + Math.cos(rm.angle) * 12;
+          const tipY = my + Math.sin(rm.angle) * 12;
+          const leftX = mx + Math.cos(rm.angle + 2.4) * 8;
+          const leftY = my + Math.sin(rm.angle + 2.4) * 8;
+          const rightX = mx + Math.cos(rm.angle - 2.4) * 8;
+          const rightY = my + Math.sin(rm.angle - 2.4) * 8;
+          this.fxOver.moveTo(tipX, tipY).lineTo(leftX, leftY).lineTo(rightX, rightY).closePath()
+            .fill({ color: rm.color, alpha: 0.95 });
+          if (rm.icon === 'boss' || rm.icon === 'titan' || rm.icon === 'raid') {
+            this.fxOver.circle(mx, my, 5 + Math.sin(time * 8) * 2)
+              .stroke({ width: 2, color: rm.icon === 'raid' ? 0xffb800 : 0xff3b5c, alpha: 0.9 });
+          }
         }
       }
     }
@@ -1661,43 +1908,50 @@ export class PixiOverlay {
     // ================= 2. ХИМЕРА (Костяные Шипы, Плазменный Рог) =================
     if (morph.chimera > 0) {
       const lvl = morph.chimera;
-      const spikeCol = 0xff7b93;
-      const hotCol = 0xffffff;
-      const numSpikes = 2 + lvl * 2;
-
-      for (let j = 0; j < numSpikes; j++) {
-        const side = j % 2 === 0 ? 1 : -1;
-        const rank = Math.floor(j / 2);
-        const spAngle = ang + Math.PI - side * (0.6 + rank * 0.4);
-        const sLen = r * (0.6 + lvl * 0.35 + Math.sin(time * 6 + j) * 0.1);
-
-        const bx = px + Math.cos(spAngle) * (r * 0.75);
-        const by = py + Math.sin(spAngle) * (r * 0.75);
-        const tx = bx + Math.cos(spAngle) * sLen;
-        const ty = by + Math.sin(spAngle) * sLen;
-
-        this.organLayer.moveTo(bx - perpX * side * 3, by - perpY * side * 3)
-          .lineTo(tx, ty)
-          .lineTo(bx + perpX * side * 3, by + perpY * side * 3)
-          .fill({ color: spikeCol, alpha: 0.85 })
-          .stroke({ width: 1.5, color: hotCol, alpha: 0.9 });
-
-        this.organLayer.circle(tx, ty, 1.8 + lvl * 0.4)
-          .fill({ color: hotCol, alpha: 0.95 });
-      }
-
-      if (lvl >= 2) {
-        const crestLen = r * (0.7 + lvl * 0.3);
-        const cx = px + cosA * (r * 0.8);
-        const cy = py + sinA * (r * 0.8);
-        const cTipX = cx + cosA * crestLen;
-        const cTipY = cy + sinA * crestLen;
-
-        this.organLayer.moveTo(cx - perpX * 4, cy - perpY * 4)
-          .lineTo(cTipX, cTipY)
-          .lineTo(cx + perpX * 4, cy + perpY * 4)
-          .fill({ color: 0xff3b5c, alpha: 0.9 })
-          .stroke({ width: 2, color: 0xffd166, alpha: 0.95 });
+      if (this.v4Textures?.morphology) {
+        const spSpines = this.makeSprite('morphOver', 0xffffff, 'normal', this.v4Textures.morphology.chimeraSpines, this.morphOverLayer);
+        spSpines.position.set(px, py);
+        spSpines.rotation = ang + Math.PI / 2;
+        spSpines.scale.set((r * (2.6 + lvl * 0.25)) / 256);
+        spSpines.alpha = 0.94;
+        if (lvl >= 2) {
+          const spHorn = this.makeSprite('morphOver', 0xffffff, 'normal', this.v4Textures.morphology.chimeraHorn, this.morphOverLayer);
+          spHorn.position.set(px, py);
+          spHorn.rotation = ang + Math.PI / 2;
+          spHorn.scale.set((r * (2.7 + lvl * 0.28)) / 256);
+          spHorn.alpha = 0.96;
+        }
+      } else {
+        const spikeCol = 0xff7b93;
+        const hotCol = 0xffffff;
+        const numSpikes = 2 + lvl * 2;
+        for (let j = 0; j < numSpikes; j++) {
+          const side = j % 2 === 0 ? 1 : -1;
+          const rank = Math.floor(j / 2);
+          const spAngle = ang + Math.PI - side * (0.6 + rank * 0.4);
+          const sLen = r * (0.6 + lvl * 0.35 + Math.sin(time * 6 + j) * 0.1);
+          const bx = px + Math.cos(spAngle) * (r * 0.75);
+          const by = py + Math.sin(spAngle) * (r * 0.75);
+          const tx = bx + Math.cos(spAngle) * sLen;
+          const ty = by + Math.sin(spAngle) * sLen;
+          this.organLayer.moveTo(bx - perpX * side * 3, by - perpY * side * 3)
+            .lineTo(tx, ty)
+            .lineTo(bx + perpX * side * 3, by + perpY * side * 3)
+            .fill({ color: spikeCol, alpha: 0.85 })
+            .stroke({ width: 1.5, color: hotCol, alpha: 0.9 });
+          this.organLayer.circle(tx, ty, 1.8 + lvl * 0.4)
+            .fill({ color: hotCol, alpha: 0.95 });
+        }
+        if (lvl >= 2) {
+          const crestLen = r * (0.7 + lvl * 0.3);
+          const cx = px + cosA * (r * 0.8);
+          const cy = py + sinA * (r * 0.8);
+          this.organLayer.moveTo(cx - perpX * 4, cy - perpY * 4)
+            .lineTo(cx + cosA * crestLen, cy + sinA * crestLen)
+            .lineTo(cx + perpX * 4, cy + perpY * 4)
+            .fill({ color: 0xff3b5c, alpha: 0.9 })
+            .stroke({ width: 2, color: 0xffd166, alpha: 0.95 });
+        }
       }
 
       if (lvl >= 3) {
@@ -1719,41 +1973,49 @@ export class PixiOverlay {
       const sporeCol = 0x86efac;
       const toxicCol = 0x34d399;
 
-      const pustuleCount = 3 + lvl * 2;
-      for (let j = 0; j < pustuleCount; j++) {
-        const pAng = j * 2.399;
-        const pDist = r * (0.35 + (j % 3) * 0.18);
-        const pusX = px + Math.cos(pAng) * pDist;
-        const pusY = py + Math.sin(pAng) * pDist;
-        const pusR = 2.5 + (j % 2) * 1.5 + Math.sin(time * 4 + j) * 0.8;
-
-        this.organLayer.circle(pusX, pusY, pusR)
-          .fill({ color: sporeCol, alpha: 0.85 })
-          .stroke({ width: 1.2, color: toxicCol, alpha: 0.9 });
-      }
-
-      if (lvl >= 2) {
-        const numAntenna = 4;
-        for (let j = 0; j < numAntenna; j++) {
-          const side = j % 2 === 0 ? 1 : -1;
-          const aRootX = px + cosA * (r * 0.3) + perpX * side * (r * 0.7);
-          const aRootY = py + sinA * (r * 0.3) + perpY * side * (r * 0.7);
-
-          const aLen = r * (1.2 + lvl * 0.4);
-          const w1 = Math.sin(time * 5 + j * 1.5) * 12;
-          const w2 = Math.cos(time * 4 + j * 1.2) * 14;
-
-          const ctrlX = aRootX - cosA * (aLen * 0.5) + perpX * (side * 14 + w1);
-          const ctrlY = aRootY - sinA * (aLen * 0.5) + perpY * (side * 14 + w1);
-          const endX = aRootX - cosA * aLen + perpX * (side * 22 + w2);
-          const endY = aRootY - sinA * aLen + perpY * (side * 22 + w2);
-
-          this.organLayer.moveTo(aRootX, aRootY)
-            .quadraticCurveTo(ctrlX, ctrlY, endX, endY)
-            .stroke({ width: 1.8, color: sporeCol, alpha: 0.75 });
-
-          this.organLayer.circle(endX, endY, 2.5)
-            .fill({ color: 0xeafff4, alpha: 0.9 });
+      if (this.v4Textures?.morphology) {
+        const spPus = this.makeSprite('morphOver', 0xffffff, 'normal', this.v4Textures.morphology.myceliumPustules, this.morphOverLayer);
+        spPus.position.set(px, py);
+        spPus.rotation = ang + Math.PI / 2;
+        spPus.scale.set((r * (2.2 + lvl * 0.22)) / 256);
+        spPus.alpha = 0.9;
+        if (lvl >= 2) {
+          const spTen = this.makeSprite('morphFloor', 0xffffff, 'normal', this.v4Textures.morphology.myceliumTendrils, this.floorLayer);
+          spTen.position.set(px, py);
+          spTen.rotation = ang + Math.PI / 2 + Math.sin(time * 3) * 0.08;
+          spTen.scale.set((r * (3.1 + lvl * 0.25)) / 256);
+          spTen.alpha = 0.94;
+        }
+      } else {
+        const pustuleCount = 3 + lvl * 2;
+        for (let j = 0; j < pustuleCount; j++) {
+          const pAng = j * 2.399;
+          const pDist = r * (0.35 + (j % 3) * 0.18);
+          const pusX = px + Math.cos(pAng) * pDist;
+          const pusY = py + Math.sin(pAng) * pDist;
+          const pusR = 2.5 + (j % 2) * 1.5 + Math.sin(time * 4 + j) * 0.8;
+          this.organLayer.circle(pusX, pusY, pusR)
+            .fill({ color: sporeCol, alpha: 0.85 })
+            .stroke({ width: 1.2, color: toxicCol, alpha: 0.9 });
+        }
+        if (lvl >= 2) {
+          for (let j = 0; j < 4; j++) {
+            const side = j % 2 === 0 ? 1 : -1;
+            const aRootX = px + cosA * (r * 0.3) + perpX * side * (r * 0.7);
+            const aRootY = py + sinA * (r * 0.3) + perpY * side * (r * 0.7);
+            const aLen = r * (1.2 + lvl * 0.4);
+            const w1 = Math.sin(time * 5 + j * 1.5) * 12;
+            const w2 = Math.cos(time * 4 + j * 1.2) * 14;
+            const ctrlX = aRootX - cosA * (aLen * 0.5) + perpX * (side * 14 + w1);
+            const ctrlY = aRootY - sinA * (aLen * 0.5) + perpY * (side * 14 + w1);
+            const endX = aRootX - cosA * aLen + perpX * (side * 22 + w2);
+            const endY = aRootY - sinA * aLen + perpY * (side * 22 + w2);
+            this.organLayer.moveTo(aRootX, aRootY)
+              .quadraticCurveTo(ctrlX, ctrlY, endX, endY)
+              .stroke({ width: 1.8, color: sporeCol, alpha: 0.75 });
+            this.organLayer.circle(endX, endY, 2.5)
+              .fill({ color: 0xeafff4, alpha: 0.9 });
+          }
         }
       }
 
@@ -1775,20 +2037,53 @@ export class PixiOverlay {
       const cryCol = 0xffd166;
       const phaseCol = 0xffffff;
 
-      const cryCount = 1 + lvl;
-      for (let j = 0; j < cryCount; j++) {
-        const cOff = (j - (cryCount - 1) / 2) * (r * 0.45);
-        const cx = px - cosA * cOff;
-        const cy = py - sinA * cOff;
-        const cSz = 4 + lvl * 1.5;
-
-        this.organLayer.poly([
-          { x: cx, y: cy - cSz },
-          { x: cx + cSz * 0.7, y: cy },
-          { x: cx, y: cy + cSz },
-          { x: cx - cSz * 0.7, y: cy },
-        ]).fill({ color: cryCol, alpha: 0.9 })
-          .stroke({ width: 1.5, color: phaseCol, alpha: 0.95 });
+      if (this.v4Textures?.morphology) {
+        const spCry = this.makeSprite('morphOver', 0xffffff, 'normal', this.v4Textures.morphology.symbiontCrystals, this.morphOverLayer);
+        spCry.position.set(px, py);
+        spCry.rotation = time * 0.65;
+        spCry.scale.set((r * (2.5 + lvl * 0.22)) / 256);
+        spCry.alpha = 0.92;
+        if (lvl >= 3) {
+          const spWings = this.makeSprite('morphFloor', 0xffffff, 'normal', this.v4Textures.morphology.symbiontWings, this.floorLayer);
+          spWings.position.set(px, py);
+          spWings.rotation = ang + Math.PI / 2;
+          const flap = 1 + Math.sin(time * 4) * 0.08;
+          spWings.scale.set((r * 3.5 * flap) / 256, (r * 3.2) / 256);
+          spWings.alpha = 0.92;
+        }
+      } else {
+        const cryCount = 1 + lvl;
+        for (let j = 0; j < cryCount; j++) {
+          const cOff = (j - (cryCount - 1) / 2) * (r * 0.45);
+          const cx = px - cosA * cOff;
+          const cy = py - sinA * cOff;
+          const cSz = 4 + lvl * 1.5;
+          this.organLayer.poly([
+            { x: cx, y: cy - cSz },
+            { x: cx + cSz * 0.7, y: cy },
+            { x: cx, y: cy + cSz },
+            { x: cx - cSz * 0.7, y: cy },
+          ]).fill({ color: cryCol, alpha: 0.9 })
+            .stroke({ width: 1.5, color: phaseCol, alpha: 0.95 });
+        }
+        if (lvl >= 3) {
+          for (const side of [-1, 1]) {
+            const wRootX = px - cosA * (r * 0.2) + perpX * side * (r * 0.6);
+            const wRootY = py - sinA * (r * 0.2) + perpY * side * (r * 0.6);
+            const wingSpan = r * 2.2;
+            const flap = Math.sin(time * 4) * 0.2;
+            const wTipX = wRootX - cosA * (r * 0.4) + perpX * side * (wingSpan * (1 + flap));
+            const wTipY = wRootY - sinA * (r * 0.4) + perpY * side * (wingSpan * (1 + flap));
+            const wBackX = wRootX - cosA * (r * 1.6);
+            const wBackY = wRootY - sinA * (r * 1.6);
+            this.organLayer.poly([
+              { x: wRootX, y: wRootY },
+              { x: wTipX, y: wTipY },
+              { x: wBackX, y: wBackY },
+            ]).fill({ color: cryCol, alpha: 0.22 })
+              .stroke({ width: 2, color: phaseCol, alpha: 0.75 });
+          }
+        }
       }
 
       if (lvl >= 2) {
@@ -1796,30 +2091,33 @@ export class PixiOverlay {
         this.organLayer.ellipse(px, py, ringRad, ringRad * 0.35)
           .stroke({ width: 1.6, color: cryCol, alpha: 0.65 });
       }
-
-      if (lvl >= 3) {
-        for (const side of [-1, 1]) {
-          const wRootX = px - cosA * (r * 0.2) + perpX * side * (r * 0.6);
-          const wRootY = py - sinA * (r * 0.2) + perpY * side * (r * 0.6);
-          const wingSpan = r * 2.2;
-          const flap = Math.sin(time * 4) * 0.2;
-
-          const wTipX = wRootX - cosA * (r * 0.4) + perpX * side * (wingSpan * (1 + flap));
-          const wTipY = wRootY - sinA * (r * 0.4) + perpY * side * (wingSpan * (1 + flap));
-          const wBackX = wRootX - cosA * (r * 1.6);
-          const wBackY = wRootY - sinA * (r * 1.6);
-
-          this.organLayer.poly([
-            { x: wRootX, y: wRootY },
-            { x: wTipX, y: wTipY },
-            { x: wBackX, y: wBackY },
-          ]).fill({ color: cryCol, alpha: 0.22 })
-            .stroke({ width: 2, color: phaseCol, alpha: 0.75 });
-        }
-      }
     }
 
-    // ================= 5. ВЕЛИКИЕ ГИБРИДЫ (APEX СИЛУЭТЫ) =================
+    // ================= 5. ВЕЛИКИЕ ГИБРИДЫ (APEX СИЛУЭТЫ И МУЛЬТЯШНЫЕ АУРЫ) =================
+    if (morph.hybrid && this.v4Textures?.hybridAuras && morph.hybrid in this.v4Textures.hybridAuras) {
+      const aTex = this.v4Textures.hybridAuras[morph.hybrid as HybridId];
+      this.hybridAura.texture = aTex;
+      this.hybridAura.position.set(px, py);
+      this.hybridAura.scale.set((r * 4.2) / 256);
+      this.hybridAura.rotation = time * 0.35;
+      this.hybridAura.tint = 0xffffff;
+      this.hybridAura.alpha = 0.86;
+      this.hybridAura.visible = true;
+    } else {
+      this.hybridAura.visible = false;
+    }
+    if (morph.hybrid && this.hybridTextures && morph.hybrid in this.hybridTextures) {
+      const hTex = this.hybridTextures[morph.hybrid as HybridSpriteKey];
+      this.hybridCrest.texture = hTex;
+      this.hybridCrest.position.set(px, py);
+      this.hybridCrest.scale.set((r * 3.1) / (hTex.width || 128));
+      this.hybridCrest.rotation = time * 0.45;
+      this.hybridCrest.tint = HYBRID_TINTS[morph.hybrid] ?? 0xffd166;
+      this.hybridCrest.alpha = 0.34 + Math.sin(time * 3.2) * 0.08;
+      this.hybridCrest.visible = true;
+    } else {
+      this.hybridCrest.visible = false;
+    }
     if (morph.hybrid) {
       const hyd = morph.hybrid;
       if (hyd === 'plasma_leviathan') {
@@ -1888,6 +2186,10 @@ export class PixiOverlay {
     this.afterimageCd = 0;
     this.dmgLive.length = 0;
     this.shakeT = 0;
+    this.hybridAura.visible = false;
+    this.hybridCrest.visible = false;
+    this.predatorEyeContainer1.visible = false;
+    this.predatorEyeContainer2.visible = false;
     this.world.position.set(0, 0);
     this.world.scale.set(1);
     for (const pool of this.pools.values()) {
@@ -1896,6 +2198,9 @@ export class PixiOverlay {
     this.poolCursor.clear();
     for (const s of this.dmgSprites) s.visible = false;
     for (const t of this.nodeTexts) t.visible = false;
+    for (const t of this.nodeStatusTexts) t.visible = false;
+    this.playerGlow.alpha = 1;
+    this.playerCore.alpha = 1;
     this.fxUnder.clear();
     this.organLayer.clear();
     this.fxOver.clear();

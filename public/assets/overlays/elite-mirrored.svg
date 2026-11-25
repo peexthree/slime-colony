@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><linearGradient id="emir_1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="52%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#a855f7"/></linearGradient><linearGradient id="emir_2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f472b6"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient></defs><!-- 6 hovering mirror prisms -->
+           <g stroke="#160e26" stroke-width="6" stroke-linejoin="round">
+             <polygon points="128,14 152,42 128,62 104,42" fill="url(#emir_1)"/>
+             <polygon points="128,242 152,214 128,194 104,214" fill="url(#emir_1)"/>
+             <polygon points="26,70 58,64 66,94 34,102" fill="url(#emir_2)"/>
+             <polygon points="230,70 198,64 190,94 222,102" fill="url(#emir_2)"/>
+             <polygon points="26,186 58,192 66,162 34,154" fill="url(#emir_2)"/>
+             <polygon points="230,186 198,192 190,162 222,154" fill="url(#emir_2)"/>
+           </g>
+           <line x1="128" y1="22" x2="128" y2="54" stroke="#fff" stroke-width="3.5" opacity="0.85"/>
+           <line x1="128" y1="202" x2="128" y2="234" stroke="#fff" stroke-width="3.5" opacity="0.85"/></svg>

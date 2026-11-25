@@ -9,6 +9,8 @@ export interface RadarNode {
   owner: -1 | 0 | 1;
   kind: string;
   capture: number;
+  raided?: boolean;
+  contested?: boolean;
 }
 
 export interface RadarEnemy {
@@ -23,13 +25,15 @@ export class PetriRadar {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private badge: HTMLElement | null = null;
+  private sweepEl: SVGSVGElement | null = null;
   private sweepAngle = 0;
   private blipPings = new Map<number, number>(); // id/hash -> ping intensity 0..1
 
-  init(canvas: HTMLCanvasElement, badge?: HTMLElement | null): void {
+  init(canvas: HTMLCanvasElement, badge?: HTMLElement | null, sweepEl?: SVGSVGElement | null): void {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.badge = badge ?? null;
+    this.sweepEl = sweepEl ?? null;
   }
 
   update(
@@ -126,11 +130,15 @@ export class PetriRadar {
     ctx.moveTo(cx - radarR, cy); ctx.lineTo(cx + radarR, cy);
     ctx.stroke();
 
-    // 3. Сканирующий луч с веерным хвостом (фосфорный след)
+    // 3. Сканирующий луч с веерным хвостом (SVG #ico-petri-radar-sweep + мягкий фосфорный след)
+    if (this.sweepEl) {
+      const deg = (this.sweepAngle * 180) / Math.PI + 90;
+      this.sweepEl.style.transform = `rotate(${deg.toFixed(1)}deg) scaleX(-1)`;
+    }
     const sweepTrail = 0.55; // сектор затухания ~32 градуса
     const sweepGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, radarR);
-    sweepGrad.addColorStop(0, 'rgba(0, 255, 157, 0.45)');
-    sweepGrad.addColorStop(1, 'rgba(0, 255, 157, 0.08)');
+    sweepGrad.addColorStop(0, this.sweepEl ? 'rgba(0, 255, 157, 0.16)' : 'rgba(0, 255, 157, 0.45)');
+    sweepGrad.addColorStop(1, this.sweepEl ? 'rgba(0, 255, 157, 0.02)' : 'rgba(0, 255, 157, 0.08)');
 
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -139,13 +147,15 @@ export class PetriRadar {
     ctx.fillStyle = sweepGrad;
     ctx.fill();
 
-    // Яркая кромка луча
-    ctx.strokeStyle = 'rgba(102, 252, 241, 0.9)';
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(this.sweepAngle) * radarR, cy + Math.sin(this.sweepAngle) * radarR);
-    ctx.stroke();
+    // Яркая кромка луча на canvas нужна только как fallback, если не подключён SVG-луч
+    if (!this.sweepEl) {
+      ctx.strokeStyle = 'rgba(102, 252, 241, 0.9)';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(this.sweepAngle) * radarR, cy + Math.sin(this.sweepAngle) * radarR);
+      ctx.stroke();
+    }
 
     // 4. Отрисовка био-узлов территории
     const nodeColors: Record<string, string> = {
@@ -168,7 +178,7 @@ export class PetriRadar {
       const nx = cx + Math.cos(angle) * rDist;
       const ny = cy + Math.sin(angle) * rDist;
 
-      const baseColor = n.owner === 1 ? '#66fcf1' : n.owner === -1 ? '#ff3b4e' : (nodeColors[n.kind] || '#b55cff');
+      const baseColor = n.raided ? '#ff3b4e' : n.contested ? '#ffb800' : n.owner === 1 ? '#66fcf1' : n.owner === -1 ? '#ff3b4e' : (nodeColors[n.kind] || '#b55cff');
 
       ctx.save();
       ctx.beginPath();
@@ -178,11 +188,12 @@ export class PetriRadar {
       ctx.shadowBlur = 6 + ping * 8;
       ctx.fill();
 
-      // Ореол владения / захвата
+      // Ореол владения / захвата / тревоги отвоевания
+      const alertExpand = n.raided ? (2 + Math.sin(Date.now() * 0.012) * 2) : 0;
       ctx.beginPath();
-      ctx.arc(nx, ny, 6, 0, Math.PI * 2);
+      ctx.arc(nx, ny, 6 + alertExpand, 0, Math.PI * 2);
       ctx.strokeStyle = baseColor;
-      ctx.lineWidth = 1;
+      ctx.lineWidth = n.raided ? 1.8 : 1;
       ctx.stroke();
       ctx.restore();
     }
@@ -309,18 +320,19 @@ export class PetriRadar {
 
     // 7. Обновление бейджа радара
     if (this.badge) {
+      const textTarget = this.badge.querySelector('#radar-badge-text') ?? this.badge;
       if (hasTitan) {
-        this.badge.textContent = t('radar_titan');
+        textTarget.textContent = t('radar_titan');
         this.badge.style.color = '#ffd700';
         this.badge.style.borderColor = 'rgba(255, 215, 0, 0.6)';
         this.badge.style.textShadow = '0 0 8px rgba(255, 215, 0, 0.8)';
       } else if (hasBoss) {
-        this.badge.textContent = t('radar_boss');
+        textTarget.textContent = t('radar_boss');
         this.badge.style.color = '#ff3b4e';
         this.badge.style.borderColor = 'rgba(255, 59, 78, 0.6)';
         this.badge.style.textShadow = '0 0 8px rgba(255, 59, 78, 0.8)';
       } else {
-        this.badge.textContent = t('radar_threats', { n: enemyCountInRange });
+        textTarget.textContent = t('radar_threats', { n: enemyCountInRange });
         this.badge.style.color = '#00ff9d';
         this.badge.style.borderColor = 'rgba(0, 255, 157, 0.35)';
         this.badge.style.textShadow = '0 0 6px rgba(0, 255, 157, 0.6)';

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><radialGradient id="gpd_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fb7185"/><stop offset="58%" stop-color="#be123c"/><stop offset="100%" stop-color="#4c0519"/></radialGradient></defs><circle cx="32" cy="32" r="23" fill="url(#gpd_a)" stroke="#160e26" stroke-width="3.4"/>
+           <path d="M16 26 Q32 42 48 26" fill="none" stroke="#fff1f2" stroke-width="3.2" stroke-linecap="round"/>
+           <polygon points="21,28 24,38 28,31" fill="#fff" stroke="#160e26" stroke-width="2"/>
+           <polygon points="43,28 40,38 36,31" fill="#fff" stroke="#160e26" stroke-width="2"/>
+           <circle cx="32" cy="18" r="4" fill="#4ade80" stroke="#160e26" stroke-width="2"/></svg>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><linearGradient id="em_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="52%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#1d4ed8"/></linearGradient><linearGradient id="em_b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fda4af"/><stop offset="100%" stop-color="#f43f5e"/></linearGradient></defs><!-- Swirl vortex arcs -->
+           <path d="M52 72 C88 22 168 22 204 72" stroke="url(#em_a)" stroke-width="14" stroke-linecap="round"/>
+           <path d="M52 72 C88 22 168 22 204 72" stroke="#160e26" stroke-width="4" stroke-linecap="round" stroke-dasharray="1 18"/>
+           <path d="M204 184 C168 234 88 234 52 184" stroke="url(#em_b)" stroke-width="14" stroke-linecap="round"/>
+           <path d="M26 128 C26 70 74 28 128 28" stroke="#67e8f9" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+           <path d="M230 128 C230 186 182 228 128 228" stroke="#fda4af" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+           <!-- Polar nodes -->
+           <polygon points="204,54 226,82 192,84" fill="#38bdf8" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <polygon points="52,202 30,174 64,172" fill="#f43f5e" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/></svg>

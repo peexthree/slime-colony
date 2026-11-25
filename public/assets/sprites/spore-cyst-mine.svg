@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><radialGradient id="scm_halo" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#a3e635"/><stop offset="58%" stop-color="#4d7c0f"/><stop offset="100%" stop-color="#052e16"/></radialGradient><radialGradient id="scm_core" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#ecfccb"/><stop offset="58%" stop-color="#84cc16"/><stop offset="100%" stop-color="#166534"/></radialGradient><radialGradient id="scm_bub" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#bef264"/><stop offset="100%" stop-color="#4d7c0f"/></radialGradient></defs><!-- Sticky puddle base -->
+           <path d="M40 144 C30 100 74 52 128 50 C186 48 228 96 218 144 C208 192 174 218 128 214 C80 210 50 188 40 144 Z" fill="url(#scm_halo)" opacity="0.35"/>
+           <!-- Radial spiky triggers -->
+           <g fill="#a3e635" stroke="#160e26" stroke-width="6" stroke-linejoin="round">
+             <polygon points="128,22 114,62 142,62"/>
+             <polygon points="128,234 114,194 142,194"/>
+             <polygon points="22,128 62,114 62,142"/>
+             <polygon points="234,128 194,114 194,142"/>
+             <polygon points="52,52 72,88 92,68"/>
+             <polygon points="204,52 184,88 164,68"/>
+             <polygon points="52,204 72,168 92,188"/>
+             <polygon points="204,204 184,168 164,188"/>
+           </g>
+           <!-- Main bulbous mine dome -->
+           <circle cx="128" cy="128" r="74" fill="url(#scm_core)" stroke="#160e26" stroke-width="8"/>
+           <path d="M188 98 C202 146 174 196 124 198 C96 199 74 186 64 166 C98 184 166 172 188 98 Z" fill="#052e16" opacity="0.32"/>
+           <!-- Glowing pustules -->
+           <circle cx="104" cy="108" r="22" fill="url(#scm_bub)" stroke="#160e26" stroke-width="6"/>
+           <circle cx="154" cy="118" r="17" fill="url(#scm_bub)" stroke="#160e26" stroke-width="5.5"/>
+           <circle cx="124" cy="154" r="15" fill="url(#scm_bub)" stroke="#160e26" stroke-width="5.5"/>
+           <!-- Glossy speculars -->
+           <ellipse cx="97" cy="100" rx="8" ry="5" fill="#fff" opacity="0.85" transform="rotate(-30 97 100)"/>
+           <ellipse cx="149" cy="111" rx="6" ry="3.5" fill="#fff" opacity="0.8" transform="rotate(-30 149 111)"/>
+           <circle cx="128" cy="128" r="10" fill="#fef08a" stroke="#160e26" stroke-width="4.5"/></svg>

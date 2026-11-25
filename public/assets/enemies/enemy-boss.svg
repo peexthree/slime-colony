@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><radialGradient id="eb_body" cx="45%" cy="35%" r="65%"><stop offset="0%" stop-color="#f472b6"/><stop offset="58%" stop-color="#9333ea"/><stop offset="100%" stop-color="#3b0764"/></radialGradient><linearGradient id="eb_horn" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="52%" stop-color="#f97316"/><stop offset="100%" stop-color="#9a3412"/></linearGradient><linearGradient id="eb_plate" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#c084fc"/><stop offset="52%" stop-color="#6b21a8"/><stop offset="100%" stop-color="#2e1065"/></linearGradient><radialGradient id="eb_eye" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#facc15"/><stop offset="100%" stop-color="#ea580c"/></radialGradient></defs><!-- Outer cycle crest spikes -->
+           <g fill="url(#eb_horn)" stroke="#160e26" stroke-width="7" stroke-linejoin="round">
+             <path d="M128 12 L108 58 L148 58 Z"/>
+             <path d="M60 32 L78 82 L106 60 Z"/>
+             <path d="M196 32 L178 82 L150 60 Z"/>
+             <path d="M18 118 L62 98 L62 146 Z"/>
+             <path d="M238 118 L194 98 L194 146 Z"/>
+           </g>
+           <!-- Massive pincer arms -->
+           <path d="M48 152 C18 176 24 222 68 232 C56 212 58 194 74 182 Z" fill="url(#eb_horn)" stroke="#160e26" stroke-width="7" stroke-linejoin="round"/>
+           <path d="M208 152 C238 176 232 222 188 232 C200 212 198 194 182 182 Z" fill="url(#eb_horn)" stroke="#160e26" stroke-width="7" stroke-linejoin="round"/>
+           <!-- Main boss carapace body -->
+           <path d="M128 44 C182 44 214 82 212 134 C210 186 176 226 128 228 C80 226 46 186 44 134 C42 82 74 44 128 44 Z" fill="url(#eb_body)" stroke="#160e26" stroke-width="9"/>
+           <!-- Cel-shaded lower armor shadow -->
+           <path d="M198 106 C206 164 176 218 128 222 C90 222 62 198 52 164 C88 196 172 188 198 106 Z" fill="#1e0536" opacity="0.38"/>
+           <!-- Armored brow plates -->
+           <path d="M62 106 Q128 74 194 106 L184 126 Q128 102 72 126 Z" fill="url(#eb_plate)" stroke="#160e26" stroke-width="6.5" stroke-linejoin="round"/>
+           <!-- Three glowing cartoon eyes -->
+           <circle cx="128" cy="118" r="20" fill="url(#eb_eye)" stroke="#160e26" stroke-width="6"/>
+           <ellipse cx="128" cy="118" rx="5.5" ry="13" fill="#160e26"/>
+           <circle cx="122" cy="111" r="4.5" fill="#fff"/>
+           <circle cx="88" cy="138" r="14" fill="url(#eb_eye)" stroke="#160e26" stroke-width="5.5"/>
+           <circle cx="91" cy="138" r="5" fill="#160e26"/>
+           <circle cx="84" cy="133" r="3.5" fill="#fff"/>
+           <circle cx="168" cy="138" r="14" fill="url(#eb_eye)" stroke="#160e26" stroke-width="5.5"/>
+           <circle cx="165" cy="138" r="5" fill="#160e26"/>
+           <circle cx="164" cy="133" r="3.5" fill="#fff"/>
+           <!-- Jagged mouth with cartoon fangs -->
+           <path d="M84 172 Q128 198 172 172 Q154 208 128 208 Q102 208 84 172 Z" fill="#310626" stroke="#160e26" stroke-width="6" stroke-linejoin="round"/>
+           <polygon points="98,178 106,196 114,182" fill="#fff" stroke="#160e26" stroke-width="3.5" stroke-linejoin="round"/>
+           <polygon points="158,178 150,196 142,182" fill="#fff" stroke="#160e26" stroke-width="3.5" stroke-linejoin="round"/>
+           <polygon points="122,185 128,198 134,185" fill="#fff" stroke="#160e26" stroke-width="3.5" stroke-linejoin="round"/>
+           <!-- Glossy dome specular -->
+           <ellipse cx="96" cy="70" rx="22" ry="9" fill="#fff" opacity="0.38" transform="rotate(-18 96 70)"/></svg>

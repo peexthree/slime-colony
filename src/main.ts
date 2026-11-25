@@ -6,25 +6,31 @@ import { PetriRadar } from './engine/radar';
 import { WebGPUSim, NodeStat } from './engine/WebGPUSim';
 import { Sfx } from './engine/audio';
 import { WaveDirector } from './engine/waves';
-import { BIOLAB_UNLOCKS, DnaBranch, RunGenome, isUnlocked, loadBiolab, pointsEarned, purchase, recordRun } from './engine/biolab';
+import {
+  BIOLAB_UNLOCKS, BiolabCategory, DnaBranch, MAX_ACTIVE_BIOLAB, RunGenome,
+  addBiolabPoints, disableAllBiolab, getActiveIds, isActive, isUnlocked,
+  loadBiolab, pointsEarned, purchase, recordRun, toggleModule,
+} from './engine/biolab';
 import { downloadPortrait, renderPortrait } from './engine/portrait';
 import { createJoystick } from './engine/joystick';
 import { GamepadController } from './engine/gamepad';
 import { CODEX_ENTRIES, getCodexBonuses, loadCodex, unlockCodexEntry } from './engine/codex';
-import { checkAchievements } from './engine/achievements';
+import { AchievementDef, ACHIEVEMENTS, checkAchievements, loadAchievements } from './engine/achievements';
 import { recordLeaderboardEntry } from './engine/leaderboard';
-import { getDailyChallenge } from './engine/challenge';
+import { getDailyChallenge, isDailyCompleted, markDailyCompleted, mulberry32 } from './engine/challenge';
 import { getLocale, setLocale, t, I18nKey } from './i18n';
 import { trBiolab, trChallengeTitle, trCodex, trDnaName, trHybrid, trNode, trScale, trUpgrade } from './i18n/gameData';
 import { inPoly, polyArea, segIsect } from './game/ringOfDeath';
 import { SpatialHashGrid } from './game/spatialHash';
-import { ENEMY_SPRITES, ENEMY_SPRITES_V2 } from './engine/svgAssets';
+import { canUnlockWeapon, canUpgradeWeapon, equippedWeaponCount, xpRequiredForLevel } from './game/progression';
+import { stepBioNodes } from './game/bioNodes';
+import { ENEMY_SPRITES, ENEMY_SPRITES_V2, ENEMY_SPRITES_V4 } from './engine/svgAssets';
 import {
   AURA, Beacon, BioNode, BOSS_EVERY, BOSS_FIRST_AT, CALL, CYSTS, DASH, DNA_COLORS, DNA_LEVELS,
   DNA_NAMES, ELITE, ENEMIES, ENEMY_CAP, EnemyType, GROWTH, HybridId, HYBRIDS, IFRAME, MANDIBLES,
-  METAMORPH, NOVA, NodeKind, ORBS, PLAYER, PROJ_LIFE, PROJ_RADIUS, PROJ_SPEED, RING,
+  MAX_EQUIPPED_WEAPONS, METAMORPH, NOVA, NodeKind, ORBS, PLAYER, PROJ_LIFE, PROJ_RADIUS, PROJ_SPEED, RING,
   SCALES, SIM_HEIGHT, SIM_WIDTH, SPAWN_TABLE, SPIKES, STAT_MAX_STACKS, STRAIN, TAIL,
-  WeaponId, WEAPON_MAX_LVL, WORLD, worldSize,
+  WeaponId, WEAPON_MAX_LVL, WEAPON_UNLOCK_LEVEL, WORLD, worldSize,
 } from './engine/types';
 import type { DnaBranchOrNeutral, EliteMutation } from './engine/types';
 
@@ -58,6 +64,8 @@ interface Enemy {
   /** Хвостик: история позиций [старые ... новые] */
   tail: { x: number; y: number }[];
   tailCap: number;
+  /** ID био-башни, которую враг пытается отбить у игрока */
+  raidNodeId?: number;
   dead?: boolean;
 }
 
@@ -108,9 +116,14 @@ async function bootstrap() {
   const intro = document.getElementById('intro')!;
   const introStartBtn = document.getElementById('intro-start')!;
   const helpBtn = document.getElementById('help-btn')!;
-  const pauseBtn = document.getElementById('pause-btn');
+  const muteBtn = document.getElementById('mute-btn') as HTMLButtonElement | null;
+  const muteBtnUse = document.getElementById('mute-btn-use');
+  const fullscreenBtn = document.getElementById('fullscreen-btn') as HTMLButtonElement | null;
+  const pauseBtn = document.getElementById('pause-btn') as HTMLButtonElement | null;
+  const pauseBtnUse = document.getElementById('pause-btn-use');
   const bossHudEl = document.getElementById('boss-hud');
   const bossNameEl = document.getElementById('boss-name');
+  const bossHudIcoUse = document.getElementById('boss-hud-ico-use');
   const bossHpFillEl = document.getElementById('boss-hp-fill');
   const bossHpTextEl = document.getElementById('boss-hp-text');
   const statusChipsEl = document.getElementById('status-chips');
@@ -121,6 +134,8 @@ async function bootstrap() {
   const modal = document.getElementById('modal')!;
   const modalTitle = document.getElementById('modal-title')!;
   const modalSub = document.getElementById('modal-sub')!;
+  const deathCauseEl = document.getElementById('death-cause');
+  const deathAchBtn = document.getElementById('death-ach-btn');
   const restartBtn = document.getElementById('restart-btn')!;
   const endlessBtn = document.getElementById('endless-btn') as HTMLButtonElement | null;
   const branchChipEl = document.getElementById('branch-chip')!;
@@ -130,7 +145,21 @@ async function bootstrap() {
   const biolabOpenBtn = document.getElementById('biolab-open')!;
   const biolabCloseBtn = document.getElementById('biolab-close')!;
   const biolabPointsEl = document.getElementById('biolab-points')!;
+  const biolabSlotsPillEl = document.getElementById('biolab-slots-pill');
+  const biolabDisableAllBtn = document.getElementById('biolab-disable-all') as HTMLButtonElement | null;
   const biolabListEl = document.getElementById('biolab-list')!;
+  const dailyModal = document.getElementById('daily-modal');
+  const dailyBriefBody = document.getElementById('daily-brief-body');
+  const dailyStartBtn = document.getElementById('daily-start-btn');
+  const dailyCloseBtn = document.getElementById('daily-close');
+  const dailyHudPillEl = document.getElementById('daily-hud-pill');
+  const achievementsModal = document.getElementById('achievements-modal');
+  const achievementsOpenBtn = document.getElementById('achievements-open');
+  const achievementsOpenLabel = document.getElementById('achievements-open-label');
+  const achStatsPillEl = document.getElementById('ach-stats-pill');
+  const achProgressEl = document.getElementById('ach-progress') as HTMLProgressElement | null;
+  const achievementsGridEl = document.getElementById('achievements-grid');
+  const achCloseBtn = document.getElementById('ach-close');
   const codexModal = document.getElementById('codex');
   const codexOpenBtn = document.getElementById('codex-open');
   const codexCloseBtn = document.getElementById('codex-close');
@@ -151,9 +180,12 @@ async function bootstrap() {
   const sliderSfx = document.getElementById('slider-sfx') as HTMLInputElement | null;
   const bgmVolLabel = document.getElementById('bgm-vol-label');
   const sfxVolLabel = document.getElementById('sfx-vol-label');
+  const setBgmIcoUse = document.getElementById('set-bgm-ico-use');
+  const setSfxIcoUse = document.getElementById('set-sfx-ico-use');
 
   const startBtnLabel = document.getElementById('start-btn-label');
   const menuRecordBadge = document.getElementById('menu-record-badge');
+  const menuRecordText = document.getElementById('menu-record-text');
   const deathStatsEl = document.getElementById('death-stats')!;
   const portraitCanvas = document.getElementById('portrait-canvas') as HTMLCanvasElement;
   const gamepad = new GamepadController();
@@ -172,13 +204,14 @@ async function bootstrap() {
   const bloomCtx = bloomCanvas.getContext('2d')!;
   const radarCanvas = document.getElementById('radar-canvas') as HTMLCanvasElement;
   const radarBadgeEl = document.getElementById('radar-badge');
+  const radarSweepSvg = document.getElementById('radar-sweep-svg') as SVGSVGElement | null;
   const resHudEl = document.getElementById('resonance-hud');
   const resMultEl = document.getElementById('res-mult');
   const resStreakEl = document.getElementById('res-streak');
   const resBarFillEl = document.getElementById('res-bar-fill');
   const radar = new PetriRadar();
   if (radarCanvas) {
-    radar.init(radarCanvas, radarBadgeEl);
+    radar.init(radarCanvas, radarBadgeEl, radarSweepSvg);
   }
 
   const sim = new WebGPUSim();
@@ -239,7 +272,7 @@ async function bootstrap() {
   let maxHp: number = PLAYER.hp;
   let moveSpeed = PLAYER.speed;
   let magnetR = PLAYER.magnet;
-  let regen = 0.5; // базовая регенерация, улучшения добавляют сверху
+  let regen = 0.18; // базовая регенерация, улучшения добавляют сверху
   let dmgMul = 1;
   let atkSpdMul = 1;
   const statStacks: Record<string, number> = {};
@@ -252,11 +285,13 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   let toxinFlash = 0;
   let mandiblesCd = 0;
   let cystsCd = 0;
+  let cystMoveDist = 0;
+  let idleTime = 0;
   let dashCd = 0;
   let dashT = 0;
   let dashRequested = false;
 
-  const liveCysts: { x: number; y: number; r: number; dmg: number; life: number }[] = [];
+  const liveCysts: { x: number; y: number; r: number; dmg: number; life: number; armT: number; armed: boolean }[] = [];
   const mandibleSwipes: { x: number; y: number; dirX: number; dirY: number; range: number; arc: number; life: number }[] = [];
   const corpseBeacons: { x: number; y: number; ttl: number }[] = [];
 
@@ -266,9 +301,35 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
 
   let enemies: Enemy[] = [];
   let projs: Proj[] = [];
-  let eprojs: { x: number; y: number; vx: number; vy: number; dmg: number; life: number }[] = [];
+  let eprojs: { x: number; y: number; vx: number; vy: number; dmg: number; life: number; sourceType: EnemyType; titan?: boolean; elite?: EliteMutation | null }[] = [];
   let orbs: XpOrb[] = [];
   let enemyIdSeq = 1;
+
+  interface DamageCause {
+    kind: string;
+    labelRu: string;
+    labelEn: string;
+    amount: number;
+  }
+  const DYING_DURATION = 1.45;
+  let dying = false;
+  let dyingT = 0;
+  let lastDamageCause: DamageCause | null = null;
+  let capturedDeathBg: HTMLCanvasElement | null = null;
+  let liveAchCheckT = 0;
+
+  let dailyRunActive = false;
+  let dailyRunDone = false;
+  let dailyInfo = getDailyChallenge();
+  let dailyRng: () => number = Math.random;
+  let dailyEnemySpeedMul = 1;
+  let dailyTailDpsMul = 1;
+  let dailyDmgMul = 1;
+  let dailyCaptureSpeedMul = 1;
+  let dailyEnemyNodeAggroMul = 1;
+  let dailyXpMul = 1;
+  let dailyDashCdDelta = 0;
+  let biolabNovaCdMul = 1;
 
   // ---- ДНК-матрица: накопленная биомасса душ по 4 геномам + гены и гибриды ----
   const dnaXp: Record<DnaBranch, number> = { vermis: 0, chimera: 0, mycelium: 0, symbiont: 0 };
@@ -350,13 +411,13 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     }
   }
 
-  // ---- Территория: био-узлы, захваченные плотностью штаммов ----
+  // ---- Территория: био-узлы, захватываемые удержанием области ----
   const NODE_KINDS: NodeKind[] = ['gen', 'amp', 'magnet', 'mutagen', 'incubator', 'gen', 'amp'];
   const NODE_NAMES: Record<NodeKind, string> = {
     gen: 'ГЕНЕРАТОР', amp: 'УСИЛИТЕЛЬ', magnet: 'МАГНИТ', mutagen: 'МУТАГЕН', incubator: 'ИНКУБАТОР',
   };
   const NODE_POS_EFFECTS: Record<NodeKind, string> = {
-    gen: '+2 HP/с', amp: 'хвост не тает', magnet: 'сбор x2.5', mutagen: '+1 карта', incubator: '+50% XP',
+    gen: '+1.5 HP/с', amp: '-40% таяния +12% урона', magnet: 'сбор x1.6', mutagen: '+1 карта, +15% XP', incubator: '+35% XP',
   };
   const NODE_NEG_EFFECTS: Record<NodeKind, string> = {
     gen: 'враги быстрее', amp: '-20% урона', magnet: 'кража сфер', mutagen: '-1 карта', incubator: 'выводок роя',
@@ -370,10 +431,15 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           id: i,
           x: curWorldW * (0.18 + (i % 3) * 0.32) + (Math.random() - 0.5) * 60,
           y: curWorldH * (0.25 + Math.floor(i / 3) * 0.26) + (Math.random() - 0.5) * 50,
-          radius: 32,
+          radius: 68,
           owner: 0 as -1 | 0 | 1,
           capture: 0,
           kind,
+          contested: false,
+          raided: false,
+          playerInside: false,
+          enemyCount: 0,
+          warnCooldown: 0,
         });
       });
     } else {
@@ -391,10 +457,15 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           id,
           x: nx,
           y: ny,
-          radius: 32,
+          radius: 68,
           owner: 0 as -1 | 0 | 1,
           capture: 0,
           kind,
+          contested: false,
+          raided: false,
+          playerInside: false,
+          enemyCount: 0,
+          warnCooldown: 0,
         });
       });
     }
@@ -406,13 +477,16 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   const simNodes: BioNode[] = [];
   let nextPickDelta = 0;      // мутаген: +1 карта в следующем выборе, вражеский: -1
   let incubatorSpawnT = 20;   // вражеский инкубатор плодит личинок
-  let nodeRegenBonus = 0;     // 🔋 генератор: +2 HP/сек
-  let tailFreeze = false;     // ⚡ усилитель: хвост не тает
+  let nodeRegenBonus = 0;     // 🔋 генератор: +1.5 HP/сек
+  let ampOwned = false;       // ⚡ усилитель: -40% таяния хвоста и +12% урона
   let weaponPenalty = 1;      // вражеский усилитель: оружие -20% урон
-  let magnetNodeOwned = false;// 🧲 магнит: радиус сбора душ x2.5
+  let magnetNodeOwned = false;// 🧲 магнит: радиус сбора душ x1.6
   let orbToEnemies = false;   // вражеский магнит: души утекают к рою
-  let xpMul = 1;              // 💜 инкубатор: +50% XP
+  let xpMul = 1;              // 💜 инкубатор: +35% XP
+  let mutagenXpMul = 1;       // 🧬 мутаген: +15% XP
   let incubatorEnemy = false; // вражеский инкубатор активен
+  let nodeRaidScanT = 0;      // периодический скан башен для рейда монстров
+  const nodeUnattendedT = new Map<number, number>();
   let callCd = 0;             // феромон-зов
   let callRequested = false;  // запрос от кнопки «ЗОВ» (мобильный джойстик)
   let frameBloom3 = 0;        // кадр для раз в 3 кадра bloom-копии
@@ -433,7 +507,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   const pathHistory: { x: number; y: number }[] = [];
   let tailTick = 0;
   const maxTail = () => Math.round((TAIL.baseMax + level * TAIL.maxPerLvl + tailCapBonus) * codexBonuses.tailCapMul);
-  const tailDps = () => (TAIL.dpsBase + tailLen * TAIL.dpsPerSeg) * tailDpsMul;
+  const tailDps = () => (TAIL.dpsBase + tailLen * TAIL.dpsPerSeg) * tailDpsMul * dailyTailDpsMul;
   // Компактный размер: организм не раздувается на весь экран, сохраняет ловкость и изящество
   const playerRadius = () => {
     const base = PLAYER.radius;
@@ -444,7 +518,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   const moveCost = () => TAIL.moveCost * (0.8 + tailLen * 0.02); // большой хвост дороже тащить
   const visibleTail = () => pathHistory.slice(-Math.max(1, Math.floor(tailLen)));
   // Эффективный урон: множители бонусов, узлов и «Нестабильного генома»
-  const effDmg = () => dmgMul * weaponPenalty * (genes.has('unstable') ? (unstableT > 0 ? 0.55 : 1.8) : 1);
+  const effDmg = () =>
+    dmgMul * weaponPenalty * (ampOwned ? 1.12 : 1) * dailyDmgMul * (genes.has('unstable') ? (unstableT > 0 ? 0.55 : 1.8) : 1);
   const effAtkSpd = () => atkSpdMul * (unstableT > 0 && unstableKind === 2 ? 0.6 : 1);
   /** Неуязвимость после урона: ген «Фазовый сдвиг» удваивает окно */
   const iframeNow = () => IFRAME * (genes.has('phantom') ? 2 : 1) + (curseChitin ? 1.5 : 0);
@@ -452,7 +527,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   let kills = 0;
   let level = 1;
   let xp = 0;
-  let xpNext = 6;
+  let xpNext = xpRequiredForLevel(1);
   let pendingUps = 0;
 
   let started = false;
@@ -496,9 +571,12 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     }
     // Escape: сначала закрыть активное подменю на один шаг назад, иначе пауза
     if (e.key === 'Escape') {
-      if (codexModal?.classList.contains('show')) { showModal(!started || paused ? 'intro' : null); return; }
-      if (biolabOverlay.classList.contains('show')) { showModal(!started || paused ? 'intro' : null); return; }
-      if (settingsModal?.classList.contains('show')) { showModal(!started || paused ? 'intro' : null); return; }
+      const backTarget: ModalKind | null = !started || (paused && !gameOver) ? 'intro' : null;
+      if (dailyModal?.classList.contains('show')) { showModal(backTarget); return; }
+      if (achievementsModal?.classList.contains('show')) { showModal(backTarget); return; }
+      if (codexModal?.classList.contains('show')) { showModal(backTarget); return; }
+      if (biolabOverlay.classList.contains('show')) { showModal(backTarget); return; }
+      if (settingsModal?.classList.contains('show')) { showModal(backTarget); return; }
       if (helpModal?.classList.contains('show')) {
         if (helpOpenedFromGame) {
           helpOpenedFromGame = false;
@@ -510,7 +588,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         }
         return;
       }
-      if (started && !gameOver && pendingUps === 0) {
+      if (started && !gameOver && !dying && pendingUps === 0) {
         paused = !paused;
         if (paused) {
           sfx.setTailDrone(false);
@@ -523,7 +601,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       }
     }
     // P: пауза / возобновление во время забега
-    if (e.key.toLowerCase() === 'p' && started && !gameOver && pendingUps === 0) {
+    if (e.key.toLowerCase() === 'p' && started && !gameOver && !dying && pendingUps === 0) {
       paused = !paused;
       if (paused) {
         sfx.setTailDrone(false);
@@ -533,6 +611,16 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         sfx.startBgm();
         showModal(null);
       }
+    }
+    // M: быстрое включение/выключение звука
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'm') {
+      toggleMuteAction();
+      return;
+    }
+    // F: полноэкранный режим
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === 'f') {
+      void toggleFullscreenAction();
+      return;
     }
     // Пробел не должен скроллить страницу во время игры
     if (e.key === ' ' && started && !gameOver) e.preventDefault();
@@ -579,6 +667,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     microParallax: boolean;
     bgmVolume: number; // 0..100
     sfxVolume: number; // 0..100
+    muted: boolean;
     quality: 'low' | 'medium' | 'high';
   }
 
@@ -593,6 +682,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           microParallax: parsed.microParallax ?? true,
           bgmVolume: parsed.bgmVolume ?? 60,
           sfxVolume: parsed.sfxVolume ?? 80,
+          muted: parsed.muted === true,
           quality: parsed.quality ?? 'medium',
         };
       }
@@ -603,11 +693,13 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       microParallax: true,
       bgmVolume: 60,
       sfxVolume: 80,
+      muted: false,
       quality: 'medium',
     };
   }
 
   const gameSettings: SettingsData = loadSettings();
+  if (gameSettings.muted) sfx.toggleMute();
 
   function saveSettings(): void {
     try {
@@ -644,7 +736,53 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     }
   }
 
-  function applyDamageToPlayer(amount: number): boolean {
+  const ENEMY_NAMES_RU: Record<EnemyType, string> = {
+    grub: 'Личинка',
+    runner: 'Бегун',
+    brute: 'Громила',
+    boss: 'Страж Цикла',
+    splitter: 'Дробитель',
+    spitter: 'Плеватель',
+    healer: 'Целитель',
+    pulsar: 'Пульсар',
+    mirror: 'Зеркало',
+    colony: 'Матка колонии',
+    brood: 'Выводок роя',
+  };
+  const ENEMY_NAMES_EN: Record<EnemyType, string> = {
+    grub: 'Grub',
+    runner: 'Runner',
+    brute: 'Brute',
+    boss: 'Cycle Warden',
+    splitter: 'Splitter',
+    spitter: 'Spitter',
+    healer: 'Healer',
+    pulsar: 'Pulsar',
+    mirror: 'Mirror',
+    colony: 'Colony Hive',
+    brood: 'Swarm Brood',
+  };
+
+  function enemyCauseLabel(
+    type: EnemyType,
+    titan?: boolean,
+    elite?: EliteMutation | null,
+    detailRu?: string,
+    detailEn?: string,
+  ): { kind: string; labelRu: string; labelEn: string } {
+    const baseRu = titan ? 'Титан Масштаба' : ENEMY_NAMES_RU[type];
+    const baseEn = titan ? 'Scale Titan' : ENEMY_NAMES_EN[type];
+    const prefRu = elite && !titan ? `Элитный «${baseRu}»` : baseRu;
+    const prefEn = elite && !titan ? `Elite ${baseEn}` : baseEn;
+    return {
+      kind: titan ? 'titan' : type,
+      labelRu: detailRu ? `${prefRu} (${detailRu})` : prefRu,
+      labelEn: detailEn ? `${prefEn} (${detailEn})` : prefEn,
+    };
+  }
+
+  function applyDamageToPlayer(amount: number, cause?: { kind: string; labelRu: string; labelEn: string }): boolean {
+    if (dying || gameOver) return false;
     if (relicCarapace && carapaceShieldReady) {
       carapaceShieldReady = false;
       carapaceCooldown = 18;
@@ -654,7 +792,10 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       sfx.zap();
       return false;
     }
-    const incomingDmg = isUnlocked('perm_armor') ? amount * 0.85 : amount;
+    const incomingDmg = isActive('perm_armor') ? amount * 0.90 : amount;
+    lastDamageCause = cause
+      ? { ...cause, amount: incomingDmg }
+      : { kind: 'unknown', labelRu: 'Неизвестная угроза реактора', labelEn: 'Unknown reactor hazard', amount: incomingDmg };
     player.hp -= incomingDmg;
     player.iframe = iframeNow();
     hurtFlash();
@@ -664,25 +805,33 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     resonanceTimer = 0;
     resonanceMult = 1.0;
     updateResonanceHud();
+    if (player.hp <= 0) {
+      player.hp = 0;
+      beginDeathSequence();
+    }
     return true;
   }
 
   /** Пересчёт бонусов всех узлов по текущим владельцам (Этап 2.1) */
   function recomputeNodeBonuses(): void {
     nodeRegenBonus = 0;
-    tailFreeze = false;
+    ampOwned = false;
     weaponPenalty = 1;
     magnetNodeOwned = false;
     orbToEnemies = false;
     xpMul = 1;
+    mutagenXpMul = 1;
     incubatorEnemy = false;
     for (const n of bioNodes) {
       if (n.owner === 1) {
-        if (n.kind === 'gen') nodeRegenBonus += 2;
-        else if (n.kind === 'amp') tailFreeze = true;
+        if (n.kind === 'gen') nodeRegenBonus += 1.5;
+        else if (n.kind === 'amp') ampOwned = true;
         else if (n.kind === 'magnet') magnetNodeOwned = true;
-        else if (n.kind === 'incubator') xpMul = 1.5;
-      } else underEnemy(n.kind);
+        else if (n.kind === 'mutagen') mutagenXpMul *= 1.15;
+        else if (n.kind === 'incubator') xpMul *= 1.35;
+      } else if (n.owner === -1) {
+        underEnemy(n.kind);
+      }
     }
   }
 
@@ -697,16 +846,18 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   function onNodeCaptured(n: BioNode): void {
     const tn = trNode(n.kind, NODE_NAMES[n.kind], NODE_POS_EFFECTS[n.kind], NODE_NEG_EFFECTS[n.kind]);
     const en = getLocale() === 'en';
+    const icoTone = n.owner === 1 ? 'bio-cyan' : n.owner === -1 ? 'bio-crimson' : 'bio-violet';
+    const icoHtml = `<svg class="bio-icon ${icoTone}" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-node-${n.kind}"/></svg>`;
     if (n.owner === 1) {
-      showToast(`${en ? 'NODE CAPTURED' : 'УЗЕЛ ЗАХВАЧЕН'}: ${tn.name} (${tn.pos})`);
+      showToast(`${icoHtml} ${en ? 'TOWER CAPTURED' : 'БАШНЯ ЗАХВАЧЕНА'}: ${tn.name} (${tn.pos})`, 'success');
       if (n.kind === 'mutagen') nextPickDelta = 1;
     } else if (n.owner === -1) {
-      showToast(`${en ? 'NODE LOST' : 'УЗЕЛ ПОТЕРЯН'}: ${tn.name} (${tn.neg})`);
+      showToast(`${icoHtml} ${en ? 'TOWER LOST' : 'БАШНЯ ПОТЕРЯНА'}: ${tn.name} (${tn.neg})`, 'danger');
       if (n.kind === 'mutagen') nextPickDelta = -1;
     } else {
-      showToast(`${en ? 'NODE NEUTRALIZED' : 'УЗЕЛ НЕЙТРАЛЕН'}: ${tn.name}`);
+      showToast(`${icoHtml} ${en ? 'TOWER NEUTRALIZED' : 'БАШНЯ НЕЙТРАЛЬНА'}: ${tn.name}`, 'info');
     }
-    overlay.spawnPulse(n.x, n.y, n.owner === 1 ? 0x66fcf1 : 0xc084fc, n.radius * 3);
+    overlay.spawnPulse(n.x, n.y, n.owner === 1 ? 0x66fcf1 : n.owner === -1 ? 0xff3b4e : 0xc084fc, n.radius * 2.2);
     sfx.capture(n.owner === 1);
     if (n.owner === 1) sim.spawnPlayerSpores(toSimX(n.x), toSimY(n.y), 1500);
     recomputeNodeBonuses();
@@ -744,7 +895,12 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     sfx.hybrid();
     const def = HYBRIDS.find((h) => h.id === id)!;
     const trH = trHybrid(id, def.name, def.desc);
-    showToast(`${getLocale() === 'en' ? 'HYBRIDIZATION' : 'ГИБРИДИЗАЦИЯ'}: ${trH.name}`);
+    const hybridSlug = id.replace(/_/g, '-');
+    showToast(
+      `<svg class="bio-icon bio-amber" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-hybrid-${hybridSlug}"/></svg> ` +
+      `${getLocale() === 'en' ? 'HYBRIDIZATION' : 'ГИБРИДИЗАЦИЯ'}: ${trH.name}`,
+      'warn'
+    );
     overlay.spawnPulse(player.x, player.y, 0xffd166, 160);
     if (id === 'plasma_leviathan') dmgMul += 0.25;
     if (id === 'ouroboros') tailCapBonus += 8;
@@ -775,7 +931,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       desc: 'Урон x2.2 и лечение +4 HP за элит и боссов, но хвост тает в 3 раза быстрее',
       curse: true,
       avail: () => !cursePredator,
-      apply: () => { cursePredator = true; dmgMul *= 2.2; showToast(`${t('badge_pathology')}: ${trUpgrade('curse_predator', 'СВЕРХХИЩНИК', '').title}`); },
+      apply: () => { cursePredator = true; dmgMul *= 2.2; showToast(`<svg class="bio-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#ico-curse-predator"/></svg> ${t('badge_pathology')}: ${trUpgrade('curse_predator', 'СВЕРХХИЩНИК', '').title}`); },
     },
     {
       id: 'curse_chitin',
@@ -783,7 +939,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       desc: 'Макс. HP +120 и неуязвимость +1.5 с, но скорость движения снижена на 30%',
       curse: true,
       avail: () => !curseChitin,
-      apply: () => { curseChitin = true; maxHp += 120; player.hp += 120; moveSpeed *= 0.70; showToast(`${t('badge_pathology')}: ${trUpgrade('curse_chitin', 'ТИТАНОВЫЙ ХИТИН', '').title}`); },
+      apply: () => { curseChitin = true; maxHp += 120; player.hp += 120; moveSpeed *= 0.70; showToast(`<svg class="bio-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#ico-curse-chitin"/></svg> ${t('badge_pathology')}: ${trUpgrade('curse_chitin', 'ТИТАНОВЫЙ ХИТИН', '').title}`); },
     },
     {
       id: 'curse_hunger',
@@ -791,7 +947,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       desc: 'Радиус сбора x2 и скорость атаки +40%, но при голоде (>3 с без сфер) теряет 3 HP/с (не смертельно)',
       curse: true,
       avail: () => !curseHunger,
-      apply: () => { curseHunger = true; magnetR *= 2; atkSpdMul += 0.40; showToast(`${t('badge_pathology')}: ${trUpgrade('curse_hunger', 'ВЕЧНЫЙ ГОЛОД', '').title}`); },
+      apply: () => { curseHunger = true; magnetR *= 2; atkSpdMul += 0.40; showToast(`<svg class="bio-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#ico-curse-hunger"/></svg> ${t('badge_pathology')}: ${trUpgrade('curse_hunger', 'ВЕЧНЫЙ ГОЛОД', '').title}`); },
     },
     // --- Прото-органеллы ---
     {
@@ -799,21 +955,21 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       title: 'БИО-ГАЛЬВАНИКА',
       desc: 'Организм накапливает статику: цепная микро-молния поражает 3 врагов каждые 4 с',
       avail: () => !relicGalvanic,
-      apply: () => { relicGalvanic = true; showToast(`${t('badge_organelle')}: ${trUpgrade('relic_galvanic', 'БИО-ГАЛЬВАНИКА', '').title}`); },
+      apply: () => { relicGalvanic = true; showToast(`<svg class="bio-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#ico-relic-galvanic"/></svg> ${t('badge_organelle')}: ${trUpgrade('relic_galvanic', 'БИО-ГАЛЬВАНИКА', '').title}`); },
     },
     {
       id: 'relic_abyssal',
       title: 'АБИССАЛЬНЫЙ ЛЮМИНОФОР',
       desc: 'Радиус сбора сфер +50%, а био-фонарь каждые 6 с ослепляет врагов вокруг вас',
       avail: () => !relicAbyssal,
-      apply: () => { relicAbyssal = true; magnetR *= 1.5; showToast(`${t('badge_organelle')}: ${trUpgrade('relic_abyssal', 'АБИССАЛЬНЫЙ ЛЮМИНОФОР', '').title}`); },
+      apply: () => { relicAbyssal = true; magnetR *= 1.5; showToast(`<svg class="bio-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#ico-relic-abyssal"/></svg> ${t('badge_organelle')}: ${trUpgrade('relic_abyssal', 'АБИССАЛЬНЫЙ ЛЮМИНОФОР', '').title}`); },
     },
     {
       id: 'relic_carapace',
       title: 'ЖИВОЙ КАРАПАКС',
       desc: 'Каждые 18 с формирует живой барьер, полностью поглощающий следующий удар',
       avail: () => !relicCarapace,
-      apply: () => { relicCarapace = true; carapaceShieldReady = true; showToast(`${t('badge_organelle')}: ${trUpgrade('relic_carapace', 'ЖИВОЙ КАРАПАКС', '').title}`); },
+      apply: () => { relicCarapace = true; carapaceShieldReady = true; showToast(`<svg class="bio-icon" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-relic-carapace"/></svg> ${t('badge_organelle')}: ${trUpgrade('relic_carapace', 'ЖИВОЙ КАРАПАКС', '').title}`); },
     },
     { id: 'dmg', title: 'Острота', desc: '+15% ко всему урону', avail: () => stack('dmg'), apply: () => { dmgMul += 0.15; bump('dmg'); } },
     { id: 'aspd', title: 'Рефлексы', desc: '+12% к скорости атаки', avail: () => stack('aspd'), apply: () => { atkSpdMul += 0.12; bump('aspd'); } },
@@ -925,6 +1081,45 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     rerollBtn.disabled = rerollsLeft <= 0;
   }
 
+  const UPGRADE_CARD_ICONS: Record<string, { id: string; vb: string }> = {
+    spikes0: { id: 'ico-weapon-spikes', vb: '0 0 32 32' },
+    'spikes+': { id: 'ico-weapon-spikes', vb: '0 0 32 32' },
+    orbits0: { id: 'ico-weapon-orbs', vb: '0 0 32 32' },
+    'orbits+': { id: 'ico-weapon-orbs', vb: '0 0 32 32' },
+    nova0: { id: 'ico-weapon-nova', vb: '0 0 32 32' },
+    'nova+': { id: 'ico-weapon-nova', vb: '0 0 32 32' },
+    aura0: { id: 'ico-weapon-aura', vb: '0 0 32 32' },
+    'aura+': { id: 'ico-weapon-aura', vb: '0 0 32 32' },
+    mandibles0: { id: 'ico-weapon-mandibles', vb: '0 0 64 64' },
+    'mandibles+': { id: 'ico-weapon-mandibles', vb: '0 0 64 64' },
+    cysts0: { id: 'ico-weapon-cysts', vb: '0 0 64 64' },
+    'cysts+': { id: 'ico-weapon-cysts', vb: '0 0 64 64' },
+    curse_predator: { id: 'ico-curse-predator', vb: '0 0 64 64' },
+    curse_chitin: { id: 'ico-curse-chitin', vb: '0 0 64 64' },
+    curse_hunger: { id: 'ico-curse-hunger', vb: '0 0 64 64' },
+    relic_galvanic: { id: 'ico-relic-galvanic', vb: '0 0 64 64' },
+    relic_abyssal: { id: 'ico-relic-abyssal', vb: '0 0 64 64' },
+    relic_carapace: { id: 'ico-relic-carapace', vb: '0 0 32 32' },
+    dmg: { id: 'ico-stat-dmg', vb: '0 0 64 64' },
+    aspd: { id: 'ico-stat-aspd', vb: '0 0 64 64' },
+    move: { id: 'ico-stat-move', vb: '0 0 64 64' },
+    hp: { id: 'ico-stat-hp', vb: '0 0 64 64' },
+    magnet: { id: 'ico-stat-magnet', vb: '0 0 64 64' },
+    regen: { id: 'ico-stat-regen', vb: '0 0 64 64' },
+    absorb: { id: 'ico-gene-predator-devour', vb: '0 0 64 64' },
+    whip2: { id: 'ico-gene-predator-apex', vb: '0 0 64 64' },
+    scales: { id: 'ico-gene-predator-frenzy', vb: '0 0 64 64' },
+    unstable: { id: 'ico-gene-chimera-horn', vb: '0 0 64 64' },
+    supercharge: { id: 'ico-gene-chimera-carapace', vb: '0 0 64 64' },
+    chain: { id: 'ico-gene-chimera-spines', vb: '0 0 64 64' },
+    infection: { id: 'ico-gene-mycelium-hyphae', vb: '0 0 64 64' },
+    puddles: { id: 'ico-gene-mycelium-toxin', vb: '0 0 64 64' },
+    charm: { id: 'ico-gene-mycelium-spores', vb: '0 0 64 64' },
+    phantom: { id: 'ico-gene-symbiont-wings', vb: '0 0 64 64' },
+    overload: { id: 'ico-gene-symbiont-swarm', vb: '0 0 64 64' },
+    resonance: { id: 'ico-gene-symbiont-prism', vb: '0 0 64 64' },
+  };
+
   function openUpgrades(): void {
     const avail = UPGRADES.filter((u) => u.avail());
     // Все улучшения выкачаны: пустое окно замкнуло бы игру в вечную паузу
@@ -950,17 +1145,17 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       card.type = 'button';
       card.className = 'up-card';
       card.dataset.id = u.id;
+      const upIco = UPGRADE_CARD_ICONS[u.id];
       let crestHtml = '';
       if (u.branch) card.classList.add(`branch-${u.branch}`);
       if (u.curse) {
         card.classList.add('curse');
-        crestHtml = `<div class="card-crest curse-crest"><svg class="inline-card-ico" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-skull-hazard"/></svg> ${t('badge_pathology')}</div>`;
+        const curseIco = upIco ?? { id: 'ico-skull-hazard', vb: '0 0 32 32' };
+        crestHtml = `<div class="card-crest curse-crest"><svg class="inline-card-ico" viewBox="${curseIco.vb}" aria-hidden="true"><use href="#${curseIco.id}"/></svg> ${t('badge_pathology')}</div>`;
       }
       if (u.hybrid) card.classList.add('hybrid');
       let branchTag = '';
-      if (u.branch) {
-        branchTag = `<span class="b-ico"><svg class="inline-card-ico" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-${u.branch}"/></svg></span> `;
-      } else if (u.hybrid) {
+      if (u.hybrid) {
         const hybridColors: Record<string, string> = {
           plasma_leviathan: '#ff6b2b',
           ouroboros: '#00ff9d',
@@ -973,6 +1168,10 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         const color = hybridColors[u.hybrid] || '#ffd166';
         branchTag = `<span class="b-ico"><svg class="inline-card-ico" style="color:${color}" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-hybrid-${hybridSlug}"/></svg></span> `;
         crestHtml = `<div style="text-align:center;margin:4px 0;"><svg class="hybrid-crest" style="color:${color}" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-hybrid-${hybridSlug}"/></svg></div>`;
+      } else if (upIco && !u.curse) {
+        branchTag = `<span class="b-ico"><svg class="up-card-ico" viewBox="${upIco.vb}" aria-hidden="true"><use href="#${upIco.id}"/></svg></span>`;
+      } else if (u.branch) {
+        branchTag = `<span class="b-ico"><svg class="inline-card-ico" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-${u.branch}"/></svg></span> `;
       }
       const trUp = trUpgrade(u.id, u.title, u.desc);
       const cleanTitle = trUp.title.replace(/^[^\w\sа-яА-ЯёЁ]+/, '').trim();
@@ -1031,7 +1230,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     const hy = HYBRIDS.find((h) => h.id === mainGenome);
     if (hy) {
       const trH = trHybrid(hy.id, hy.name, hy.desc);
-      branchChipEl.innerHTML = `<svg class="chip-ico" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-node-mutagen"/></svg> ${trH.name}`;
+      const hybridSlug = hy.id.replace(/_/g, '-');
+      branchChipEl.innerHTML = `<svg class="chip-ico" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-hybrid-${hybridSlug}"/></svg> ${trH.name}`;
       branchChipEl.dataset.branch = 'hybrid';
       return;
     }
@@ -1158,6 +1358,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     } else {
       stage.dataset.phase = 'playing';
     }
+    syncPauseButton();
   }
 
   function showModal(which: ModalKind | null): void {
@@ -1177,9 +1378,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     if (which === 'biolab') renderBiolab();
     if (which === 'codex') renderCodex();
     if (which === 'settings') syncSettingsUI();
-    if (which === 'intro' && menuRecordBadge) {
+    if (which === 'intro' && (menuRecordText || menuRecordBadge)) {
       const bl = loadBiolab();
-      menuRecordBadge.textContent = t('record_badge', { time: fmtTime(bl.bestTime), runs: bl.runs, points: bl.points });
+      const recStr = t('record_badge', { time: fmtTime(bl.bestTime), runs: bl.runs, points: bl.points });
+      if (menuRecordText) menuRecordText.textContent = recStr;
+      else if (menuRecordBadge) menuRecordBadge.textContent = recStr;
     }
 
     if (which !== null) {
@@ -1232,7 +1435,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         brute: ENEMY_SPRITES.brute,
         spitter: ENEMY_SPRITES.spitter,
         pulsar: ENEMY_SPRITES.pulsar,
-        boss: ENEMY_SPRITES.titan,
+        boss: ENEMY_SPRITES_V4.boss,
         titan: ENEMY_SPRITES.titan,
         healer: ENEMY_SPRITES_V2.healer,
         mirror: ENEMY_SPRITES_V2.mirror,
@@ -1242,7 +1445,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       };
       if (map[entryId]) return map[entryId];
     }
-    return `<svg viewBox="0 0 32 32"><use href="#${fallbackIconId}"/></svg>`;
+    const vb = category === 'hybrid' ? '0 0 48 48' : '0 0 32 32';
+    return `<svg viewBox="${vb}" aria-hidden="true"><use href="#${fallbackIconId}"/></svg>`;
   }
 
   function renderCodex(): void {
@@ -1365,6 +1569,66 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   if (helpModalOpenBtn) helpModalOpenBtn.addEventListener('click', () => { helpOpenedFromGame = false; showModal('help'); });
   if (helpCloseBtn) helpCloseBtn.addEventListener('click', closeHelpModal);
 
+  function syncPauseButton(): void {
+    if (pauseBtnUse) pauseBtnUse.setAttribute('href', paused ? '#ico-play' : '#ico-pause');
+    if (pauseBtn) pauseBtn.setAttribute('aria-pressed', paused ? 'true' : 'false');
+  }
+
+  function syncAudioIcons(): void {
+    const isMuted = sfx.muted;
+    if (muteBtnUse) muteBtnUse.setAttribute('href', isMuted ? '#ico-sound-mute' : '#ico-sound-on');
+    if (muteBtn) {
+      const label = t(isMuted ? 'unmute_btn_title' : 'mute_btn_title');
+      muteBtn.title = label;
+      muteBtn.setAttribute('aria-label', label);
+      muteBtn.setAttribute('aria-pressed', isMuted ? 'true' : 'false');
+    }
+    if (setBgmIcoUse) {
+      setBgmIcoUse.setAttribute('href', isMuted || gameSettings.bgmVolume === 0 ? '#ico-sound-mute' : '#ico-sound-on');
+    }
+    if (setSfxIcoUse) {
+      setSfxIcoUse.setAttribute('href', isMuted || gameSettings.sfxVolume === 0 ? '#ico-sound-mute' : '#ico-sound-on');
+    }
+  }
+
+  function syncFullscreenButton(): void {
+    if (!fullscreenBtn) return;
+    const supported = Boolean(document.fullscreenEnabled);
+    fullscreenBtn.hidden = !supported;
+    if (!supported) return;
+    const active = Boolean(document.fullscreenElement);
+    const label = t(active ? 'exit_fullscreen_btn_title' : 'fullscreen_btn_title');
+    fullscreenBtn.title = label;
+    fullscreenBtn.setAttribute('aria-label', label);
+    fullscreenBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  }
+
+  function toggleMuteAction(): void {
+    sfx.unlock();
+    const isMuted = sfx.toggleMute();
+    gameSettings.muted = isMuted;
+    saveSettings();
+    syncAudioIcons();
+    showToast(
+      `<svg class="bio-icon ${isMuted ? 'bio-amber' : 'bio-cyan'}" viewBox="0 0 32 32" aria-hidden="true"><use href="#${isMuted ? 'ico-sound-mute' : 'ico-sound-on'}"/></svg> ${t(isMuted ? 'toast_muted' : 'toast_unmuted')}`
+    );
+  }
+
+  async function toggleFullscreenAction(): Promise<void> {
+    if (!document.fullscreenEnabled) return;
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await stage.requestFullscreen();
+      }
+    } catch {
+      // Отклонено политикой браузера или жестом без фокуса
+    } finally {
+      syncFullscreenButton();
+    }
+  }
+
   function togglePause(): void {
     if (!started || gameOver || pendingUps > 0) return;
     paused = !paused;
@@ -1380,6 +1644,13 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   if (pauseBtn) {
     pauseBtn.addEventListener('click', togglePause);
   }
+  if (muteBtn) {
+    muteBtn.addEventListener('click', toggleMuteAction);
+  }
+  if (fullscreenBtn) {
+    fullscreenBtn.addEventListener('click', () => { void toggleFullscreenAction(); });
+  }
+  document.addEventListener('fullscreenchange', syncFullscreenButton);
 
   document.querySelectorAll('.modal-x-btn[data-close-modal]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -1422,6 +1693,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (bgmVolLabel) bgmVolLabel.textContent = `${gameSettings.bgmVolume}%`;
       sfx.setBgmVolume(gameSettings.bgmVolume / 100);
       saveSettings();
+      syncAudioIcons();
     });
   }
 
@@ -1431,6 +1703,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (sfxVolLabel) sfxVolLabel.textContent = `${gameSettings.sfxVolume}%`;
       sfx.setSfxVolume(gameSettings.sfxVolume / 100);
       saveSettings();
+      syncAudioIcons();
     });
   }
 
@@ -1459,9 +1732,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
 
     setText('menu-brand-badge', 'brand_badge');
     setText('menu-tagline', 'tagline');
-    if (menuRecordBadge) {
+    if (menuRecordText || menuRecordBadge) {
       const bl = loadBiolab();
-      menuRecordBadge.textContent = t('record_badge', { time: fmtTime(bl.bestTime), runs: bl.runs, points: bl.points });
+      const recStr = t('record_badge', { time: fmtTime(bl.bestTime), runs: bl.runs, points: bl.points });
+      if (menuRecordText) menuRecordText.textContent = recStr;
+      else if (menuRecordBadge) menuRecordBadge.textContent = recStr;
     }
     if (startBtnLabel) startBtnLabel.textContent = started ? t('resume_run') : t('start_run');
     const dcLabel = document.getElementById('daily-challenge-label');
@@ -1510,18 +1785,26 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       pauseBtn.title = t('pause_btn_title');
       pauseBtn.setAttribute('aria-label', t('pause_btn_title'));
     }
+    syncAudioIcons();
+    syncFullscreenButton();
+    syncPauseButton();
     for (const b of ['vermis', 'chimera', 'mycelium', 'symbiont'] as DnaBranch[]) {
       const nameEl = document.querySelector(`#dna-${b} .dna-name`);
       if (nameEl) nameEl.textContent = t(`dna_${b}` as I18nKey);
     }
     joystick.setLabels(t('touch_call'), t('touch_dash'));
     if (!started && radarBadgeEl) {
-      radarBadgeEl.textContent = t('radar_threats', { n: 0 });
+      const rbText = radarBadgeEl.querySelector('#radar-badge-text') ?? radarBadgeEl;
+      rbText.textContent = t('radar_threats', { n: 0 });
     }
 
     // Death modal buttons
     if (restartBtn) restartBtn.textContent = t('restart_btn');
-    if (endlessBtn) endlessBtn.textContent = t('endless_btn');
+    if (endlessBtn) {
+      const sp = endlessBtn.querySelector('span');
+      if (sp) sp.textContent = t('endless_btn');
+      else endlessBtn.textContent = t('endless_btn');
+    }
     if (savePortraitBtn) {
       const sp = savePortraitBtn.querySelector('span');
       if (sp) sp.textContent = t('save_portrait');
@@ -1539,8 +1822,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     // Codex
     setText('codex-title-el', 'codex_title');
     setText('codex-sub', 'codex_sub');
-    if (codexPrevBtn) codexPrevBtn.textContent = t('codex_prev');
-    if (codexNextBtn) codexNextBtn.textContent = t('codex_next');
+    setText('codex-prev-label', 'codex_prev');
+    setText('codex-next-label', 'codex_next');
     if (codexCloseBtn) codexCloseBtn.textContent = t('codex_close');
     const codexCounts: Record<string, number> = {
       all: CODEX_ENTRIES.length,
@@ -1591,8 +1874,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       btn.setAttribute('aria-label', t('close_aria'));
     });
     if (settingsCloseBtn) settingsCloseBtn.textContent = t('settings_close');
-    setText('export-save-btn', 'export_save');
-    setText('import-save-btn', 'import_save');
+    setText('export-save-label', 'export_save');
+    setText('import-save-label', 'import_save');
 
     syncRerollBtn();
     updateBranchChip();
@@ -1685,19 +1968,22 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       card.className = 'bl-card' + (bought ? ' owned' : can ? ' afford' : '');
       card.dataset.id = u.id;
       let ico = 'ico-node-gen';
+      let icoVb = '0 0 32 32';
       if (u.id.includes('orbs')) ico = 'ico-weapon-orbs';
       else if (u.id.includes('aura')) ico = 'ico-weapon-aura';
-      else if (u.id.includes('tail')) ico = 'ico-vermis';
+      else if (u.id.includes('tail')) ico = 'ico-tail-length';
       else if (u.id.includes('nova')) ico = 'ico-weapon-nova';
       else if (u.id.includes('magnet')) ico = 'ico-node-magnet';
       else if (u.id.includes('regen')) ico = 'ico-node-gen';
+      else if (u.id === 'perm_dmg') { ico = 'ico-perm-dmg'; icoVb = '0 0 64 64'; }
+      else if (u.id === 'perm_armor') { ico = 'ico-perm-armor'; icoVb = '0 0 64 64'; }
       else if (u.id === 'unlock_vermis') ico = 'ico-vermis';
       else if (u.id === 'unlock_chimera') ico = 'ico-chimera';
       else if (u.id === 'unlock_mycelium') ico = 'ico-mycelium';
       else if (u.id === 'unlock_symbiont') ico = 'ico-symbiont';
 
       card.innerHTML =
-        `<div class="bl-head"><h3><svg class="bio-icon bio-cyan" viewBox="0 0 32 32" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;" aria-hidden="true"><use href="#${ico}"/></svg>${trB.name}</h3><span class="bl-cost">${bought ? t('biolab_bought') : t('biolab_cost', { cost: u.cost })}</span></div>` +
+        `<div class="bl-head"><h3><svg class="bio-icon bio-cyan" viewBox="${icoVb}" style="width:16px;height:16px;vertical-align:-3px;margin-right:5px;" aria-hidden="true"><use href="#${ico}"/></svg>${trB.name}</h3><span class="bl-cost">${bought ? t('biolab_bought') : t('biolab_cost', { cost: u.cost })}</span></div>` +
         `<p>${trB.effect}</p>`;
       biolabListEl.appendChild(card);
     }
@@ -2180,7 +2466,10 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     metamorphT = METAMORPH.slowT + METAMORPH.zoomT;
     sfx.metamorph();
     const trSc = trScale(SCALES[scaleIdx].id, SCALES[scaleIdx].name, SCALES[scaleIdx].sub);
-    showToast(`${getLocale() === 'en' ? 'METAMORPHOSIS' : 'МЕТАМОРФОЗ'}: ${trSc.name} — ${trSc.sub}`);
+    showToast(
+      `<svg class="bio-icon bio-cyan" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-macro-scale"/></svg> ` +
+      `${getLocale() === 'en' ? 'METAMORPHOSIS' : 'МЕТАМОРФОЗ'}: ${trSc.name} — ${trSc.sub}`
+    );
     overlay.spawnPulse(player.x, player.y, 0xffffff, 280);
     overlay.beginShake(0.5);
     sim.spawnPlayerSpores(toSimX(player.x), toSimY(player.y), 3500);
@@ -2238,7 +2527,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       win,
     });
     for (const ach of newAchs) {
-      showToast(`${getLocale() === 'en' ? 'ACHIEVEMENT' : 'ДОСТИЖЕНИЕ'}: ${ach.title}`, 'success');
+      showToast(
+        `<svg class="bio-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#${ach.iconId}"/></svg> ` +
+        `${getLocale() === 'en' ? 'ACHIEVEMENT' : 'ДОСТИЖЕНИЕ'}: ${ach.title}`,
+        'success'
+      );
     }
     const topStr = topRecords.slice(0, 3).map((r, i) => `#${i + 1} ${fmtTime(r.time)}`).join(' · ');
     modalTitle.textContent = win ? t('modal_win_title') : t('modal_lose_title');
@@ -2424,7 +2717,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         dna,
       });
     }
-    showToast(`<svg class="bio-icon bio-lime" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-node-incubator"/></svg> ${getLocale() === 'en' ? 'SPORE COCOON DESTROYED! +14 DNA ORBS' : 'ГНЕЗДО СПОР УНИЧТОЖЕНО! +14 СФЕР ДНК'}`);
+    showToast(`<svg class="bio-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#ico-anomaly-cocoon"/></svg> ${getLocale() === 'en' ? 'SPORE COCOON DESTROYED! +14 DNA ORBS' : 'ГНЕЗДО СПОР УНИЧТОЖЕНО! +14 СФЕР ДНК'}`);
   }
 
   function hitCocoonsInArea(x: number, y: number, radius: number, dmg: number, color: number): boolean {
@@ -2454,7 +2747,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       const ax = Math.max(r + 20, Math.min(curWorldW - r - 20, player.x + Math.cos(ang) * dist));
       const ay = Math.max(r + 20, Math.min(curWorldH - r - 20, player.y + Math.sin(ang) * dist));
       anomalies.push({ kind: 'acid', x: ax, y: ay, r, warnT: 3.5, life: 9, maxLife: 9, spawnCd: 0 });
-      showToast(`<svg class="bio-icon bio-amber" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-skull-hazard"/></svg> ${en ? 'ACID TIDE IN SECTOR' : 'КИСЛОТНЫЙ ПРИЛИВ В СЕКТОРЕ'}`);
+      showToast(`<svg class="bio-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#ico-anomaly-acid"/></svg> ${en ? 'ACID TIDE IN SECTOR' : 'КИСЛОТНЫЙ ПРИЛИВ В СЕКТОРЕ'}`);
       sfx.anomalyAlert();
     } else if (roll < 0.72) {
       // Гнездо спор: кокон, плодящий выводок, пока не уничтожен (особенно уязвим к Кольцу Смерти)
@@ -2464,7 +2757,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       const maxHp = Math.round(180 * (1 + scaleIdx * 0.5));
       anomalies.push({ kind: 'cocoon', x: ax, y: ay, r: 30, warnT: 1.5, life: 32, maxLife: 32, hp: maxHp, maxHp, spawnCd: 2.5 });
       overlay.spawnPulse(ax, ay, 0xa3e635, 110);
-      showToast(`<svg class="bio-icon bio-lime" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-node-incubator"/></svg> ${en ? 'SPORE COCOON: CRUSH WITH RING!' : 'ГНЕЗДО СПОР: СХЛОПНИТЕ КОЛЬЦОМ!'}`);
+      showToast(`<svg class="bio-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#ico-anomaly-cocoon"/></svg> ${en ? 'SPORE COCOON: CRUSH WITH RING!' : 'ГНЕЗДО СПОР: СХЛОПНИТЕ КОЛЬЦОМ!'}`);
       sfx.anomalyAlert();
     } else {
       // Вспышка митоза: питательный дождь из 22 сфер ДНК и бафф хвоста на 10 сек
@@ -2480,7 +2773,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         orbs.push({ x: ox, y: oy, vx: 0, vy: 0, value: 1 + Math.floor(scaleIdx * 0.5), color: DNA_COLORS[dna], dna });
       }
       overlay.spawnPulse(player.x, player.y, 0x66fcf1, 180);
-      showToast(`<svg class="bio-icon bio-cyan" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-mycelium"/></svg> ${en ? 'MITOSIS BLOOM: NUTRIENT SURGE (10s)' : 'ВСПЫШКА МИТОЗА: ПИТАТЕЛЬНАЯ СРЕДА (10 с)'}`);
+      showToast(`<svg class="bio-icon" viewBox="0 0 64 64" aria-hidden="true"><use href="#ico-anomaly-bloom"/></svg> ${en ? 'MITOSIS BLOOM: NUTRIENT SURGE (10s)' : 'ВСПЫШКА МИТОЗА: ПИТАТЕЛЬНАЯ СРЕДА (10 с)'}`);
       sfx.capture(true);
     }
   }
@@ -2750,7 +3043,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       if (gameTime >= nextBossAt) {
         nextBossAt += BOSS_EVERY;
         spawnEnemy('boss');
-        showToast(getLocale() === 'en' ? 'CYCLE WARDEN APPROACHING' : 'СТРАЖ ЦИКЛА ПРИБЛИЖАЕТСЯ');
+        showToast(
+          `<svg class="bio-icon bio-crimson" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-skull-hazard"/></svg> ` +
+          `${getLocale() === 'en' ? 'CYCLE WARDEN APPROACHING' : 'СТРАЖ ЦИКЛА ПРИБЛИЖАЕТСЯ'}`,
+          'danger'
+        );
         sfx.boss();
       }
       // Биомасса шкалы созрела: из глубин пробуждается Титан масштаба
@@ -2763,7 +3060,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         titan.hp = titan.maxHp = Math.round(titan.maxHp * (1 + scaleIdx * 0.35));
         overlay.spawnPulse(titan.x, titan.y, 0xffffff, 150);
         const trS = trScale(SCALES[scaleIdx].id, SCALES[scaleIdx].name, SCALES[scaleIdx].sub);
-        showToast(getLocale() === 'en' ? `SCALE TITAN AWAKENED — ${trS.name}` : `ТИТАН МАСШТАБА ПРОБУДИЛСЯ — ${trS.name}`);
+        showToast(
+          `<svg class="bio-icon bio-amber" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-macro-scale"/></svg> ` +
+          `${getLocale() === 'en' ? `SCALE TITAN AWAKENED — ${trS.name}` : `ТИТАН МАСШТАБА ПРОБУДИЛСЯ — ${trS.name}`}`,
+          'warn'
+        );
         sfx.boss();
       }
       // Вражеский инкубатор (💜): плодит личинок каждые 20 секунд
@@ -3031,6 +3332,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
               vx: ((player.x - e.x) / pd) * (150 + scaleIdx * 15),
               vy: ((player.y - e.y) / pd) * (150 + scaleIdx * 15),
               dmg: pDmg, life: 2.8,
+              sourceType: e.type, titan: e.titan, elite: e.elite,
             });
           } else if (e.type === 'healer') {
             // Целитель: лечит ближний штамм - приоритетная цель
@@ -3082,6 +3384,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
                   vx: Math.cos(ang) * pSpd,
                   vy: Math.sin(ang) * pSpd,
                   dmg: pDmg, life: 3.0,
+                  sourceType: e.type, titan: e.titan, elite: e.elite,
                 });
               }
             } else {
@@ -3094,6 +3397,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
                   vx: Math.cos(ang) * pSpd,
                   vy: Math.sin(ang) * pSpd,
                   dmg: pDmg, life: 2.8,
+                  sourceType: e.type, titan: e.titan, elite: e.elite,
                 });
               }
             }
@@ -3578,6 +3882,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
             r,
             dmg,
             life: 14,
+            armT: 0,
+            armed: true,
           });
         }
         sfx.cyst();
@@ -3793,7 +4099,10 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         overlay.spawnPulse(callTargetX, callTargetY, 0xff3b5c, CALL.beaconRadius + 40);
         overlay.beginShake(0.12);
         sfx.call();
-        showToast(getLocale() === 'en' ? 'PHEROMONE CALL' : 'ФЕРОМОН-ЗОВ');
+        showToast(
+          `<svg class="bio-icon bio-violet" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-skill-call"/></svg> ` +
+          `${getLocale() === 'en' ? 'PHEROMONE CALL' : 'ФЕРОМОН-ЗОВ'}`
+        );
       }
       if (callRequested) callRequested = false;
 
@@ -3953,6 +4262,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           const trS = trScale(sc.id, sc.name, sc.sub);
           const baseName = activeBoss.titan ? `${t('boss_titan')} · ${trS.name}` : t('boss_guardian');
           bossNameEl.textContent = activeBoss.enragedPhase ? `${baseName} · ${t('boss_enraged')}` : baseName;
+          if (bossHudIcoUse) bossHudIcoUse.setAttribute('href', activeBoss.titan ? '#ico-macro-scale' : '#ico-skull-hazard');
           const bPct = Math.max(0, Math.min(100, (activeBoss.hp / Math.max(1, activeBoss.maxHp)) * 100));
           bossHpFillEl.style.width = `${bPct.toFixed(1)}%`;
           bossHpTextEl.textContent = `${Math.ceil(activeBoss.hp)}/${Math.round(activeBoss.maxHp)}`;
@@ -3967,12 +4277,13 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         if (key !== lastStatusKey) {
           lastStatusKey = key;
           const pills: string[] = [];
-          if (trailOwn) pills.push(`<span class="status-pill" style="color:var(--cyan)">${t('status_own_strain')}</span>`);
-          if (trailEnemy) pills.push(`<span class="status-pill" style="color:var(--red)">${t('status_enemy_strain')}</span>`);
-          if (neuralLinkActive) pills.push(`<span class="status-pill" style="color:#00ff9d">${t('status_neural')}</span>`);
-          if (bloomBuffT > 0) pills.push(`<span class="status-pill" style="color:var(--lime)">${t('status_bloom')}</span>`);
-          if (relicCarapace && carapaceShieldReady) pills.push(`<span class="status-pill" style="color:#00ff9d">${t('status_carapace')}</span>`);
-          if (tailFreeze) pills.push(`<span class="status-pill" style="color:var(--amber)">${t('status_freeze')}</span>`);
+          const pillIco = (id: string) => `<svg viewBox="0 0 32 32" aria-hidden="true"><use href="#${id}"/></svg>`;
+          if (trailOwn) pills.push(`<span class="status-pill" style="color:var(--cyan)">${pillIco('ico-chip-haste')}${t('status_own_strain')}</span>`);
+          if (trailEnemy) pills.push(`<span class="status-pill" style="color:var(--red)">${pillIco('ico-chip-poison')}${t('status_enemy_strain')}</span>`);
+          if (neuralLinkActive) pills.push(`<span class="status-pill" style="color:#00ff9d">${pillIco('ico-chip-regen')}${t('status_neural')}</span>`);
+          if (bloomBuffT > 0) pills.push(`<span class="status-pill" style="color:var(--lime)">${pillIco('ico-chip-frenzy')}${t('status_bloom')}</span>`);
+          if (relicCarapace && carapaceShieldReady) pills.push(`<span class="status-pill" style="color:#00ff9d">${pillIco('ico-chip-shield')}${t('status_carapace')}</span>`);
+          if (tailFreeze) pills.push(`<span class="status-pill" style="color:var(--amber)">${pillIco('ico-chip-armor')}${t('status_freeze')}</span>`);
           statusChipsEl.innerHTML = pills.join('');
         }
       }
@@ -3999,7 +4310,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         carapaceCooldown -= dt;
         if (carapaceCooldown <= 0) {
           carapaceShieldReady = true;
-          showToast(getLocale() === 'en' ? 'CARAPACE: SHIELD READY' : 'КАРАПАКС: ЩИТ ГОТОВ');
+          showToast(`<svg class="bio-icon" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-relic-carapace"/></svg> ${getLocale() === 'en' ? 'CARAPACE: SHIELD READY' : 'КАРАПАКС: ЩИТ ГОТОВ'}`);
           overlay.spawnPulse(player.x, player.y, 0x00ff9d, 60);
         }
       }
