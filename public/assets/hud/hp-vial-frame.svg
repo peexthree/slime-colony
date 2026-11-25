@@ -1,19 +1,11 @@
-<svg viewBox="0 0 320 56" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Левый и правый металлические био-зажимы колбы -->
-  <path d="M4 16L12 8H28V48H12L4 40V16Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M316 16L308 8H292V48H308L316 40V16Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M14 14V42M21 14V42M299 14V42M306 14V42" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-  <!-- Стеклянный цилиндр ампулы -->
-  <rect x="24" y="12" width="272" height="32" rx="14" fill="currentColor" fill-opacity="0.06" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/>
-  <!-- Верхний стеклянный блик на колбе -->
-  <path d="M40 17.5H280" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.42"/>
-  <path d="M44 39.5H120M200 39.5H276" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.35"/>
-  <!-- Мерные деления микроскопа (10 секций) -->
-  <g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.78" vector-effect="non-scaling-stroke">
-    <path d="M56 12V20M82 12V18M108 12V20M134 12V18M160 12V23M186 12V18M212 12V20M238 12V18M264 12V20"/>
-    <path d="M56 44V38M108 44V38M160 44V36M212 44V38M264 44V38"/>
-  </g>
-  <!-- Клапанные болты на скобах -->
-  <circle cx="11" cy="28" r="2.2" fill="currentColor"/>
-  <circle cx="309" cy="28" r="2.2" fill="currentColor"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 56" fill="none"><defs><linearGradient id="p2_hp_m" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#475569"/><stop offset="52%" stop-color="#1e293b"/><stop offset="100%" stop-color="#0f172a"/></linearGradient><linearGradient id="p2_hp_c" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fda4af"/><stop offset="52%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></linearGradient></defs><!-- Left heart bio-cap -->
+           <rect x="6" y="10" width="32" height="36" rx="12" fill="url(#p2_hp_m)" stroke="#160e26" stroke-width="4.5"/>
+           <circle cx="22" cy="28" r="9" fill="url(#p2_hp_c)" stroke="#160e26" stroke-width="3"/>
+           <!-- Glass vial outer frame (hollow interior for bar fill) -->
+           <rect x="34" y="10" width="268" height="36" rx="18" fill="none" stroke="url(#p2_hp_m)" stroke-width="9"/>
+           <rect x="34" y="10" width="268" height="36" rx="18" fill="none" stroke="#160e26" stroke-width="3.5"/>
+           <!-- Measurement ticks & glass gloss -->
+           <path d="M90 12 V20 M144 12 V20 M198 12 V20 M252 12 V20" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+           <path d="M52 17 H282" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.35"/>
+           <!-- Right steel end-cap -->
+           <path d="M298 12 H310 C314 12 316 18 316 28 C316 38 314 44 310 44 H298 Z" fill="url(#p2_hp_m)" stroke="#160e26" stroke-width="4" stroke-linejoin="round"/></svg>

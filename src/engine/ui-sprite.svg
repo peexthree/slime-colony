@@ -1,445 +1,190 @@
 <!-- Справочный SVG-спрайт HUD (синхронизирован с index.html) -->
   <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none" aria-hidden="true">
-  <symbol id="ico-vermis" viewBox="0 0 32 32" fill="none">
-    <path d="M8.5 5C12 9.5 12 16 7.5 26M23.5 5C20 9.5 20 16 24.5 26" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M8.5 5L11.5 7.5M23.5 5L20.5 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-      <path d="M16 4V28" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-      <path d="M12.5 9.5L16 12L19.5 9.5M12 15.5L16 18L20 15.5M13 21.5L16 24L19 21.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <polygon points="16,12.5 18.2,15 16,17.5 13.8,15" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-chimera" viewBox="0 0 32 32" fill="none">
-    <path d="M14.8 3.5L7 13.5L10.5 24.5L14.5 28L13.5 18L15.4 11.5L14.8 3.5Z" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M18.2 5L25 13.5L21.5 24.5L17.5 28.5L18.5 18L16.6 12L18.2 5Z" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M16 10.5L14.8 16L17.2 16L16 22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="16" r="1.7" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-mycelium" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="11" r="4.2" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="11" r="1.6" fill="currentColor"/>
-      <path d="M16 15.2V28M16 19.5C12.2 20.5 9.2 23.2 6.5 27M16 18.5C19.8 19.8 22.8 22.8 25.5 27M11.5 22.5C11.2 24.8 11.8 26.8 12.6 28.2M20.5 22C20.8 24.5 20.2 26.6 19.4 28.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M11.8 9.8C8.8 9 6.8 7 5.5 5M20.2 9.8C23.2 9 25.2 7 26.5 5M16 6.8V3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-      <circle cx="5.5" cy="5" r="1.2" fill="currentColor"/>
-      <circle cx="26.5" cy="5" r="1.2" fill="currentColor"/>
-      <circle cx="16" cy="3.5" r="1.2" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-symbiont" viewBox="0 0 32 32" fill="none">
-    <ellipse cx="16" cy="16" rx="12" ry="4.8" transform="rotate(45 16 16)" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-      <ellipse cx="16" cy="16" rx="12" ry="4.8" transform="rotate(-45 16 16)" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-      <path d="M16 10.5V21.5M10.5 16H21.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="16" r="2.6" fill="currentColor"/>
-      <circle cx="7.8" cy="7.8" r="1.5" fill="currentColor"/>
-      <circle cx="24.2" cy="24.2" r="1.5" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-weapon-spikes" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="3.6" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="16" r="1.4" fill="currentColor"/>
-      <path d="M16 2.8L17.8 9.2L16 10.8L14.2 9.2L16 2.8Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M16 29.2L17.8 22.8L16 21.2L14.2 22.8L16 29.2Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M29.2 16L22.8 17.8L21.2 16L22.8 14.2L29.2 16Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M2.8 16L9.2 17.8L10.8 16L9.2 14.2L2.8 16Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M6.8 6.8L11.8 11.8M25.2 6.8L20.2 11.8M6.8 25.2L11.8 20.2M25.2 25.2L20.2 20.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-weapon-orbs" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="10.2" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6.5 4.2" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="16" r="2.2" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.6" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="5.8" r="2.9" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="5.8" r="1.1" fill="currentColor"/>
-      <circle cx="24.8" cy="21.1" r="2.9" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-      <circle cx="24.8" cy="21.1" r="1.1" fill="currentColor"/>
-      <circle cx="7.2" cy="21.1" r="2.9" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-      <circle cx="7.2" cy="21.1" r="1.1" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-weapon-nova" viewBox="0 0 32 32" fill="none">
-    <path d="M11 4.6A12.4 12.4 0 0 1 25 7.4M27.8 12.5A12.4 12.4 0 0 1 21 27.4M16 28.4A12.4 12.4 0 0 1 4.6 20.8M4.2 13.5A12.4 12.4 0 0 1 8 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-      <path d="M16 8.2A7.8 7.8 0 0 1 23.4 13.5M23.5 18.2A7.8 7.8 0 0 1 13.8 23.5M8.5 18.2A7.8 7.8 0 0 1 12.5 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.85" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="16" r="3" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="16" r="1.2" fill="currentColor"/>
-      <path d="M16 3V6M29 16H26M16 29V26M3 16H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-weapon-aura" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="12.2" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3.8 3.2" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="16" r="8.2" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-      <circle cx="13.2" cy="17.8" r="2.6" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-      <circle cx="19.2" cy="13.8" r="2" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-      <circle cx="14.2" cy="11.2" r="1.3" fill="currentColor"/>
-      <circle cx="19.8" cy="19.8" r="1.4" fill="currentColor"/>
-      <path d="M10.5 7.5C10.5 5.8 11.8 5.2 11.8 3.8M22 8.5C22 6.8 23.2 6.2 23.2 4.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-skill-call" viewBox="0 0 32 32" fill="none">
-    <path d="M16 14.5V27.5M11.5 27.5L16 21.5L20.5 27.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="13.5" r="2.5" fill="currentColor"/>
-      <path d="M11.5 17.5C9.5 15.3 9.5 11.7 11.5 9.5M20.5 17.5C22.5 15.3 22.5 11.7 20.5 9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-      <path d="M8.2 20.5C4.8 16.6 4.8 10.4 8.2 6.5M23.8 20.5C27.2 16.6 27.2 10.4 23.8 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="5.2" r="1.3" fill="currentColor"/>
-      <circle cx="11" cy="6.2" r="1" fill="currentColor" fill-opacity="0.8"/>
-      <circle cx="21" cy="6.2" r="1" fill="currentColor" fill-opacity="0.8"/>
-  </symbol>
-
-  <symbol id="ico-node-gen" viewBox="0 0 32 32" fill="none">
-    <rect x="9.5" y="7.5" width="13" height="20" rx="4.5" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
-      <path d="M13 7.5V5.2C13 4.5 13.5 4 14.2 4H17.8C18.5 4 19 4.5 19 5.2V7.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M12.5 22.5H19.5M12.5 18H19.5M12.5 13.5H19.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-      <path d="M6.5 13.5V21.5M25.5 13.5V21.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.6" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-node-amp" viewBox="0 0 32 32" fill="none">
-    <path d="M8.5 7.5C4.8 11.8 4.8 20.2 8.5 24.5M23.5 7.5C27.2 11.8 27.2 20.2 23.5 24.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
-      <path d="M17.8 4.5L11.2 16.5H16.2L14.2 27.5L20.8 15.5H15.8L17.8 4.5Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <circle cx="8.5" cy="7.5" r="1.2" fill="currentColor"/>
-      <circle cx="23.5" cy="24.5" r="1.2" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-node-magnet" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="3.4" fill="currentColor" fill-opacity="0.24" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="16" r="1.3" fill="currentColor"/>
-      <path d="M6 6C9.5 7.5 11.5 9.5 12.8 12.8M26 6C22.5 7.5 20.5 9.5 19.2 12.8M6 26C9.5 24.5 11.5 22.5 12.8 19.2M26 26C22.5 24.5 20.5 22.5 19.2 19.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-      <path d="M10.2 12.4L12.9 12.9L12.4 10.2M21.8 12.4L19.1 12.9L19.6 10.2M10.2 19.6L12.9 19.1L12.4 21.8M21.8 19.6L19.1 19.1L19.6 21.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="16" r="12.2" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 4.5" stroke-opacity="0.55" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-node-mutagen" viewBox="0 0 32 32" fill="none">
-    <polygon points="16,3.5 22.8,7.4 22.8,15.2 16,19.1 9.2,15.2 9.2,7.4" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M16 7.5V15.2M12.5 11.3H19.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-      <path d="M16 19.1V25.5M13.8 21.8H18.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-      <path d="M16 24.5L9.5 28.5M16 24.5L22.5 28.5M14.5 23L7 25.2M17.5 23L25 25.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-node-incubator" viewBox="0 0 32 32" fill="none">
-    <path d="M16 4C21.8 4 25 10.2 25 17C25 23.2 21.2 28 16 28C10.8 28 7 23.2 7 17C7 10.2 10.2 4 16 4Z" fill="currentColor" fill-opacity="0.14" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
-      <path d="M8.5 13.5C11.5 15.2 20.5 15.2 23.5 13.5M8.2 20.5C11.8 22.2 20.2 22.2 23.8 20.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="17.2" r="3.4" fill="currentColor" fill-opacity="0.28" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-      <circle cx="16" cy="17.2" r="1.4" fill="currentColor"/>
-      <path d="M16 4V8.5M16 28V24.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-corner-frame" viewBox="0 0 48 48" fill="none">
-    <path d="M4 44V15L15 4H44" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M9 34V17L17 9H34" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.55" vector-effect="non-scaling-stroke"/>
-      <circle cx="15" cy="4" r="2" fill="currentColor"/>
-      <circle cx="4" cy="15" r="2" fill="currentColor"/>
-      <path d="M24 4V8M31 4V7M4 24H8M4 31H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-scale-bracket" viewBox="0 0 24 48" fill="none">
-    <path d="M20 4H11L4 12V36L11 44H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M9.5 14V34" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.55" vector-effect="non-scaling-stroke"/>
-      <path d="M13 24H19L16 21M19 24L16 27" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-      <path d="M4 18H7.5M4 30H7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-      <circle cx="20" cy="4" r="1.6" fill="currentColor"/>
-      <circle cx="20" cy="44" r="1.6" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-hybrid-ion-colossus" viewBox="0 0 48 48" fill="none">
-    <!-- Внешние бронированные плечи колосса -->
-  <polygon points="24,5 39,13.5 39,34.5 24,43 9,34.5 9,13.5" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <!-- Тесла-рога и боковые разрядники -->
-  <path d="M9 13.5L4.5 10.5M39 13.5L43.5 10.5M9 34.5L4.5 37.5M39 34.5L43.5 37.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <!-- Дуговые молнии вокруг ядра -->
-  <path d="M13 24L17 20L15.5 25L19 23M35 24L31 20L32.5 25L29 23" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <!-- Центральный ионный разряд -->
-  <path d="M26.5 10.5L19.5 24.5H24.5L21.5 37.5L28.5 23.5H23.5L26.5 10.5Z" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <!-- Силовые узлы-конденсаторы -->
-  <circle cx="24" cy="5" r="2" fill="currentColor"/>
-  <circle cx="24" cy="43" r="2" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-hybrid-ouroboros" viewBox="0 0 48 48" fill="none">
-    <!-- Тело змея-уробороса -->
-  <path d="M28 9.2A15.4 15.4 0 1 1 18.5 9.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <path d="M29 14.2A10.4 10.4 0 1 1 18.8 14.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.6" vector-effect="non-scaling-stroke"/>
-  <!-- Голова паразита, заглатывающая хвост в верхней точке -->
-  <path d="M24.5 5.2L31.5 9.2L26.2 14.2L22.5 11.2L24.5 5.2Z" fill="currentColor" fill-opacity="0.26" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M18.5 9.8L23 9.5M16 12.2L19.2 14.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <!-- Сегментные насечки хитина по кольцу -->
-  <path d="M38.5 20.5L34.2 21.8M36.8 32.5L33 29.8M24 39.5V35M11.2 32.5L15 29.8M9.5 20.5L13.8 21.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <!-- Символ бесконечной био-регенерации в центре -->
-  <path d="M19.5 24C19.5 21.8 22.2 21.8 24 24C25.8 26.2 28.5 26.2 28.5 24C28.5 21.8 25.8 21.8 24 24C22.2 26.2 19.5 26.2 19.5 24Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="24" cy="24" r="1.6" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-hybrid-phase-serpent" viewBox="0 0 48 48" fill="none">
-    <!-- Гравитационные дуги портала -->
-  <path d="M24 6.5C34 6.5 41.5 14 41.5 24C41.5 31.2 36.8 37.5 30 39.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-  <path d="M24 41.5C14 41.5 6.5 34 6.5 24C6.5 16.8 11.2 10.5 18 8.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-  <!-- Спиральный вихрь фазового змея -->
-  <path d="M12.5 24C12.5 17 18.2 12 25 12.5C31.5 13 35.8 18.2 35.2 24.8C34.6 31.2 28.8 35.2 22.8 34.4C17.5 33.6 15.2 28.8 16.6 24.2C17.8 20.2 21.8 18.4 25.4 19.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <!-- Клиновидная голова фазового змея -->
-  <path d="M35.5 12L31 19.5L26 15.5L35.5 12Z" fill="currentColor" fill-opacity="0.28" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <!-- Сингулярность портала и фазовые осколки -->
-  <polygon points="24,19.5 28.5,24 24,28.5 19.5,24" fill="currentColor" fill-opacity="0.24" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="24" cy="24" r="2" fill="currentColor"/>
-  <circle cx="11" cy="14" r="1.4" fill="currentColor"/>
-  <circle cx="37" cy="34" r="1.4" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-hybrid-plasma-leviathan" viewBox="0 0 48 48" fill="none">
-    <!-- Внешнее кольцо аннигиляции -->
-  <circle cx="24" cy="24" r="18.5" stroke="currentColor" stroke-width="1.6" stroke-dasharray="10 4 3 4" stroke-linecap="round" stroke-opacity="0.72" vector-effect="non-scaling-stroke"/>
-  <!-- Плазменный гребень и тело левиафана -->
-  <path d="M13 33C9.5 27.5 10.5 18 17 13.5C21 10.8 25.5 10.5 29.5 12.5L35 8.5L33.5 15.5C38 19.5 39 27.5 34.5 33.5C30.5 38.8 22.5 40 16.5 36.5" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <!-- Внутренние спинные шипы пламени -->
-  <path d="M14 16L11 11.5M20 11.5L19.5 6.5M37 22L42 20.5M35.5 30.5L40 33.5M12 27.5L7.5 29.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <!-- Раскрытые плазменные жвала и ядро -->
-  <path d="M24 16.5C27.2 19.8 29.5 22.8 28.5 27.2C27.8 30.2 25.5 31.8 24 31.8C22.5 31.8 20.2 30.2 19.5 27.2C18.5 22.8 20.8 19.8 24 16.5Z" fill="currentColor" fill-opacity="0.28" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="24" cy="26" r="2.6" fill="currentColor"/>
-  <path d="M24 31.8V36.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-hybrid-psi-web" viewBox="0 0 48 48" fill="none">
-    <!-- Внешние синаптические связи -->
-  <path d="M24 7L38 15L38 33L24 41L10 33L10 15L24 7Z" stroke="currentColor" stroke-width="1.4" stroke-opacity="0.55" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M24 7V17M38 15L29.5 20.5M38 33L29.5 27.5M24 41V31M10 33L18.5 27.5M10 15L18.5 20.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <!-- Псионическое полушарие / центральный нейрон -->
-  <path d="M24 16C28.8 16 32 19.5 32 24C32 28.5 28.8 32 24 32C19.2 32 16 28.5 16 24C16 19.5 19.2 16 24 16Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9" vector-effect="non-scaling-stroke"/>
-  <!-- Извилины и глаз сверхразума -->
-  <path d="M18.5 24C20.5 21 27.5 21 29.5 24C27.5 27 20.5 27 18.5 24Z" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="24" cy="24" r="2.2" fill="currentColor"/>
-  <!-- 6 периферийных синапсов -->
-  <circle cx="24" cy="7" r="2.3" fill="currentColor"/>
-  <circle cx="38" cy="15" r="2.3" fill="currentColor"/>
-  <circle cx="38" cy="33" r="2.3" fill="currentColor"/>
-  <circle cx="24" cy="41" r="2.3" fill="currentColor"/>
-  <circle cx="10" cy="33" r="2.3" fill="currentColor"/>
-  <circle cx="10" cy="15" r="2.3" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-hybrid-spore-reactor" viewBox="0 0 48 48" fill="none">
-    <!-- Внешнее кольцо сдерживания -->
-  <circle cx="24" cy="24" r="19" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6 4" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
-  <!-- 3 споровых сектора реактора -->
-  <path d="M24 19.2L17.2 8.8A16.5 16.5 0 0 1 30.8 8.8L24 19.2Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M28.2 26.4L40.5 25.8A16.5 16.5 0 0 1 33.8 37.5L28.2 26.4Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M19.8 26.4L14.2 37.5A16.5 16.5 0 0 1 7.5 25.8L19.8 26.4Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <!-- Споровые пустулы в межсекторных зонах -->
-  <circle cx="11.5" cy="17.5" r="2.4" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
-  <circle cx="36.5" cy="17.5" r="2.4" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
-  <circle cx="24" cy="39" r="2.4" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
-  <!-- Центральная активная зона -->
-  <circle cx="24" cy="24" r="5" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.9" vector-effect="non-scaling-stroke"/>
-  <circle cx="24" cy="24" r="2" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-damage-nova" viewBox="0 0 32 32" fill="none">
-    <polygon points="16,3.5 19,11.2 27,7 22,14.2 29,17.5 21.2,19.8 24.5,27.5 16.8,22.5 12.5,28.5 11.8,20.5 4,21.5 9.8,15.2 5.2,8.2 13,11.4" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16.2" r="2.8" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-macro-scale" viewBox="0 0 32 32" fill="none">
-    <polygon points="16,4 28,25.5 4,25.5" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <polygon points="16,25.5 22,14.8 10,14.8" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <polygon points="16,14.8 19,20 13,20" fill="currentColor"/>
-  <path d="M16 4V11.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-node-dominance" viewBox="0 0 32 32" fill="none">
-    <polygon points="16,4.5 26,10.2 26,21.8 16,27.5 6,21.8 6,10.2" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M16 4.5V12.5M26 21.8L19 17.8M6 21.8L13 17.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <polygon points="16,12 19.6,14 19.6,18 16,20 12.4,18 12.4,14" fill="currentColor" fill-opacity="0.32" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="4.5" r="1.8" fill="currentColor"/>
-  <circle cx="26" cy="21.8" r="1.8" fill="currentColor"/>
-  <circle cx="6" cy="21.8" r="1.8" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-record-badge" viewBox="0 0 32 32" fill="none">
-    <polygon points="16,3.5 19.6,11.2 28,12.2 21.8,18 23.4,26.5 16,22.2 8.6,26.5 10.2,18 4,12.2 12.4,11.2" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <polygon points="16,10 18.2,14.6 22.8,15.2 19.4,18.4 20.2,23 16,20.6 11.8,23 12.6,18.4 9.2,15.2 13.8,14.6" fill="currentColor"/>
-  <path d="M16 25.5V29M11.5 28L16 26.5L20.5 28" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-skull-hazard" viewBox="0 0 32 32" fill="none">
-    <path d="M16 4.5C9.8 4.5 6 8.8 6 14.5C6 18.2 8 21 10.5 22.4V26.2C10.5 27 11.2 27.5 12 27.5H20C20.8 27.5 21.5 27 21.5 26.2V22.4C24 21 26 18.2 26 14.5C26 8.8 22.2 4.5 16 4.5Z" fill="currentColor" fill-opacity="0.14" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <polygon points="10.2,14.5 14,13.5 13.4,17 10.6,17" fill="currentColor"/>
-  <polygon points="21.8,14.5 18,13.5 18.6,17 21.4,17" fill="currentColor"/>
-  <path d="M16 18.5L14.8 21H17.2L16 18.5Z" fill="currentColor"/>
-  <path d="M13.5 24.5V27.5M16 24.5V27.5M18.5 24.5V27.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-tail-length" viewBox="0 0 32 32" fill="none">
-    <path d="M7.5 24.5C12.5 24.5 12 17.5 16 16C20 14.5 19.5 7.5 24.5 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
-  <circle cx="24.5" cy="7.5" r="3.4" fill="currentColor" fill-opacity="0.26" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
-  <circle cx="24.5" cy="7.5" r="1.2" fill="currentColor"/>
-  <circle cx="19.8" cy="12.5" r="2.8" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-  <circle cx="15" cy="17.2" r="2.5" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-  <circle cx="10.4" cy="22" r="2.1" fill="currentColor" fill-opacity="0.14" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-  <path d="M8.5 24L5 27" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-timer" viewBox="0 0 32 32" fill="none">
-    <path d="M12.5 4H19.5M16 4V7.5M23.5 9L25.8 6.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="18" r="10.2" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
-  <path d="M16 11.2V18L20.8 20.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="18" r="1.6" fill="currentColor"/>
-  <path d="M16 9.8V10.8M24.2 18H23.2M16 26.2V25.2M7.8 18H8.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-biolab" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="11.5" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="8.6" stroke="currentColor" stroke-width="1.3" stroke-dasharray="4 3" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
-  <circle cx="13.2" cy="14" r="2.8" fill="currentColor" fill-opacity="0.26" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
-  <circle cx="13.2" cy="14" r="1" fill="currentColor"/>
-  <circle cx="19.5" cy="18.2" r="2.3" fill="currentColor" fill-opacity="0.26" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
-  <circle cx="19.2" cy="12" r="1.4" fill="currentColor"/>
-  <circle cx="12.8" cy="20.4" r="1.3" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-camera-dna" viewBox="0 0 32 32" fill="none">
-    <path d="M4.5 10.5V6.5C4.5 5.4 5.4 4.5 6.5 4.5H10.5M21.5 4.5H25.5C26.6 4.5 27.5 5.4 27.5 6.5V10.5M27.5 21.5V25.5C27.5 26.6 26.6 27.5 25.5 27.5H21.5M10.5 27.5H6.5C5.4 27.5 4.5 26.6 4.5 25.5V21.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M12.2 8.8C12.2 12.8 19.8 13.2 19.8 16C19.8 18.8 12.2 19.2 12.2 23.2M19.8 8.8C19.8 12.8 12.2 13.2 12.2 16C12.2 18.8 19.8 19.2 19.8 23.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <path d="M13 10.8H19M13 21.2H19" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="1.4" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-gear-settings" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="4.5" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
-    <path d="M16 3.5V6.5M16 25.5V28.5M3.5 16H6.5M25.5 16H28.5M7.2 7.2L9.3 9.3M22.7 22.7L24.8 24.8M7.2 24.8L9.3 22.7M22.7 9.3L24.8 7.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-    <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-pause" viewBox="0 0 32 32" fill="none">
-    <path d="M8.5 7.5L10.5 5.5H13.5V26.5H10.5L8.5 24.5V7.5Z" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M18.5 5.5H21.5L23.5 7.5V24.5L21.5 26.5H18.5V5.5Z" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-ambush" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="10.5" stroke="currentColor" stroke-width="1.4" stroke-dasharray="3.5 3.5" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="3" fill="currentColor" fill-opacity="0.28" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="1.1" fill="currentColor"/>
-  <path d="M5 5L11.5 11.5M11.5 7.5V11.5H7.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M27 5L20.5 11.5M20.5 7.5V11.5H24.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M27 27L20.5 20.5M20.5 24.5V20.5H24.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M5 27L11.5 20.5M11.5 24.5V20.5H7.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-feast" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="17.5" r="7.5" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
-  <circle cx="13.5" cy="16" r="2.2" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke"/>
-  <circle cx="18.6" cy="19.2" r="2.4" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1.4" vector-effect="non-scaling-stroke"/>
-  <circle cx="18.2" cy="14" r="1.3" fill="currentColor"/>
-  <path d="M16 10V5M11.5 11.5L8 7.5M20.5 11.5L24 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="4.5" r="1.6" fill="currentColor"/>
-  <circle cx="7.5" cy="7" r="1.4" fill="currentColor"/>
-  <circle cx="24.5" cy="7" r="1.4" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-fury" viewBox="0 0 32 32" fill="none">
-    <path d="M5.5 11L13.5 14.8L11.5 18L5.5 14.5V11Z" fill="currentColor"/>
-  <path d="M26.5 11L18.5 14.8L20.5 18L26.5 14.5V11Z" fill="currentColor"/>
-  <path d="M4.5 7.5L13 12.2M27.5 7.5L19 12.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <path d="M7.5 21.5L11 26.5L14 22L16 26.5L18 22L21 26.5L24.5 21.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M16 4V8.5M10 5L11.5 7.5M22 5L20.5 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-wave-tide" viewBox="0 0 32 32" fill="none">
-    <path d="M3.5 20.5C7 20.5 9.5 17 12.2 12.5C14.8 8.2 19.5 6.5 23.8 8.2C26.5 9.2 27.5 11.8 25.5 13.8C23.8 15.5 21 14.5 21 12.5C21 11.5 21.8 11 22.6 11.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <path d="M3.5 20.5C8 20.5 11 23 15.8 23C20.5 23 24 20.5 28.5 20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <path d="M5.5 26C9.5 26 12.5 27.5 16.5 27.5C20.5 27.5 23.5 26 27 26" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-  <circle cx="12" cy="8" r="1.4" fill="currentColor"/>
-  <circle cx="8" cy="12" r="1.1" fill="currentColor" fill-opacity="0.8"/>
-  </symbol>
-<symbol id="ico-hp-vial-frame" viewBox="0 0 320 56" fill="none">
-    <!-- Левый и правый металлические био-зажимы колбы -->
-    <path d="M4 16L12 8H28V48H12L4 40V16Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-    <path d="M316 16L308 8H292V48H308L316 40V16Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-    <path d="M14 14V42M21 14V42M299 14V42M306 14V42" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-    <!-- Стеклянный цилиндр ампулы -->
-    <rect x="24" y="12" width="272" height="32" rx="14" fill="currentColor" fill-opacity="0.06" stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke"/>
-    <!-- Верхний стеклянный блик на колбе -->
-    <path d="M40 17.5H280" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.42"/>
-    <path d="M44 39.5H120M200 39.5H276" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.35"/>
-    <!-- Мерные деления микроскопа (10 секций) -->
-    <g stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.78" vector-effect="non-scaling-stroke">
-      <path d="M56 12V20M82 12V18M108 12V20M134 12V18M160 12V23M186 12V18M212 12V20M238 12V18M264 12V20"/>
-      <path d="M56 44V38M108 44V38M160 44V36M212 44V38M264 44V38"/>
-    </g>
-    <!-- Клапанные болты на скобах -->
-    <circle cx="11" cy="28" r="2.2" fill="currentColor"/>
-    <circle cx="309" cy="28" r="2.2" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-xp-conduit" viewBox="0 0 320 44" fill="none">
-    <!-- Левый нагнетательный био-насос -->
-    <polygon points="4,22 14,7 36,7 42,22 36,37 14,37" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-    <circle cx="23" cy="22" r="5.5" fill="currentColor" fill-opacity="0.28" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-    <circle cx="23" cy="22" r="2" fill="currentColor"/>
-    <!-- Правый приёмный узел метаморфоза -->
-    <polygon points="316,22 306,7 284,7 278,22 284,37 306,37" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-    <polygon points="297,15 304,22 297,29 290,22" fill="currentColor" fill-opacity="0.35" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
-    <!-- Питательная трубка-кондуит -->
-    <rect x="38" y="13" width="244" height="18" rx="9" fill="currentColor" fill-opacity="0.06" stroke="currentColor" stroke-width="1.9" vector-effect="non-scaling-stroke"/>
-    <!-- Кольцевые манжеты давления по длине трубки -->
-    <path d="M96 10V34M160 9V35M224 10V34" stroke="currentColor" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-    <!-- Шевроны направления потока биомассы -->
-    <path d="M64 18L69 22L64 26M126 18L131 22L126 26M190 18L195 22L190 26M252 18L257 22L252 26" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
-    <!-- Стеклянный блик -->
-    <path d="M48 16.5H272" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.36"/>
-  </symbol>
-
-  <symbol id="ico-petri-radar" viewBox="0 0 160 160" fill="none">
-    <!-- Внешний тактический обод микроскопа и чашки Петри -->
-    <circle cx="80" cy="80" r="76" stroke="currentColor" stroke-width="2.2" stroke-opacity="0.85" vector-effect="non-scaling-stroke"/>
-    <circle cx="80" cy="80" r="71" stroke="currentColor" stroke-width="1.2" stroke-dasharray="12 6 3 6" stroke-opacity="0.5" vector-effect="non-scaling-stroke"/>
-    <!-- 4 угловых зажима предметного столика микроскопа -->
-    <path d="M80 2V10M80 150V158M2 80H10M150 80H158" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-    <path d="M25 25L31 31M135 25L129 31M135 135L129 129M25 135L31 129" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
-    <!-- Градусные микро-риски по внешнему периметру -->
-    <path d="M104 8L102 14M132 26L127 31M152 54L146 57M152 106L146 103M132 134L127 129M104 152L102 146M56 152L58 146M28 134L33 129M8 106L14 103M8 54L14 57M28 26L33 31M56 8L58 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
-    <circle cx="80" cy="80" r="77.5" stroke="currentColor" stroke-width="0.8" stroke-opacity="0.25" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-petri-radar-sweep" viewBox="0 0 160 160" fill="none">
-    <defs>
-      <linearGradient id="sweep-grad" x1="80" y1="14" x2="136" y2="62" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stop-color="currentColor" stop-opacity="0.52"/>
-        <stop offset="55%" stop-color="currentColor" stop-opacity="0.16"/>
-        <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-    <!-- Сектор затухающего эха радара (65 градусов) -->
-    <path d="M80 80V13A67 67 0 0 1 140.5 51.5L80 80Z" fill="url(#sweep-grad)"/>
-    <path d="M80 80V13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-    <circle cx="80" cy="13" r="3" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-book-codex" viewBox="0 0 32 32" fill="none">
-    <path d="M5 6.5C8.5 5 12.5 5.5 16 7.5C19.5 5.5 23.5 5 27 6.5V24.5C23.5 23 19.5 23.5 16 25.5C12.5 23.5 8.5 23 5 24.5V6.5Z" fill="currentColor" fill-opacity="0.14" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-    <path d="M16 7.5V25.5M9 11.5H13M9 15.5H13M19 11.5H23M19 15.5H23" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-help-question" viewBox="0 0 32 32" fill="none">
-    <circle cx="16" cy="16" r="12" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
-    <path d="M12.5 12.5C12.5 10.5 14 9 16 9C18 9 19.5 10.5 19.5 12.2C19.5 14 17.5 14.8 16.5 15.8C16 16.3 16 17 16 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-    <circle cx="16" cy="22" r="1.4" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-play" viewBox="0 0 32 32" fill="none">
-    <path d="M9 6.5L26 16L9 25.5L11.5 16L9 6.5Z" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-    <circle cx="15.5" cy="16" r="1.8" fill="currentColor"/>
-  </symbol>
-
-  <symbol id="ico-sound-on" viewBox="0 0 32 32" fill="none">
-    <path d="M5 12.5H9.5L16.5 7V25L9.5 19.5H5C4.4 19.5 4 19.1 4 18.5V13.5C4 12.9 4.4 12.5 5 12.5Z" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-    <path d="M20.5 11.8C22.4 13.8 22.4 18.2 20.5 20.2M24 8.5C27.5 12.5 27.5 19.5 24 23.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-sound-mute" viewBox="0 0 32 32" fill="none">
-    <path d="M5 12.5H9.5L16.5 7V25L9.5 19.5H5C4.4 19.5 4 19.1 4 18.5V13.5C4 12.9 4.4 12.5 5 12.5Z" fill="currentColor" fill-opacity="0.14" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-    <path d="M21 12.5L27.5 19M27.5 12.5L21 19" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
-  <symbol id="ico-fullscreen" viewBox="0 0 32 32" fill="none">
-    <path d="M4.5 11.5V6.5L6.5 4.5H11.5M20.5 4.5H25.5L27.5 6.5V11.5M27.5 20.5V25.5L25.5 27.5H20.5M11.5 27.5H6.5L4.5 25.5V20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-    <path d="M11 11L6.5 6.5M21 11L25.5 6.5M21 21L25.5 25.5M11 21L6.5 25.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-    <circle cx="16" cy="16" r="2.2" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-  </symbol>
-
+  <!-- EVOTOON PACK 2 (41 ICON SYMBOLS + 6 HUD/UI SYMBOLS) -->
+  <symbol id="ico-vermis" viewBox="0 0 32 32"><defs><linearGradient id="p2_dv_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fda4af"/><stop offset="52%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></linearGradient></defs><path d="M7 24 C6 13 13 5 25 6 C21 12 20 17 24 22 C18 26 11 27 7 24 Z" fill="url(#p2_dv_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="17" cy="14" r="3.6" fill="#fef08a" stroke="#160e26" stroke-width="1.8"/>
+           <ellipse cx="17.5" cy="14" rx="1.2" ry="2.6" fill="#160e26"/>
+           <polygon points="22,19 28,17 24,23" fill="#fff" stroke="#160e26" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-chimera" viewBox="0 0 32 32"><defs><linearGradient id="p2_dc_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></linearGradient></defs><polygon points="16,3 27,10 25,24 16,29 7,24 5,10" fill="url(#p2_dc_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <polygon points="16,8 21,15 16,24 11,15" fill="#fff7ed" opacity="0.65" stroke="#160e26" stroke-width="1.8" stroke-linejoin="round"/>
+           <path d="M7 10 L3 5 M25 10 L29 5" stroke="#160e26" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="ico-mycelium" viewBox="0 0 32 32"><defs><radialGradient id="p2_dm_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#d9f99d"/><stop offset="58%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><rect x="12" y="18" width="8" height="10" rx="3" fill="#fef3c7" stroke="#160e26" stroke-width="2.2"/>
+           <path d="M4 19 C4 9 10 5 16 5 C22 5 28 9 28 19 Z" fill="url(#p2_dm_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="12" cy="12" r="2.4" fill="#fef08a" stroke="#160e26" stroke-width="1.4"/>
+           <circle cx="20" cy="13" r="2.6" fill="#fef08a" stroke="#160e26" stroke-width="1.4"/></symbol>
+  <symbol id="ico-symbiont" viewBox="0 0 32 32"><defs><linearGradient id="p2_ds_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="52%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs><polygon points="16,3 26,14 20,28 12,28 6,14" fill="url(#p2_ds_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <polygon points="16,3 20,14 16,28 12,14" fill="#fff" opacity="0.5" stroke="#160e26" stroke-width="1.6"/>
+           <circle cx="16" cy="14" r="2.2" fill="#fef08a"/></symbol>
+  <symbol id="ico-hybrid-plasma-leviathan" viewBox="0 0 48 48"><defs><linearGradient id="p2_h1_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient><linearGradient id="p2_h1_b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#6366f1"/></linearGradient></defs><circle cx="24" cy="24" r="20" fill="url(#p2_h1_b)" stroke="#160e26" stroke-width="3"/>
+           <path d="M10 26 C12 12 24 8 38 14 C32 20 34 28 38 34 C26 40 12 36 10 26 Z" fill="url(#p2_h1_a)" stroke="#160e26" stroke-width="2.8" stroke-linejoin="round"/>
+           <circle cx="22" cy="20" r="3.5" fill="#fef08a" stroke="#160e26" stroke-width="2"/>
+           <polygon points="31,20 39,24 31,28" fill="#fff" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-hybrid-ouroboros" viewBox="0 0 48 48"><defs><linearGradient id="p2_h2_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="52%" stop-color="#10b981"/><stop offset="100%" stop-color="#0ea5e9"/></linearGradient></defs><circle cx="24" cy="24" r="16" stroke="url(#p2_h2_a)" stroke-width="8"/>
+           <circle cx="24" cy="24" r="20" stroke="#160e26" stroke-width="2.6"/>
+           <circle cx="24" cy="24" r="12" stroke="#160e26" stroke-width="2.6"/>
+           <!-- Serpent head -->
+           <path d="M20 4 L34 9 L22 15 Z" fill="#fef08a" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="25" cy="8.5" r="1.6" fill="#160e26"/></symbol>
+  <symbol id="ico-hybrid-phase-serpent" viewBox="0 0 48 48"><defs><linearGradient id="p2_h3_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="52%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs><path d="M9 36 C12 22 24 28 24 18 C24 12 30 8 40 10 L34 20 C29 19 30 30 22 36 C16 40 12 40 9 36 Z" fill="url(#p2_h3_a)" stroke="#160e26" stroke-width="2.8" stroke-linejoin="round"/>
+           <circle cx="32" cy="13" r="2.2" fill="#fef08a" stroke="#160e26" stroke-width="1.4"/>
+           <path d="M8 14 H18 M30 38 H40" stroke="#67e8f9" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="ico-hybrid-spore-reactor" viewBox="0 0 48 48"><defs><radialGradient id="p2_h4_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#84cc16"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><circle cx="24" cy="24" r="19" fill="#14532d" stroke="#160e26" stroke-width="3"/>
+           <circle cx="24" cy="13" r="6.5" fill="url(#p2_h4_a)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="14" cy="30" r="6.5" fill="url(#p2_h4_a)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="34" cy="30" r="6.5" fill="url(#p2_h4_a)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="24" cy="24" r="5" fill="#fef9c3" stroke="#160e26" stroke-width="2.4"/></symbol>
+  <symbol id="ico-hybrid-ion-colossus" viewBox="0 0 48 48"><defs><linearGradient id="p2_h5_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde68a"/><stop offset="52%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#92400e"/></linearGradient><radialGradient id="p2_h5_c" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#ffffff"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#2563eb"/></radialGradient></defs><polygon points="24,4 42,14 40,34 24,44 8,34 6,14" fill="url(#p2_h5_a)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <circle cx="24" cy="24" r="10" fill="url(#p2_h5_c)" stroke="#160e26" stroke-width="2.6"/>
+           <polygon points="25,16 19,25 24,25 23,32 29,23 24,23" fill="#fef08a"/></symbol>
+  <symbol id="ico-hybrid-psi-web" viewBox="0 0 48 48"><defs><radialGradient id="p2_h6_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#f5d0fe"/><stop offset="58%" stop-color="#a855f7"/><stop offset="100%" stop-color="#4c1d95"/></radialGradient></defs><polygon points="24,6 40,15 40,33 24,42 8,33 8,15" fill="#2e1065" stroke="#c084fc" stroke-width="2.8" stroke-linejoin="round"/>
+           <path d="M24 6 V42 M8 15 L40 33 M40 15 L8 33" stroke="#e879f9" stroke-width="2.2"/>
+           <circle cx="24" cy="24" r="8" fill="url(#p2_h6_a)" stroke="#160e26" stroke-width="2.6"/>
+           <circle cx="24" cy="24" r="3" fill="#fef08a"/></symbol>
+  <symbol id="ico-weapon-spikes" viewBox="0 0 32 32"><defs><linearGradient id="p2_ws_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#fb923c"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><polygon points="6,11 28,6 14,17" fill="url(#p2_ws_a)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/>
+           <polygon points="4,21 29,16 14,26" fill="url(#p2_ws_a)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/>
+           <polygon points="10,27 26,25 16,30" fill="#fde047" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-weapon-orbs" viewBox="0 0 32 32"><defs><radialGradient id="p2_wo_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#2563eb"/></radialGradient></defs><circle cx="16" cy="16" r="10.5" stroke="#67e8f9" stroke-width="2.2" stroke-dasharray="4 3"/>
+           <circle cx="16" cy="5.5" r="4" fill="url(#p2_wo_a)" stroke="#160e26" stroke-width="2"/>
+           <circle cx="7" cy="21" r="4" fill="url(#p2_wo_a)" stroke="#160e26" stroke-width="2"/>
+           <circle cx="25" cy="21" r="4" fill="url(#p2_wo_a)" stroke="#160e26" stroke-width="2"/>
+           <circle cx="16" cy="16" r="3" fill="#fef08a" stroke="#160e26" stroke-width="1.8"/></symbol>
+  <symbol id="ico-weapon-nova" viewBox="0 0 32 32"><defs><radialGradient id="p2_wn_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#f472b6"/><stop offset="100%" stop-color="#9333ea"/></radialGradient></defs><path d="M16 2 L19 10 L28 7 L23 15 L30 20 L21 22 L22 30 L16 24 L10 30 L11 22 L2 20 L9 15 L4 7 L13 10 Z" fill="url(#p2_wn_a)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/>
+           <circle cx="16" cy="16" r="4.5" fill="#fff" stroke="#160e26" stroke-width="1.8"/></symbol>
+  <symbol id="ico-weapon-aura" viewBox="0 0 32 32"><defs><radialGradient id="p2_wa_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#d9f99d"/><stop offset="58%" stop-color="#4ade80"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_wa_a)" opacity="0.35" stroke="#84cc16" stroke-width="2.6" stroke-dasharray="4 3"/>
+           <circle cx="16" cy="16" r="7" fill="url(#p2_wa_a)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="14" cy="14" r="1.8" fill="#fef08a"/></symbol>
+  <symbol id="ico-skill-call" viewBox="0 0 32 32"><defs><radialGradient id="p2_sc_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#2563eb"/></radialGradient></defs><path d="M5 16 A11 11 0 0 1 16 5" stroke="#67e8f9" stroke-width="2.6" stroke-linecap="round"/>
+           <path d="M27 16 A11 11 0 0 1 16 27" stroke="#67e8f9" stroke-width="2.6" stroke-linecap="round"/>
+           <path d="M16 5 A11 11 0 0 1 27 16" stroke="#fef08a" stroke-width="2.6" stroke-linecap="round"/>
+           <path d="M16 27 A11 11 0 0 1 5 16" stroke="#fef08a" stroke-width="2.6" stroke-linecap="round"/>
+           <circle cx="16" cy="16" r="6" fill="url(#p2_sc_a)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="16" cy="16" r="2.2" fill="#fff"/></symbol>
+  <symbol id="ico-node-gen" viewBox="0 0 32 32"><defs><radialGradient id="p2_ng_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></radialGradient></defs><polygon points="16,3 28,10 28,22 16,29 4,22 4,10" fill="url(#p2_ng_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <polygon points="17,8 11,17 16,17 15,24 21,15 16,15" fill="#fff" stroke="#160e26" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-node-amp" viewBox="0 0 32 32"><defs><radialGradient id="p2_na_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fda4af"/><stop offset="58%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_na_a)" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M16 8 L23 16 H19 V24 H13 V16 H9 Z" fill="#fef08a" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-node-magnet" viewBox="0 0 32 32"><defs><linearGradient id="p2_nm_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><circle cx="16" cy="16" r="12" fill="#1e293b" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M10 10 V17 C10 21 12.5 23.5 16 23.5 C19.5 23.5 22 21 22 17 V10 H18.5 V17 C18.5 18.8 17.4 20 16 20 C14.6 20 13.5 18.8 13.5 17 V10 Z" fill="url(#p2_nm_a)" stroke="#160e26" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-node-mutagen" viewBox="0 0 32 32"><defs><radialGradient id="p2_nmu_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#e9d5ff"/><stop offset="58%" stop-color="#a855f7"/><stop offset="100%" stop-color="#581c87"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_nmu_a)" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M11 9 C21 12 21 16 11 19 C21 22 21 24 11 25" stroke="#fef08a" stroke-width="2.5" stroke-linecap="round"/>
+           <path d="M21 9 C11 12 11 16 21 19 C11 22 11 24 21 25" stroke="#67e8f9" stroke-width="2.5" stroke-linecap="round"/></symbol>
+  <symbol id="ico-node-incubator" viewBox="0 0 32 32"><defs><radialGradient id="p2_ni_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#bbf7d0"/><stop offset="58%" stop-color="#10b981"/><stop offset="100%" stop-color="#065f46"/></radialGradient></defs><path d="M16 4 C23 4 27 11 26 20 C25 25 21 28 16 28 C11 28 7 25 6 20 C5 11 9 4 16 4 Z" fill="url(#p2_ni_a)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="16" cy="17" r="5.5" fill="#fef08a" stroke="#160e26" stroke-width="2"/>
+           <circle cx="14.5" cy="15.5" r="1.5" fill="#fff"/></symbol>
+  <symbol id="ico-timer" viewBox="0 0 32 32"><defs><radialGradient id="p2_st1" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0284c7"/></radialGradient></defs><rect x="13" y="3" width="6" height="4" rx="1.5" fill="#fbbf24" stroke="#160e26" stroke-width="2"/>
+           <circle cx="16" cy="18" r="11" fill="url(#p2_st1)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="16" cy="18" r="7.5" fill="#f8fafc"/>
+           <path d="M16 13 V18 L20 20" stroke="#160e26" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-skull-hazard" viewBox="0 0 32 32"><defs><radialGradient id="p2_st2" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fff1f2"/><stop offset="58%" stop-color="#fecdd3"/><stop offset="100%" stop-color="#fda4af"/></radialGradient></defs><path d="M16 4 C23 4 27 9 27 15 C27 19 24 22 22 23 V27 H10 V23 C8 22 5 19 5 15 C5 9 9 4 16 4 Z" fill="url(#p2_st2)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="12" cy="15" r="2.8" fill="#160e26"/>
+           <circle cx="20" cy="15" r="2.8" fill="#160e26"/>
+           <path d="M14 23 V27 M18 23 V27" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-tail-length" viewBox="0 0 32 32"><defs><linearGradient id="p2_st3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><circle cx="7" cy="23" r="3.5" fill="#a7f3d0" stroke="#160e26" stroke-width="2"/>
+           <circle cx="13" cy="19" r="4.2" fill="#6ee7b7" stroke="#160e26" stroke-width="2"/>
+           <circle cx="20" cy="14" r="5" fill="url(#p2_st3)" stroke="#160e26" stroke-width="2.2"/>
+           <polygon points="24,10 30,6 27,13" fill="#fef08a" stroke="#160e26" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-node-dominance" viewBox="0 0 32 32"><defs><linearGradient id="p2_st4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs><line x1="16" y1="8" x2="8" y2="23" stroke="#38bdf8" stroke-width="2.6"/>
+           <line x1="16" y1="8" x2="24" y2="23" stroke="#38bdf8" stroke-width="2.6"/>
+           <line x1="8" y1="23" x2="24" y2="23" stroke="#38bdf8" stroke-width="2.6"/>
+           <circle cx="16" cy="8" r="4.5" fill="url(#p2_st4)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="8" cy="23" r="4" fill="#34d399" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="24" cy="23" r="4" fill="#34d399" stroke="#160e26" stroke-width="2.2"/></symbol>
+  <symbol id="ico-macro-scale" viewBox="0 0 32 32"><defs><linearGradient id="p2_st5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="52%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#6366f1"/></linearGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_st5)" opacity="0.25" stroke="#38bdf8" stroke-width="2.4"/>
+           <circle cx="16" cy="16" r="6" fill="url(#p2_st5)" stroke="#160e26" stroke-width="2.2"/>
+           <path d="M21 11 L27 5 M22 5 H27 V10" stroke="#fef08a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-damage-nova" viewBox="0 0 32 32"><defs><linearGradient id="p2_st6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><polygon points="16,2 19,11 29,8 22,16 29,24 19,21 16,30 13,21 3,24 10,16 3,8 13,11" fill="url(#p2_st6)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-record-badge" viewBox="0 0 32 32"><defs><linearGradient id="p2_st7" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="52%" stop-color="#facc15"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><polygon points="10,20 7,30 16,26 25,30 22,20" fill="#f43f5e" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/>
+           <circle cx="16" cy="13" r="9.5" fill="url(#p2_st7)" stroke="#160e26" stroke-width="2.4"/>
+           <polygon points="16,7 18,11 22,11.5 19,14.5 20,18.5 16,16.5 12,18.5 13,14.5 10,11.5 14,11" fill="#fff" stroke="#160e26" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-wave-tide" viewBox="0 0 32 32"><defs><linearGradient id="p2_ev1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="52%" stop-color="#0284c7"/><stop offset="100%" stop-color="#1e3a8a"/></linearGradient></defs><path d="M3 22 C7 10 15 6 25 9 C19 12 20 17 29 19 C25 26 11 29 3 22 Z" fill="url(#p2_ev1)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <path d="M9 18 Q14 13 20 14" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity="0.8"/></symbol>
+  <symbol id="ico-ambush" viewBox="0 0 32 32"><defs><radialGradient id="p2_ev2" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fda4af"/><stop offset="58%" stop-color="#e11d48"/><stop offset="100%" stop-color="#4c0519"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_ev2)" stroke="#160e26" stroke-width="2.4"/>
+           <polygon points="8,13 15,16 10,19" fill="#fef08a" stroke="#160e26" stroke-width="1.6" stroke-linejoin="round"/>
+           <polygon points="24,13 17,16 22,19" fill="#fef08a" stroke="#160e26" stroke-width="1.6" stroke-linejoin="round"/>
+           <path d="M16 2 V7 M16 25 V30 M2 16 H7 M25 16 H30" stroke="#fef08a" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="ico-fury" viewBox="0 0 32 32"><defs><linearGradient id="p2_ev3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><path d="M16 3 C22 10 26 14 26 20 C26 26 21.5 29 16 29 C10.5 29 6 26 6 20 C6 15 9 12 11 10 C11 13 13 14 14 12 C14 8 15 5 16 3 Z" fill="url(#p2_ev3)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <path d="M16 15 C19 19 20 24 16 26 C12 24 13 19 16 15 Z" fill="#fef9c3"/></symbol>
+  <symbol id="ico-feast" viewBox="0 0 32 32"><defs><radialGradient id="p2_ev4a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="58%" stop-color="#facc15"/><stop offset="100%" stop-color="#d97706"/></radialGradient><radialGradient id="p2_ev4b" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#bbf7d0"/><stop offset="58%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><circle cx="11" cy="20" r="6.5" fill="url(#p2_ev4b)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="22" cy="19" r="5.5" fill="url(#p2_ev4a)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="16" cy="10" r="6.5" fill="url(#p2_ev4a)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="14" cy="8" r="1.8" fill="#fff"/>
+           <circle cx="9.5" cy="18" r="1.6" fill="#fff"/></symbol>
+  <symbol id="ico-biolab" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#bbf7d0"/><stop offset="52%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></linearGradient></defs><path d="M12 5 H20 V11 L26 23 C27 26 25 28 22 28 H10 C7 28 5 26 6 23 L12 11 Z" fill="url(#p2_ct1)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <rect x="10" y="3" width="12" height="3.5" rx="1.5" fill="#38bdf8" stroke="#160e26" stroke-width="2"/>
+           <circle cx="14" cy="22" r="2.2" fill="#fef08a"/>
+           <circle cx="19" cy="19" r="1.6" fill="#fff"/></symbol>
+  <symbol id="ico-camera-dna" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#cbd5e1"/><stop offset="52%" stop-color="#64748b"/><stop offset="100%" stop-color="#334155"/></linearGradient></defs><path d="M5 10 H10 L12 6 H20 L22 10 H27 C28.5 10 29 11 29 12.5 V25 C29 26.5 28 27.5 26.5 27.5 H5.5 C4 27.5 3 26.5 3 25 V12.5 C3 11 3.5 10 5 10 Z" fill="url(#p2_ct2)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="16" cy="18.5" r="5.5" fill="#38bdf8" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="14.5" cy="17" r="1.8" fill="#fff"/>
+           <circle cx="24" cy="13.5" r="1.5" fill="#fef08a"/></symbol>
+  <symbol id="ico-pause" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs><rect x="6" y="5" width="7.5" height="22" rx="3.2" fill="url(#p2_ct3)" stroke="#160e26" stroke-width="2.4"/>
+           <rect x="18.5" y="5" width="7.5" height="22" rx="3.2" fill="url(#p2_ct3)" stroke="#160e26" stroke-width="2.4"/></symbol>
+  <symbol id="ico-play" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#86efac"/><stop offset="52%" stop-color="#10b981"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M8 5 L27 16 L8 27 Z" fill="url(#p2_ct4)" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/>
+           <path d="M11 10 L21 16" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.7"/></symbol>
+  <symbol id="ico-sound-on" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><path d="M4 12 H10 L18 6 V26 L10 20 H4 Z" fill="url(#p2_ct5)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <path d="M22 12 A5.5 5.5 0 0 1 22 20" stroke="#fef08a" stroke-width="2.6" stroke-linecap="round"/>
+           <path d="M25.5 8.5 A10 10 0 0 1 25.5 23.5" stroke="#4ade80" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="ico-sound-mute" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#475569"/></linearGradient></defs><path d="M4 12 H10 L18 6 V26 L10 20 H4 Z" fill="url(#p2_ct6)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <path d="M22 12 L29 19 M29 12 L22 19" stroke="#f43f5e" stroke-width="3" stroke-linecap="round"/></symbol>
+  <symbol id="ico-fullscreen" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct7" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient></defs><g stroke="url(#p2_ct7)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+             <path d="M5 12 V5 H12"/>
+             <path d="M20 5 H27 V12"/>
+             <path d="M27 20 V27 H20"/>
+             <path d="M12 27 H5 V20"/>
+           </g>
+           <rect x="11" y="11" width="10" height="10" rx="2.5" fill="#fef08a" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-book-codex" viewBox="0 0 32 32"><defs><linearGradient id="p2_in1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#c084fc"/><stop offset="52%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#4c1d95"/></linearGradient></defs><path d="M4 7 C9 5 13 6 16 8 C19 6 23 5 28 7 V25 C23 23 19 24 16 26 C13 24 9 23 4 25 Z" fill="url(#p2_in1)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <line x1="16" y1="8" x2="16" y2="26" stroke="#160e26" stroke-width="2.2"/>
+           <path d="M8 12 H13 M8 16 H13 M19 12 H24 M19 16 H24" stroke="#fef08a" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="ico-help-question" viewBox="0 0 32 32"><defs><radialGradient id="p2_in2" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#bae6fd"/><stop offset="58%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#1d4ed8"/></radialGradient></defs><circle cx="16" cy="16" r="12.5" fill="url(#p2_in2)" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M12 12 C12 9 14 8 16 8 C18.5 8 20 9.5 20 11.5 C20 13.5 18 14.5 16.5 15.5 C15.8 16 15.5 16.8 15.5 18" stroke="#fef08a" stroke-width="3" stroke-linecap="round"/>
+           <circle cx="15.8" cy="23" r="2" fill="#fef08a"/></symbol>
+  <symbol id="ico-gear-settings" viewBox="0 0 32 32"><defs><linearGradient id="p2_in3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e2e8f0"/><stop offset="52%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#475569"/></linearGradient></defs><path d="M14 3 H18 L19 7 C20.5 7.4 21.8 8 23 9 L26.5 7.2 L29 10.7 L26.2 13.5 C26.6 15 26.6 17 26.2 18.5 L29 21.3 L26.5 24.8 L23 23 C21.8 24 20.5 24.6 19 25 L18 29 H14 L13 25 C11.5 24.6 10.2 24 9 23 L5.5 24.8 L3 21.3 L5.8 18.5 C5.4 17 5.4 15 5.8 13.5 L3 10.7 L5.5 7.2 L9 9 C10.2 8 11.5 7.4 13 7 Z" fill="url(#p2_in3)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/>
+           <circle cx="16" cy="16" r="4.8" fill="#38bdf8" stroke="#160e26" stroke-width="2.2"/></symbol>
+  <symbol id="ico-corner-frame" viewBox="0 0 48 48"><defs><linearGradient id="p2_cf_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#0ea5e9"/></linearGradient></defs><path d="M6 42 V14 C6 9 9 6 14 6 H42 L34 14 H16 C14.5 14 14 14.5 14 16 V34 Z" fill="url(#p2_cf_a)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <circle cx="14" cy="14" r="4" fill="#fef08a" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-scale-bracket" viewBox="0 0 24 48"><defs><linearGradient id="p2_sb_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient></defs><path d="M20 4 H10 C6 4 4 7 4 12 V36 C4 41 6 44 10 44 H20 L16 38 H11 V10 H16 Z" fill="url(#p2_sb_a)" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/>
+           <circle cx="7.5" cy="24" r="3" fill="#fef08a" stroke="#160e26" stroke-width="1.8"/></symbol>
+  <symbol id="ico-hp-vial-frame" viewBox="0 0 320 56"><defs><linearGradient id="p2_hp_m" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#475569"/><stop offset="52%" stop-color="#1e293b"/><stop offset="100%" stop-color="#0f172a"/></linearGradient><linearGradient id="p2_hp_c" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fda4af"/><stop offset="52%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></linearGradient></defs><!-- Left heart bio-cap -->
+           <rect x="6" y="10" width="32" height="36" rx="12" fill="url(#p2_hp_m)" stroke="#160e26" stroke-width="4.5"/>
+           <circle cx="22" cy="28" r="9" fill="url(#p2_hp_c)" stroke="#160e26" stroke-width="3"/>
+           <!-- Glass vial outer frame (hollow interior for bar fill) -->
+           <rect x="34" y="10" width="268" height="36" rx="18" fill="none" stroke="url(#p2_hp_m)" stroke-width="9"/>
+           <rect x="34" y="10" width="268" height="36" rx="18" fill="none" stroke="#160e26" stroke-width="3.5"/>
+           <!-- Measurement ticks & glass gloss -->
+           <path d="M90 12 V20 M144 12 V20 M198 12 V20 M252 12 V20" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+           <path d="M52 17 H282" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.35"/>
+           <!-- Right steel end-cap -->
+           <path d="M298 12 H310 C314 12 316 18 316 28 C316 38 314 44 310 44 H298 Z" fill="url(#p2_hp_m)" stroke="#160e26" stroke-width="4" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-xp-conduit" viewBox="0 0 320 44"><defs><linearGradient id="p2_xp_f" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#334155"/><stop offset="52%" stop-color="#1e293b"/><stop offset="100%" stop-color="#0f172a"/></linearGradient><linearGradient id="p2_xp_g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs><!-- Left glowing DNA connector -->
+           <polygon points="8,22 22,8 36,8 36,36 22,36" fill="url(#p2_xp_f)" stroke="#160e26" stroke-width="4" stroke-linejoin="round"/>
+           <circle cx="24" cy="22" r="5.5" fill="url(#p2_xp_g)" stroke="#160e26" stroke-width="2.5"/>
+           <!-- Conduit frame (hollow center) -->
+           <rect x="34" y="9" width="264" height="26" rx="13" fill="none" stroke="url(#p2_xp_f)" stroke-width="8"/>
+           <rect x="34" y="9" width="264" height="26" rx="13" fill="none" stroke="#160e26" stroke-width="3"/>
+           <!-- Conduit clamps -->
+           <rect x="112" y="5" width="10" height="34" rx="4" fill="url(#p2_xp_f)" stroke="#160e26" stroke-width="3"/>
+           <rect x="210" y="5" width="10" height="34" rx="4" fill="url(#p2_xp_f)" stroke="#160e26" stroke-width="3"/>
+           <!-- Right end valve -->
+           <circle cx="304" cy="22" r="10" fill="url(#p2_xp_g)" stroke="#160e26" stroke-width="3.5"/>
+           <circle cx="301" cy="19" r="2.8" fill="#fff"/></symbol>
+  <symbol id="ico-petri-radar" viewBox="0 0 160 160"><defs><radialGradient id="p2_rad_b" cx="42%" cy="38%" r="65%"><stop offset="0%" stop-color="#0f2942"/><stop offset="58%" stop-color="#091526"/><stop offset="100%" stop-color="#040a14"/></radialGradient><linearGradient id="p2_rad_r" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#64748b"/><stop offset="52%" stop-color="#334155"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs><circle cx="80" cy="80" r="74" fill="url(#p2_rad_r)" stroke="#160e26" stroke-width="5"/>
+           <circle cx="80" cy="80" r="64" fill="url(#p2_rad_b)" stroke="#160e26" stroke-width="4"/>
+           <!-- Radar rings & crosshair -->
+           <circle cx="80" cy="80" r="44" stroke="#22d3ee" stroke-width="1.8" stroke-dasharray="6 6" opacity="0.45"/>
+           <circle cx="80" cy="80" r="22" stroke="#22d3ee" stroke-width="1.5" opacity="0.45"/>
+           <line x1="16" y1="80" x2="144" y2="80" stroke="#38bdf8" stroke-width="1.5" opacity="0.35"/>
+           <line x1="80" y1="16" x2="80" y2="144" stroke="#38bdf8" stroke-width="1.5" opacity="0.35"/>
+           <!-- Rim rivets -->
+           <circle cx="80" cy="11" r="3.5" fill="#34d399" stroke="#160e26" stroke-width="2"/>
+           <circle cx="80" cy="149" r="3.5" fill="#34d399" stroke="#160e26" stroke-width="2"/>
+           <circle cx="11" cy="80" r="3.5" fill="#34d399" stroke="#160e26" stroke-width="2"/>
+           <circle cx="149" cy="80" r="3.5" fill="#34d399" stroke="#160e26" stroke-width="2"/>
+           <!-- Glass sheen -->
+           <path d="M36 42 A54 54 0 0 1 114 34" stroke="#fff" stroke-width="4.5" stroke-linecap="round" opacity="0.35"/></symbol>
+  <symbol id="ico-petri-radar-sweep" viewBox="0 0 160 160"><defs><linearGradient id="p2_swp_a" x1="80%" y1="20%" x2="20%" y2="80%"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient></defs><path d="M80 80 L80 18 A62 62 0 0 1 134 49 Z" fill="url(#p2_swp_a)" opacity="0.42"/>
+           <line x1="80" y1="80" x2="80" y2="18" stroke="#a7f3d0" stroke-width="3.5" stroke-linecap="round"/>
+           <circle cx="80" cy="80" r="5" fill="#6ee7b7" stroke="#160e26" stroke-width="2.5"/></symbol>
 
   <!-- EVOTOON PACK V4 UI SYMBOLS -->
   <symbol id="ico-weapon-mandibles" viewBox="0 0 64 64"><defs><linearGradient id="wm_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#fb923c"/><stop offset="100%" stop-color="#dc2626"/></linearGradient><linearGradient id="wm_b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fca5a5"/><stop offset="52%" stop-color="#ef4444"/><stop offset="100%" stop-color="#7f1d1d"/></linearGradient><radialGradient id="wm_g" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fbbf24"/><stop offset="58%" stop-color="#ea580c"/><stop offset="100%" stop-color="#450a0a"/></radialGradient></defs><circle cx="32" cy="34" r="24" fill="url(#wm_g)" opacity="0.22"/>

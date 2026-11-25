@@ -1,24 +1,12 @@
-<svg viewBox="0 0 256 256" width="256" height="256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="nova-ring" cx="50%" cy="50%" r="50%">
-      <stop offset="56%" stop-color="#FFFFFF" stop-opacity="0"/>
-      <stop offset="76%" stop-color="#FFFFFF" stop-opacity="0.42"/>
-      <stop offset="86%" stop-color="#FFFFFF" stop-opacity="0.96"/>
-      <stop offset="93%" stop-color="#FFFFFF" stop-opacity="0.3"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <!-- Основная световая волна давления -->
-  <circle cx="128" cy="128" r="122" fill="url(#nova-ring)"/>
-  <!-- Разорванный внешний фронт ударной волны -->
-  <path d="M84 22A114 114 0 0 1 198 38M234 86A114 114 0 0 1 218 198M172 234A114 114 0 0 1 58 218M22 170A114 114 0 0 1 38 58" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round"/>
-  <!-- Вторая зубчатая фрактальная дуга разрыва -->
-  <path d="M128 24L138 42L158 28L162 48L186 42L182 64L208 68L196 88L222 102L204 118L230 136L208 148L224 172L198 178L206 204L180 198L178 224L154 212L142 234L128 216L114 234L102 212L78 224L76 198L50 204L58 178L32 172L48 148L26 136L52 118L34 102L60 88L48 68L74 64L70 42L94 48L98 28L118 42L128 24Z" stroke="#FFFFFF" stroke-width="2.4" stroke-linejoin="round" stroke-opacity="0.88"/>
-  <!-- Радиальные разрывы материи (спицы импульса) -->
-  <g stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-opacity="0.72">
-    <path d="M128 8V34M128 222V248M8 128H34M222 128H248"/>
-    <path d="M44 44L64 64M192 192L212 212M212 44L192 64M64 192L44 212"/>
-  </g>
-  <!-- Внутренний эхо-контур -->
-  <circle cx="128" cy="128" r="82" stroke="#FFFFFF" stroke-width="2" stroke-dasharray="14 12" stroke-opacity="0.58"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><radialGradient id="p2_nov_r" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="58%" stop-color="#f472b6"/><stop offset="100%" stop-color="#7c3aed"/></radialGradient></defs><!-- Outer comic starburst shock ring -->
+           <circle cx="128" cy="128" r="112" stroke="url(#p2_nov_r)" stroke-width="20" opacity="0.88"/>
+           <circle cx="128" cy="128" r="112" stroke="#160e26" stroke-width="5" stroke-dasharray="28 16"/>
+           <circle cx="128" cy="128" r="88" stroke="#fef08a" stroke-width="7" stroke-dasharray="20 14" opacity="0.9"/>
+           <circle cx="128" cy="128" r="66" stroke="#38bdf8" stroke-width="4" opacity="0.55"/>
+           <!-- Radial speed streaks -->
+           <g stroke="#fff" stroke-width="5" stroke-linecap="round" opacity="0.85">
+             <line x1="128" y1="8" x2="128" y2="26"/>
+             <line x1="128" y1="230" x2="128" y2="248"/>
+             <line x1="8" y1="128" x2="26" y2="128"/>
+             <line x1="230" y1="128" x2="248" y2="128"/>
+           </g></svg>

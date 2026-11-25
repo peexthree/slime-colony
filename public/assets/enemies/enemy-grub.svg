@@ -1,27 +1,22 @@
-<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="grub-aura" cx="54%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.45"/>
-      <stop offset="65%" stop-color="#FFFFFF" stop-opacity="0.12"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="grub-body" x1="16" y1="64" x2="112" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.28"/>
-      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.62"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.92"/>
-    </linearGradient>
-  </defs>
-  <ellipse cx="64" cy="64" rx="56" ry="38" fill="url(#grub-aura)"/>
-  <!-- Предротовые жвала -->
-  <path d="M101 52C110 47 117 49 121 56M101 76C110 81 117 79 121 72" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
-  <!-- Тело личинки -->
-  <path d="M20 64C20 45 42 35 72 37C95 38.5 108 49 108 64C108 79 95 89.5 72 91C42 93 20 83 20 64Z" fill="url(#grub-body)" stroke="#FFFFFF" stroke-width="3"/>
-  <!-- 4 сегментные насечки -->
-  <path d="M40 42C45 52 45 76 40 86" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-opacity="0.85"/>
-  <path d="M58 38C64 50 64 78 58 90" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-opacity="0.9"/>
-  <path d="M76 38C82 50 82 78 76 90" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round"/>
-  <path d="M92 43C96 52 96 76 92 85" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"/>
-  <!-- Внутренний био-канал и ядро -->
-  <ellipse cx="68" cy="64" rx="22" ry="9" fill="#FFFFFF" fill-opacity="0.35"/>
-  <circle cx="84" cy="64" r="6.5" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><radialGradient id="p2_grub_b" cx="40%" cy="30%" r="68%"><stop offset="0%" stop-color="#fda4af"/><stop offset="58%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></radialGradient><radialGradient id="p2_grub_t" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fecdd3"/><stop offset="58%" stop-color="#fb7185"/><stop offset="100%" stop-color="#be123c"/></radialGradient></defs><!-- Rear tail segments (-X) -->
+           <ellipse cx="26" cy="64" rx="14" ry="16" fill="url(#p2_grub_t)" stroke="#160e26" stroke-width="5"/>
+           <ellipse cx="48" cy="64" rx="20" ry="24" fill="url(#p2_grub_t)" stroke="#160e26" stroke-width="5"/>
+           <!-- Front mandibles (+X) -->
+           <path d="M100 50 Q116 44 120 55 Q111 58 103 58 Z" fill="#fef08a" stroke="#160e26" stroke-width="4" stroke-linejoin="round"/>
+           <path d="M100 78 Q116 84 120 73 Q111 70 103 70 Z" fill="#fef08a" stroke="#160e26" stroke-width="4" stroke-linejoin="round"/>
+           <!-- Main head/thorax body -->
+           <ellipse cx="76" cy="64" rx="30" ry="32" fill="url(#p2_grub_b)" stroke="#160e26" stroke-width="5.5"/>
+           <!-- Cel shadow bottom -->
+           <path d="M52 78 C64 94 94 92 102 74 C92 84 68 86 52 78 Z" fill="#4c0519" opacity="0.35"/>
+           <!-- Glossy back shine -->
+           <ellipse cx="68" cy="46" rx="11" ry="5" fill="#fff" opacity="0.55" transform="rotate(-14 68 46)"/>
+           <!-- Angry cartoon eyes facing +X -->
+           <circle cx="88" cy="52" r="8" fill="#fef08a" stroke="#160e26" stroke-width="3.5"/>
+           <circle cx="91" cy="52" r="3.4" fill="#160e26"/>
+           <circle cx="87" cy="49" r="2" fill="#fff"/>
+           <circle cx="88" cy="76" r="8" fill="#fef08a" stroke="#160e26" stroke-width="3.5"/>
+           <circle cx="91" cy="76" r="3.4" fill="#160e26"/>
+           <circle cx="87" cy="73" r="2" fill="#fff"/>
+           <!-- Cute brow lines -->
+           <path d="M80 43 L95 47" stroke="#160e26" stroke-width="3.5" stroke-linecap="round"/>
+           <path d="M80 85 L95 81" stroke="#160e26" stroke-width="3.5" stroke-linecap="round"/></svg>

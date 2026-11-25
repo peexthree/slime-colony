@@ -1,27 +1,11 @@
-<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="split-aura-l" cx="30%" cy="50%" r="36%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="split-aura-r" cx="70%" cy="50%" r="36%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="38" cy="64" r="44" fill="url(#split-aura-l)"/>
-  <circle cx="90" cy="64" r="44" fill="url(#split-aura-r)"/>
-  <!-- Две головы-мандибулы по краям -->
-  <path d="M18 52L7 44M18 76L7 84M110 52L121 44M110 76L121 84" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>
-  <!-- Восьмёркообразное тело в процессе деления -->
-  <path d="M36 28C51 28 55 48 64 48C73 48 77 28 92 28C107 28 116 44 116 64C116 84 107 100 92 100C77 100 73 80 64 80C55 80 51 100 36 100C21 100 12 84 12 64C12 44 21 28 36 28Z" fill="#FFFFFF" fill-opacity="0.32" stroke="#FFFFFF" stroke-width="3.2"/>
-  <!-- Нити веретена деления (митоз) -->
-  <path d="M40 54C52 57 76 57 88 54M40 64H88M40 74C52 71 76 71 88 74" stroke="#FFFFFF" stroke-width="2.2" stroke-opacity="0.8" stroke-dasharray="4 3"/>
-  <!-- Перетяжка разрыва по центру -->
-  <path d="M64 40V88" stroke="#FFFFFF" stroke-width="2.4" stroke-dasharray="3 4" stroke-opacity="0.9"/>
-  <!-- Два независимых ядра -->
-  <circle cx="37" cy="64" r="14" fill="#FFFFFF" fill-opacity="0.55" stroke="#FFFFFF" stroke-width="2.4"/>
-  <circle cx="37" cy="64" r="7.5" fill="#FFFFFF"/>
-  <circle cx="91" cy="64" r="14" fill="#FFFFFF" fill-opacity="0.55" stroke="#FFFFFF" stroke-width="2.4"/>
-  <circle cx="91" cy="64" r="7.5" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><radialGradient id="p2_spl_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="58%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#155e75"/></radialGradient><radialGradient id="p2_spl_b" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fbcfe8"/><stop offset="58%" stop-color="#ec4899"/><stop offset="100%" stop-color="#831843"/></radialGradient></defs><!-- Mitosis peanut silhouette -->
+           <path d="M40 24 C56 24 58 46 64 46 C70 46 72 24 88 24 C108 24 118 42 118 64 C118 86 108 104 88 104 C72 104 70 82 64 82 C58 82 56 104 40 104 C20 104 10 86 10 64 C10 42 20 24 40 24 Z" fill="url(#p2_spl_a)" stroke="#160e26" stroke-width="5.5"/>
+           <!-- Tension seam -->
+           <path d="M64 48 V80" stroke="#160e26" stroke-width="4" stroke-dasharray="5 5" stroke-linecap="round"/>
+           <!-- Two mischievous nuclei -->
+           <circle cx="38" cy="64" r="14" fill="url(#p2_spl_b)" stroke="#160e26" stroke-width="4"/>
+           <circle cx="90" cy="64" r="14" fill="url(#p2_spl_b)" stroke="#160e26" stroke-width="4"/>
+           <circle cx="38" cy="64" r="4.5" fill="#fef08a"/>
+           <circle cx="90" cy="64" r="4.5" fill="#fef08a"/>
+           <ellipse cx="30" cy="40" rx="8" ry="4" fill="#fff" opacity="0.65" transform="rotate(-25 30 40)"/>
+           <ellipse cx="84" cy="40" rx="8" ry="4" fill="#fff" opacity="0.65" transform="rotate(-25 84 40)"/></svg>

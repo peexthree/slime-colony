@@ -1,21 +1,5 @@
-<svg viewBox="0 0 64 64" width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="venom-glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-      <stop offset="48%" stop-color="#FFFFFF" stop-opacity="0.38"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="32" cy="32" r="28" fill="url(#venom-glow)"/>
-  <!-- Органический сгусток -->
-  <path d="M32 13C41 13 49 20 50 30C51 40 43 50 32 50C21 50 14 42 15 32C16 21 23 13 32 13Z" fill="#FFFFFF" fill-opacity="0.62" stroke="#FFFFFF" stroke-width="2.4"/>
-  <!-- Ядро и пузырьки -->
-  <circle cx="33" cy="31" r="9.5" fill="#FFFFFF"/>
-  <circle cx="26" cy="25" r="3" fill="#FFFFFF" fill-opacity="0.55"/>
-  <circle cx="39" cy="38" r="2.2" fill="#FFFFFF" fill-opacity="0.6"/>
-  <!-- Мелкие брызги -->
-  <circle cx="12" cy="18" r="3" fill="#FFFFFF" fill-opacity="0.8"/>
-  <circle cx="53" cy="17" r="2.4" fill="#FFFFFF" fill-opacity="0.75"/>
-  <circle cx="52" cy="48" r="3.2" fill="#FFFFFF" fill-opacity="0.8"/>
-  <circle cx="15" cy="48" r="2" fill="#FFFFFF" fill-opacity="0.65"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><radialGradient id="p2_ven_a" cx="40%" cy="35%" r="65%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#84cc16"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><path d="M12 32 C12 18 22 10 34 12 C48 14 54 22 54 32 C54 44 44 52 32 52 C20 52 12 44 12 32 Z" fill="url(#p2_ven_a)" stroke="#160e26" stroke-width="3.8"/>
+           <circle cx="28" cy="28" r="5.5" fill="#fef9c3" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="40" cy="38" r="4" fill="#d9f99d" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="10" cy="18" r="3.5" fill="#a3e635" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="54" cy="48" r="3" fill="#84cc16" stroke="#160e26" stroke-width="2"/></svg>

@@ -3325,13 +3325,13 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       }
       // Если хвост сжался до минимума и игрок стоит на месте без движения - голод грызёт здоровье
       if (tailLen <= TAIL.minLen + 0.1 && !isMoving && !isVoidEvent) {
-        player.hp = Math.max(0, player.hp - 10 * dt);
+        player.hp = Math.max(0, player.hp - 6 * dt);
         if (player.hp <= 0) {
           lastDamageCause = {
             kind: 'starvation',
             labelRu: 'Истощение хвоста (неподвижность без энергии)',
             labelEn: 'Tail starvation (idle with depleted tail)',
-            amount: 10 * dt,
+            amount: 6 * dt,
           };
           beginDeathSequence();
         }

@@ -1,19 +1,13 @@
-<svg viewBox="0 0 64 64" width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="brood-glow" cx="62%" cy="50%" r="44%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.88"/>
-      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="38" cy="32" r="24" fill="url(#brood-glow)"/>
-  <!-- Микро-жвала -->
-  <path d="M49 26L57 23M49 38L57 41" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/>
-  <!-- Хвост-жгутик -->
-  <path d="M18 32C12 30 9 35 5 32" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-opacity="0.72"/>
-  <!-- Тело микро-личинки -->
-  <path d="M16 32C18 22 29 18 42 20C50 21.5 54 26 54 32C54 38 50 42.5 42 44C29 46 18 42 16 32Z" fill="#FFFFFF" fill-opacity="0.48" stroke="#FFFFFF" stroke-width="2.4"/>
-  <!-- Сегментные полоски и ядро -->
-  <path d="M29 22C32 28 32 36 29 42M39 21C42 28 42 36 39 43" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.82"/>
-  <circle cx="44" cy="32" r="4.5" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><radialGradient id="p2_brd_a" cx="40%" cy="32%" r="68%"><stop offset="0%" stop-color="#f9a8d4"/><stop offset="58%" stop-color="#e11d48"/><stop offset="100%" stop-color="#881337"/></radialGradient></defs><!-- Wiggly tail (-X) -->
+           <path d="M6 32 Q14 24 22 32 Q14 40 6 32 Z" fill="#fda4af" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <!-- Tiny bite spikes (+X) -->
+           <polygon points="48,24 58,27 50,31" fill="#fef08a" stroke="#160e26" stroke-width="2.5" stroke-linejoin="round"/>
+           <polygon points="48,40 58,37 50,33" fill="#fef08a" stroke="#160e26" stroke-width="2.5" stroke-linejoin="round"/>
+           <!-- Chubby round larva body -->
+           <ellipse cx="36" cy="32" rx="18" ry="16" fill="url(#p2_brd_a)" stroke="#160e26" stroke-width="3.8"/>
+           <!-- Cute angry eyes facing +X -->
+           <circle cx="43" cy="26" r="4" fill="#fef08a" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="44.5" cy="26" r="1.8" fill="#160e26"/>
+           <circle cx="43" cy="38" r="4" fill="#fef08a" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="44.5" cy="38" r="1.8" fill="#160e26"/>
+           <ellipse cx="30" cy="23" rx="5.5" ry="2.8" fill="#fff" opacity="0.65" transform="rotate(-18 30 23)"/></svg>

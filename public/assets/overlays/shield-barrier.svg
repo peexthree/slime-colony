@@ -1,36 +1,13 @@
-<svg viewBox="0 0 256 256" width="256" height="256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="shield-fill" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.06"/>
-      <stop offset="62%" stop-color="#FFFFFF" stop-opacity="0.18"/>
-      <stop offset="90%" stop-color="#FFFFFF" stop-opacity="0.58"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-    <clipPath id="shield-hex-clip">
-      <polygon points="128,18 223,73 223,183 128,238 33,183 33,73"/>
-    </clipPath>
-  </defs>
-  <!-- Внешнее свечение купола -->
-  <circle cx="128" cy="128" r="120" fill="url(#shield-fill)"/>
-  <!-- Сотовая гексагональная решётка внутри щита -->
-  <g clip-path="url(#shield-hex-clip)" stroke="#FFFFFF" stroke-width="1.8" stroke-opacity="0.48">
-    <polygon points="128,96 156,112 156,144 128,160 100,144 100,112" fill="#FFFFFF" fill-opacity="0.08"/>
-    <polygon points="128,32 156,48 156,80 128,96 100,80 100,48"/>
-    <polygon points="128,160 156,176 156,208 128,224 100,208 100,176"/>
-    <polygon points="184,64 212,80 212,112 184,128 156,112 156,80" fill="#FFFFFF" fill-opacity="0.14"/>
-    <polygon points="72,64 100,80 100,112 72,128 44,112 44,80"/>
-    <polygon points="184,128 212,144 212,176 184,192 156,176 156,144"/>
-    <polygon points="72,128 100,144 100,176 72,192 44,176 44,144" fill="#FFFFFF" fill-opacity="0.14"/>
-  </g>
-  <!-- Основной шестиугольный силовой контур -->
-  <polygon points="128,18 223,73 223,183 128,238 33,183 33,73" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round"/>
-  <!-- Усиленные угловые эмиттеры барьера -->
-  <path d="M106 31L128 18L150 31M202 61L223 73V98M223 158V183L202 195M150 225L128 238L106 225M54 195L33 183V158M33 98V73L54 61" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Энергетические узлы в вершинах -->
-  <circle cx="128" cy="18" r="4.5" fill="#FFFFFF"/>
-  <circle cx="223" cy="73" r="4.5" fill="#FFFFFF"/>
-  <circle cx="223" cy="183" r="4.5" fill="#FFFFFF"/>
-  <circle cx="128" cy="238" r="4.5" fill="#FFFFFF"/>
-  <circle cx="33" cy="183" r="4.5" fill="#FFFFFF"/>
-  <circle cx="33" cy="73" r="4.5" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><radialGradient id="p2_shb_a" cx="50%" cy="50%" r="52%"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0284c7"/></radialGradient></defs><polygon points="128,16 226,72 226,184 128,240 30,184 30,72" fill="url(#p2_shb_a)" opacity="0.22"/>
+           <polygon points="128,16 226,72 226,184 128,240 30,184 30,72" fill="none" stroke="#38bdf8" stroke-width="12" stroke-linejoin="round"/>
+           <polygon points="128,16 226,72 226,184 128,240 30,184 30,72" fill="none" stroke="#160e26" stroke-width="4" stroke-dasharray="24 14"/>
+           <!-- Inner hexagonal honeycomb struts -->
+           <polygon points="128,58 188,92 188,164 128,198 68,164 68,92" fill="none" stroke="#bae6fd" stroke-width="4.5" opacity="0.65"/>
+           <line x1="128" y1="16" x2="128" y2="58" stroke="#67e8f9" stroke-width="4" opacity="0.7"/>
+           <line x1="128" y1="198" x2="128" y2="240" stroke="#67e8f9" stroke-width="4" opacity="0.7"/>
+           <line x1="30" y1="72" x2="68" y2="92" stroke="#67e8f9" stroke-width="4" opacity="0.7"/>
+           <line x1="226" y1="72" x2="188" y2="92" stroke="#67e8f9" stroke-width="4" opacity="0.7"/>
+           <line x1="30" y1="184" x2="68" y2="164" stroke="#67e8f9" stroke-width="4" opacity="0.7"/>
+           <line x1="226" y1="184" x2="188" y2="164" stroke="#67e8f9" stroke-width="4" opacity="0.7"/>
+           <!-- Gloss arc -->
+           <path d="M58 76 Q128 36 198 76" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity="0.65"/></svg>

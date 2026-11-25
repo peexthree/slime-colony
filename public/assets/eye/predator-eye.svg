@@ -1,34 +1,8 @@
-<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="eye-iris" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.18"/>
-      <stop offset="52%" stop-color="#FFFFFF" stop-opacity="0.58"/>
-      <stop offset="86%" stop-color="#FFFFFF" stop-opacity="0.92"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.2"/>
-    </radialGradient>
-    <radialGradient id="eye-glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.45"/>
-      <stop offset="70%" stop-color="#FFFFFF" stop-opacity="0.1"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <ellipse cx="64" cy="64" rx="60" ry="42" fill="url(#eye-glow)"/>
-  <!-- Внешняя хитиновая глазница (веки) -->
-  <path d="M10 64C26 30 48 22 64 22C80 22 102 30 118 64C102 98 80 106 64 106C48 106 26 98 10 64Z" fill="#FFFFFF" fill-opacity="0.14" stroke="#FFFFFF" stroke-width="3.6" stroke-linejoin="round"/>
-  <!-- Складки верхнего и нижнего хитинового века -->
-  <path d="M22 44C38 28 90 28 106 44M22 84C38 100 90 100 106 84" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.7"/>
-  <!-- Радужка глаза -->
-  <circle cx="64" cy="64" r="32" fill="url(#eye-iris)" stroke="#FFFFFF" stroke-width="2.6"/>
-  <!-- Радиальные мышечные волокна радужки -->
-  <g stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.62">
-    <path d="M64 34V43M64 85V94M34 64H43M85 64H94"/>
-    <path d="M43 43L49 49M79 79L85 85M85 43L79 49M49 79L43 85"/>
-    <path d="M52 36L56 44M72 84L76 92M92 52L84 56M44 72L36 76"/>
-    <path d="M76 36L72 44M56 84L52 92M92 76L84 72M44 56L36 52"/>
-  </g>
-  <!-- Внутреннее кольцо зрачковой зоны -->
-  <circle cx="64" cy="64" r="19" stroke="#FFFFFF" stroke-width="1.8" stroke-dasharray="5 4" stroke-opacity="0.72"/>
-  <!-- Влажный блик роговицы -->
-  <ellipse cx="48" cy="48" rx="9" ry="5" transform="rotate(-32 48 48)" fill="#FFFFFF" fill-opacity="0.88"/>
-  <circle cx="78" cy="76" r="3" fill="#FFFFFF" fill-opacity="0.55"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><radialGradient id="p2_eye_s" cx="52%" cy="46%" r="58%"><stop offset="0%" stop-color="#ffffff"/><stop offset="58%" stop-color="#fef9c3"/><stop offset="100%" stop-color="#fde68a"/></radialGradient><linearGradient id="p2_eye_l" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fb7185"/><stop offset="52%" stop-color="#e11d48"/><stop offset="100%" stop-color="#881337"/></linearGradient></defs><!-- Outer fleshy predator eyelid -->
+           <path d="M12 64 C24 24 72 16 116 64 C72 112 24 104 12 64 Z" fill="url(#p2_eye_l)" stroke="#160e26" stroke-width="6" stroke-linejoin="round"/>
+           <!-- Bright cartoon sclera -->
+           <path d="M24 64 C34 34 72 28 106 64 C72 100 34 94 24 64 Z" fill="url(#p2_eye_s)" stroke="#160e26" stroke-width="4.5" stroke-linejoin="round"/>
+           <!-- Subtle upper eyelid shadow -->
+           <path d="M28 58 C42 36 74 34 102 60 C74 44 46 46 28 58 Z" fill="#f59e0b" opacity="0.22"/>
+           <!-- Fierce brow crest facing +X -->
+           <path d="M22 36 Q64 16 112 46" stroke="#160e26" stroke-width="6" stroke-linecap="round"/></svg>

@@ -1,13 +1,6 @@
-<svg viewBox="0 0 48 48" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Тело змея-уробороса -->
-  <path d="M28 9.2A15.4 15.4 0 1 1 18.5 9.8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <path d="M29 14.2A10.4 10.4 0 1 1 18.8 14.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.6" vector-effect="non-scaling-stroke"/>
-  <!-- Голова паразита, заглатывающая хвост в верхней точке -->
-  <path d="M24.5 5.2L31.5 9.2L26.2 14.2L22.5 11.2L24.5 5.2Z" fill="currentColor" fill-opacity="0.26" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M18.5 9.8L23 9.5M16 12.2L19.2 14.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <!-- Сегментные насечки хитина по кольцу -->
-  <path d="M38.5 20.5L34.2 21.8M36.8 32.5L33 29.8M24 39.5V35M11.2 32.5L15 29.8M9.5 20.5L13.8 21.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <!-- Символ бесконечной био-регенерации в центре -->
-  <path d="M19.5 24C19.5 21.8 22.2 21.8 24 24C25.8 26.2 28.5 26.2 28.5 24C28.5 21.8 25.8 21.8 24 24C22.2 26.2 19.5 26.2 19.5 24Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="24" cy="24" r="1.6" fill="currentColor"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none"><defs><linearGradient id="p2_h2_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="52%" stop-color="#10b981"/><stop offset="100%" stop-color="#0ea5e9"/></linearGradient></defs><circle cx="24" cy="24" r="16" stroke="url(#p2_h2_a)" stroke-width="8"/>
+           <circle cx="24" cy="24" r="20" stroke="#160e26" stroke-width="2.6"/>
+           <circle cx="24" cy="24" r="12" stroke="#160e26" stroke-width="2.6"/>
+           <!-- Serpent head -->
+           <path d="M20 4 L34 9 L22 15 Z" fill="#fef08a" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="25" cy="8.5" r="1.6" fill="#160e26"/></svg>

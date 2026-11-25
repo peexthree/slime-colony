@@ -360,7 +360,7 @@ export class PixiOverlay {
 
     this.hybridCrest = new Sprite(this.glowTex);
     this.hybridCrest.anchor.set(0.5);
-    this.hybridCrest.blendMode = 'add';
+    this.hybridCrest.blendMode = 'normal';
     this.hybridCrest.visible = false;
     this.entityLayer.addChild(this.hybridCrest);
 
@@ -553,11 +553,11 @@ export class PixiOverlay {
     this.releasePool('auraCilia');
     if (state.aura) {
       if (this.v3Textures?.vfx.auraCiliaMembrane) {
-        const sp = this.makeSprite('auraCilia', 0xff3b5c, 'add', this.v3Textures.vfx.auraCiliaMembrane);
+        const sp = this.makeSprite('auraCilia', 0xffffff, 'normal', this.v3Textures.vfx.auraCiliaMembrane, this.floorLayer);
         sp.position.set(state.aura.x, state.aura.y);
         sp.scale.set((state.aura.r * 2.2) / 256);
         sp.rotation = time * 0.8;
-        sp.alpha = 0.55 + Math.sin(time * 4) * 0.15;
+        sp.alpha = 0.72 + Math.sin(time * 4) * 0.12;
       } else {
         this.fxUnder.circle(state.aura.x, state.aura.y, state.aura.r)
           .fill({ color: 0xff3b5c, alpha: 0.06 })
@@ -712,14 +712,14 @@ export class PixiOverlay {
           .stroke({ width: 3.2, color: n.capture >= 0 ? 0x66fcf1 : 0xff3b5c, alpha: 0.94 });
       }
 
-      // Векторная био-иконка типа узла
+      // Векторная био-иконка типа узла (полноцветный мультяшный спрайт)
       const nodeTex = this.nodeTextures?.[n.kind];
       if (nodeTex) {
-        const ico = this.makeSprite('nodeIco', coreCol, 'normal', nodeTex);
+        const ico = this.makeSprite('nodeIco', 0xffffff, 'normal', nodeTex);
         ico.position.set(n.x, n.y);
-        const tw = nodeTex.width || 32;
-        ico.scale.set((coreR * 1.25) / tw);
-        ico.alpha = 0.96;
+        const tw = nodeTex.width || 128;
+        ico.scale.set((coreR * 1.45) / tw);
+        ico.alpha = 0.98;
       } else {
         let txt = this.nodeTexts[i];
         if (!txt) {
@@ -868,15 +868,23 @@ export class PixiOverlay {
           .stroke({ width: 1.4, color: tc1, alpha: alpha * 0.4 });
       }
 
+      const segTint = isDying
+        ? 0xff5c77
+        : state.tailState === 'crit'
+          ? ((i / step) % 2 === 0 ? 0xffa6b8 : 0xffd0d8)
+          : state.tailState === 'low'
+            ? 0xfff0b3
+            : 0xffffff;
+
       if (i === 0 && this.v3Textures?.tail.tailStinger) {
-        // Кончик хвоста: ядовитое хитиновое жало со светящейся ампулой
-        const sp = this.makeSprite('ptail_stinger', tint, 'normal', this.v3Textures.tail.tailStinger);
+        // Кончик хвоста: мультяшное ядовитое жало
+        const sp = this.makeSprite('ptail_stinger', segTint, 'normal', this.v3Textures.tail.tailStinger);
         alignTailSegment(sp, finalX, finalY, alignPrevX, alignPrevY);
         sp.scale.set((segR * 2.8) / 128);
         sp.alpha = alpha;
       } else if (this.v3Textures?.tail.tailVertebra) {
-        // Хитиновый позвонок с отогнутыми рёбрами и нервным каналом
-        const sp = this.makeSprite('ptail_vert', tint, 'normal', this.v3Textures.tail.tailVertebra);
+        // Мультяшный позвонок хвоста
+        const sp = this.makeSprite('ptail_vert', segTint, 'normal', this.v3Textures.tail.tailVertebra);
         alignTailSegment(sp, finalX, finalY, alignPrevX, alignPrevY);
         sp.scale.set((segR * 2.6) / 128);
         sp.alpha = alpha;
@@ -939,11 +947,11 @@ export class PixiOverlay {
     this.releasePool('carapaceShield');
     if (state.carapaceReady) {
       if (this.v3Textures?.overlays.shieldBarrier) {
-        const sp = this.makeSprite('carapaceShield', 0x00ff9d, 'add', this.v3Textures.overlays.shieldBarrier);
+        const sp = this.makeSprite('carapaceShield', 0xffffff, 'normal', this.v3Textures.overlays.shieldBarrier);
         sp.position.set(px, py);
         sp.scale.set(((state.player.r + 12) * 2.3) / 256);
         sp.rotation = time * 0.7;
-        sp.alpha = 0.55 + Math.sin(time * 4) * 0.14;
+        sp.alpha = 0.78 + Math.sin(time * 4) * 0.12;
       } else {
         this.fxOver.circle(px, py, state.player.r + 9)
           .stroke({ width: 2, color: 0x00ff9d, alpha: 0.72 });
@@ -971,7 +979,7 @@ export class PixiOverlay {
     this.playerCore.rotation = time * (isDying ? 3.5 : 0.35);
     this.playerCore.alpha = deathCoreAlpha;
     if (isDying) this.playerCore.tint = 0xff7b93;
-    else if (form) this.playerCore.tint = form.core;
+    else this.playerCore.tint = nucTex ? 0xffffff : (form?.core ?? 0xffffff);
 
     // Анимация гибели организма: разлом мембраны, распад на светящиеся фрагменты и ударная волна
     if (isDying) {
@@ -1114,14 +1122,14 @@ export class PixiOverlay {
         scaleY *= 0.88;
       }
 
-      const isCartoonBoss = e.type === 'boss' && !e.titan && !!this.v4Textures?.boss;
-      const spTint = isCartoonBoss
-        ? (isDead ? 0xff3b5c : hitFlash ? 0xff94a8 : e.infected ? 0x67e8f9 : spored ? 0x86efac : 0xffffff)
+      const isCartoonSprite = Boolean(tex);
+      const spTint = isCartoonSprite
+        ? (isDead ? 0xff3b5c : hitFlash ? 0xff94a8 : e.infected > 0 ? 0x67e8f9 : spored ? 0x86efac : 0xffffff)
         : enemyTint;
       const sp = this.makeSprite('enemy', spTint, 'normal', tex);
       sp.position.set(e.x, e.y);
       sp.scale.set(scaleX, scaleY);
-      sp.alpha = 0.96;
+      sp.alpha = 0.98;
 
       // Ориентация и вращение сущностей по вектору движения
       let rot = 0;
@@ -1143,11 +1151,11 @@ export class PixiOverlay {
       } else if (e.type === 'pulsar') {
         rot = time * 2.8;
       } else if (e.type === 'boss' || e.titan) {
-        rot = Math.sin(time * 0.9) * (isCartoonBoss ? 0.09 : 0.15);
+        rot = Math.sin(time * 0.9) * (isCartoonSprite ? 0.09 : 0.15);
       }
       sp.rotation = rot;
 
-      if (!isCartoonBoss) {
+      if (!isCartoonSprite) {
         const core = this.makeSprite('enemyCore', enemyCoreTint, 'normal');
         core.position.set(e.x, e.y);
         core.scale.set((e.radius * 0.65) / 64);
@@ -1212,11 +1220,11 @@ export class PixiOverlay {
       if (e.elite) {
         // Базовый золотой нимб элиты
         if (this.v3Textures?.overlays.eliteCrownHalo) {
-          const spHalo = this.makeSprite('eliteHalo', 0xffd166, 'add', this.v3Textures.overlays.eliteCrownHalo);
+          const spHalo = this.makeSprite('eliteHalo', 0xffffff, 'normal', this.v3Textures.overlays.eliteCrownHalo);
           spHalo.position.set(e.x, e.y);
           spHalo.scale.set(((e.radius + 14) * 2.3) / 256);
           spHalo.rotation = time * 1.4;
-          spHalo.alpha = 0.88;
+          spHalo.alpha = 0.92;
         } else {
           const haloR = e.radius + 6 + Math.sin(time * 5) * 1.5;
           this.fxOver.circle(e.x, e.y, haloR)
@@ -1318,11 +1326,11 @@ export class PixiOverlay {
       }
 
       if (e.type === 'mirror' && this.v3Textures?.overlays.shieldBarrier) {
-        const spShield = this.makeSprite('enemyShield', 0x7df9ff, 'add', this.v3Textures.overlays.shieldBarrier);
+        const spShield = this.makeSprite('enemyShield', 0xffffff, 'normal', this.v3Textures.overlays.shieldBarrier);
         spShield.position.set(e.x, e.y);
         spShield.scale.set(((e.radius + 8) * 2.4) / 256);
         spShield.rotation = -time * 0.8;
-        spShield.alpha = 0.82;
+        spShield.alpha = 0.88;
       }
 
       if (e.titan || e.type === 'boss') {
@@ -1367,46 +1375,57 @@ export class PixiOverlay {
         .stroke({ width: 2.5, color: 0x9df5ff, alpha: 0.9 });
     }
 
-    // Яд плевателей (высокая видимость: кислотно-алый био-снаряд с ярким ядром)
+    // Яд плевателей (мультяшный сгусток кислотной слизи)
     this.releasePool('eproj');
     this.releasePool('eproj_core');
     for (const p of state.eprojs) {
-      const sp = this.makeSprite('eproj', 0xff2a6d, 'add', this.particleTextures?.spitVenom);
+      const spitTex = this.particleTextures?.spitVenom;
+      const sp = this.makeSprite('eproj', spitTex ? 0xffffff : 0xff2a6d, spitTex ? 'normal' : 'add', spitTex);
       sp.position.set(p.x, p.y);
-      const pw = this.particleTextures?.spitVenom?.width || 64;
-      sp.scale.set(22 / pw);
+      const pw = spitTex?.width || 64;
+      sp.scale.set(24 / pw);
       sp.rotation = time * 4.5;
-      sp.alpha = 0.95;
+      sp.alpha = 0.98;
 
-      const c = this.makeSprite('eproj_core', 0xffffff, 'normal');
-      c.position.set(p.x, p.y);
-      c.scale.set(6 / 64);
-      c.alpha = 0.9;
+      if (!spitTex) {
+        const c = this.makeSprite('eproj_core', 0xffffff, 'normal');
+        c.position.set(p.x, p.y);
+        c.scale.set(6 / 64);
+        c.alpha = 0.9;
+      }
     }
 
-    // Снаряды игрока: кинетические био-шипы с направлением полета
+    // Снаряды игрока: мультяшные био-шипы с направлением полета
     this.releasePool('proj');
     for (const p of state.projs) {
       const needleTex = this.playerTextures?.projNeedle;
-      const sp = this.makeSprite('proj', 0x66fcf1, 'add', needleTex);
+      const sp = this.makeSprite('proj', needleTex ? 0xffffff : 0x66fcf1, needleTex ? 'normal' : 'add', needleTex);
       sp.position.set(p.x, p.y);
       const nw = needleTex?.width || 64;
-      sp.scale.set(22 / nw);
+      sp.scale.set(24 / nw);
       sp.rotation = (p.vx !== undefined && p.vy !== undefined)
         ? Math.atan2(p.vy, p.vx)
         : Math.atan2(p.y - py, p.x - px);
     }
 
-    // Души убитых врагов (хвост плазмоида ориентирован назад от вектора к игроку)
+    // Души убитых врагов (полноцветная сфера + аура цвета ветки ДНК)
+    this.releasePool('orbGlow');
     this.releasePool('orb');
     let i = 0;
     for (const o of state.xpOrbs) {
-      const sp = this.makeSprite('orb', o.color, 'add', this.particleTextures?.xpSoul);
+      const xpTex = this.particleTextures?.xpSoul;
+      if (xpTex) {
+        const g = this.makeSprite('orbGlow', o.color, 'add');
+        g.position.set(o.x, o.y);
+        g.scale.set((24 + Math.min(o.value, 10)) / 64);
+        g.alpha = 0.45 + 0.15 * Math.sin(time * 6 + i * 1.3);
+      }
+      const sp = this.makeSprite('orb', xpTex ? 0xffffff : o.color, xpTex ? 'normal' : 'add', xpTex);
       sp.position.set(o.x, o.y);
-      const ow = this.particleTextures?.xpSoul?.width || 64;
+      const ow = xpTex?.width || 64;
       sp.scale.set((16 + Math.min(o.value, 10)) / ow);
-      sp.alpha = 0.75 + 0.25 * Math.sin(time * 6 + i * 1.3);
-      sp.rotation = Math.atan2(py - o.y, px - o.x);
+      sp.alpha = xpTex ? 0.96 : (0.75 + 0.25 * Math.sin(time * 6 + i * 1.3));
+      sp.rotation = xpTex ? 0 : Math.atan2(py - o.y, px - o.x);
       i++;
     }
 
@@ -1418,7 +1437,7 @@ export class PixiOverlay {
         const ox = state.orbit.cx + Math.cos(ang) * state.orbit.radius;
         const oy = state.orbit.cy + Math.sin(ang) * state.orbit.radius;
         const orbTex = this.v3Textures?.vfx.orbitPlasmaSphere;
-        const sp = this.makeSprite('orbit', 0x9df5ff, orbTex ? 'normal' : 'add', orbTex);
+        const sp = this.makeSprite('orbit', orbTex ? 0xffffff : 0x9df5ff, orbTex ? 'normal' : 'add', orbTex);
         sp.position.set(ox, oy);
         if (orbTex) {
           sp.scale.set(34 / 128);
@@ -1426,7 +1445,7 @@ export class PixiOverlay {
         } else {
           sp.scale.set(13 / 64);
         }
-        sp.alpha = 0.95;
+        sp.alpha = 0.96;
       }
     }
 
@@ -1437,10 +1456,10 @@ export class PixiOverlay {
       r.radius += (r.maxRadius - r.radius) * 0.12;
       r.alpha *= 0.86;
       if (this.v3Textures?.vfx.novaShockwave) {
-        const sp = this.makeSprite('ringShockwave', r.color, 'add', this.v3Textures.vfx.novaShockwave);
+        const sp = this.makeSprite('ringShockwave', 0xffffff, 'normal', this.v3Textures.vfx.novaShockwave);
         sp.position.set(r.x, r.y);
         sp.scale.set((r.radius * 2.2) / 256);
-        sp.alpha = r.alpha * 0.65;
+        sp.alpha = Math.min(1, r.alpha * 1.25);
         sp.rotation = time * 1.2 + j;
       } else {
         this.fxOver.circle(r.x, r.y, r.radius)
@@ -1754,12 +1773,12 @@ export class PixiOverlay {
             if (rnd < 0.4) continue;
             const floatX = bx + (rnd - 0.5) * 80 + Math.sin(time * 0.4 + rnd * 6) * 18;
             const floatY = by + (rnd - 0.5) * 80 + Math.cos(time * 0.35 + rnd * 5) * 18;
-            const sp = this.makeSprite('biomeMacro', biomeTint, 'add', biomeTex);
+            const sp = this.makeSprite('biomeMacro', 0xffffff, 'normal', biomeTex, this.floorLayer);
             sp.position.set(floatX, floatY);
             const size = 110 + rnd * 120;
             sp.scale.set(size / 256);
             sp.rotation = time * 0.08 * (rnd > 0.7 ? 1 : -1) + rnd * Math.PI * 2;
-            sp.alpha = 0.09 + rnd * 0.08;
+            sp.alpha = 0.22 + rnd * 0.12;
           }
         }
       }
@@ -2112,8 +2131,9 @@ export class PixiOverlay {
       this.hybridCrest.position.set(px, py);
       this.hybridCrest.scale.set((r * 3.1) / (hTex.width || 128));
       this.hybridCrest.rotation = time * 0.45;
-      this.hybridCrest.tint = HYBRID_TINTS[morph.hybrid] ?? 0xffd166;
-      this.hybridCrest.alpha = 0.34 + Math.sin(time * 3.2) * 0.08;
+      this.hybridCrest.tint = 0xffffff;
+      this.hybridCrest.blendMode = 'normal';
+      this.hybridCrest.alpha = 0.52 + Math.sin(time * 3.2) * 0.1;
       this.hybridCrest.visible = true;
     } else {
       this.hybridCrest.visible = false;

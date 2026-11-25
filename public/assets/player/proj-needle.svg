@@ -1,20 +1,5 @@
-<svg viewBox="0 0 64 64" width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="needle-wake" x1="4" y1="32" x2="60" y2="32" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
-      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="1"/>
-    </linearGradient>
-    <radialGradient id="needle-tip" cx="78%" cy="50%" r="36%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <ellipse cx="44" cy="32" rx="18" ry="12" fill="url(#needle-tip)"/>
-  <!-- Сверхзвуковой шлейф -->
-  <path d="M4 32H44" stroke="url(#needle-wake)" stroke-width="4" stroke-linecap="round"/>
-  <!-- Зазубренный хитиновый шип -->
-  <path d="M60 32L35 21L40 29L18 32L40 35L35 43L60 32Z" fill="#FFFFFF" fill-opacity="0.92"/>
-  <!-- Яркая кинетическая жилка -->
-  <path d="M56 32H30" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><linearGradient id="p2_ndl_a" x1="0%" y1="50%" x2="100%" y2="50%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#fb923c"/><stop offset="100%" stop-color="#e11d48"/></linearGradient></defs><!-- Rear bio-energy feathers (-X) -->
+           <path d="M6 20 L24 27 L18 32 L24 37 L6 44 L14 32 Z" fill="#38bdf8" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <!-- Razor spike body pointing +X -->
+           <path d="M16 25 L59 32 L16 39 L23 32 Z" fill="url(#p2_ndl_a)" stroke="#160e26" stroke-width="3.6" stroke-linejoin="round"/>
+           <path d="M26 30 L50 32" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/></svg>

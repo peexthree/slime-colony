@@ -303,10 +303,10 @@
   }
   .bio-hp-vial .vial-track {
     position: absolute;
-    left: 7.8%;
-    right: 7.8%;
-    top: 23%;
-    bottom: 23%;
+    left: 12%;
+    right: 7%;
+    top: 25%;
+    bottom: 25%;
     border-radius: 99px;
     background: rgba(255, 59, 78, 0.16);
     overflow: hidden;
@@ -589,9 +589,9 @@
   /* Левая колонка: ДНК-матрица + тактические статус-чипы (ниже топ-панели без наложений) */
   #hud-left-col {
     position: absolute;
-    z-index: 5;
+    z-index: 8;
     left: 14px;
-    top: 114px;
+    top: 148px;
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -752,6 +752,7 @@
     border-color: rgba(148, 163, 184, 0.32);
     background: rgba(8, 15, 24, 0.9);
   }
+  .wh.locked .wh-ico svg { filter: grayscale(0.75) opacity(0.5); }
   .wh.locked .wh-ico { color: #7f95ab; }
   .wh.locked .wh-lvl { color: #9db0c4; }
 
@@ -810,10 +811,10 @@
   }
   .bio-xp-conduit .conduit-track {
     position: absolute;
-    left: 12%;
-    right: 12%;
-    top: 30%;
-    bottom: 30%;
+    left: 11.8%;
+    right: 8.5%;
+    top: 26%;
+    bottom: 26%;
     border-radius: 99px;
     background: rgba(102, 252, 241, 0.14);
     overflow: hidden;
@@ -847,9 +848,9 @@
   }
   .petri-radar #radar-canvas {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
+    inset: 10%;
+    width: 80%;
+    height: 80%;
     border-radius: 50%;
   }
   .petri-radar .radar-frame,

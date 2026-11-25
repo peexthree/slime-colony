@@ -1,6 +1,3 @@
-<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M14.8 3.5L7 13.5L10.5 24.5L14.5 28L13.5 18L15.4 11.5L14.8 3.5Z" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M18.2 5L25 13.5L21.5 24.5L17.5 28.5L18.5 18L16.6 12L18.2 5Z" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M16 10.5L14.8 16L17.2 16L16 22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="1.7" fill="currentColor"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="p2_dc_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></linearGradient></defs><polygon points="16,3 27,10 25,24 16,29 7,24 5,10" fill="url(#p2_dc_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <polygon points="16,8 21,15 16,24 11,15" fill="#fff7ed" opacity="0.65" stroke="#160e26" stroke-width="1.8" stroke-linejoin="round"/>
+           <path d="M7 10 L3 5 M25 10 L29 5" stroke="#160e26" stroke-width="2.4" stroke-linecap="round"/></svg>

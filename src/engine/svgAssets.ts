@@ -1,340 +1,187 @@
-// svgAssets.ts — Автогенерированный пак SVG для HUD и PixiJS v8
-import { Texture, Assets } from 'pixi.js';
+// svgAssets.ts — EvoToon Pack 2 (полноцветный мультяшный cel-shaded стиль с обводкой #160e26)
+import { Texture } from 'pixi.js';
 
 export const UI_ICONS = {
-  vermis: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M8.5 5C12 9.5 12 16 7.5 26M23.5 5C20 9.5 20 16 24.5 26" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M8.5 5L11.5 7.5M23.5 5L20.5 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <path d="M16 4V28" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-  <path d="M12.5 9.5L16 12L19.5 9.5M12 15.5L16 18L20 15.5M13 21.5L16 24L19 21.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <polygon points="16,12.5 18.2,15 16,17.5 13.8,15" fill="currentColor"/>
-</svg>`,
-  chimera: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M14.8 3.5L7 13.5L10.5 24.5L14.5 28L13.5 18L15.4 11.5L14.8 3.5Z" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M18.2 5L25 13.5L21.5 24.5L17.5 28.5L18.5 18L16.6 12L18.2 5Z" fill="currentColor" fill-opacity="0.08" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M16 10.5L14.8 16L17.2 16L16 22" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="1.7" fill="currentColor"/>
-</svg>`,
-  mycelium: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="16" cy="11" r="4.2" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="11" r="1.6" fill="currentColor"/>
-  <path d="M16 15.2V28M16 19.5C12.2 20.5 9.2 23.2 6.5 27M16 18.5C19.8 19.8 22.8 22.8 25.5 27M11.5 22.5C11.2 24.8 11.8 26.8 12.6 28.2M20.5 22C20.8 24.5 20.2 26.6 19.4 28.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M11.8 9.8C8.8 9 6.8 7 5.5 5M20.2 9.8C23.2 9 25.2 7 26.5 5M16 6.8V3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="5.5" cy="5" r="1.2" fill="currentColor"/>
-  <circle cx="26.5" cy="5" r="1.2" fill="currentColor"/>
-  <circle cx="16" cy="3.5" r="1.2" fill="currentColor"/>
-</svg>`,
-  symbiont: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <ellipse cx="16" cy="16" rx="12" ry="4.8" transform="rotate(45 16 16)" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-  <ellipse cx="16" cy="16" rx="12" ry="4.8" transform="rotate(-45 16 16)" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-  <path d="M16 10.5V21.5M10.5 16H21.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="2.6" fill="currentColor"/>
-  <circle cx="7.8" cy="7.8" r="1.5" fill="currentColor"/>
-  <circle cx="24.2" cy="24.2" r="1.5" fill="currentColor"/>
-</svg>`,
-  weaponSpikes: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="16" cy="16" r="3.6" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="1.4" fill="currentColor"/>
-  <path d="M16 2.8L17.8 9.2L16 10.8L14.2 9.2L16 2.8Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M16 29.2L17.8 22.8L16 21.2L14.2 22.8L16 29.2Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M29.2 16L22.8 17.8L21.2 16L22.8 14.2L29.2 16Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M2.8 16L9.2 17.8L10.8 16L9.2 14.2L2.8 16Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M6.8 6.8L11.8 11.8M25.2 6.8L20.2 11.8M6.8 25.2L11.8 20.2M25.2 25.2L20.2 20.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-</svg>`,
-  weaponOrbs: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="16" cy="16" r="10.2" stroke="currentColor" stroke-width="1.5" stroke-dasharray="6.5 4.2" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="2.2" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.6" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="5.8" r="2.9" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="5.8" r="1.1" fill="currentColor"/>
-  <circle cx="24.8" cy="21.1" r="2.9" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-  <circle cx="24.8" cy="21.1" r="1.1" fill="currentColor"/>
-  <circle cx="7.2" cy="21.1" r="2.9" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-  <circle cx="7.2" cy="21.1" r="1.1" fill="currentColor"/>
-</svg>`,
-  weaponNova: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M11 4.6A12.4 12.4 0 0 1 25 7.4M27.8 12.5A12.4 12.4 0 0 1 21 27.4M16 28.4A12.4 12.4 0 0 1 4.6 20.8M4.2 13.5A12.4 12.4 0 0 1 8 6.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <path d="M16 8.2A7.8 7.8 0 0 1 23.4 13.5M23.5 18.2A7.8 7.8 0 0 1 13.8 23.5M8.5 18.2A7.8 7.8 0 0 1 12.5 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.85" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="3" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="1.2" fill="currentColor"/>
-  <path d="M16 3V6M29 16H26M16 29V26M3 16H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-</svg>`,
-  weaponAura: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="16" cy="16" r="12.2" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3.8 3.2" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="8.2" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-  <circle cx="13.2" cy="17.8" r="2.6" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-  <circle cx="19.2" cy="13.8" r="2" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-  <circle cx="14.2" cy="11.2" r="1.3" fill="currentColor"/>
-  <circle cx="19.8" cy="19.8" r="1.4" fill="currentColor"/>
-  <path d="M10.5 7.5C10.5 5.8 11.8 5.2 11.8 3.8M22 8.5C22 6.8 23.2 6.2 23.2 4.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-</svg>`,
-  skillCall: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M16 14.5V27.5M11.5 27.5L16 21.5L20.5 27.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="13.5" r="2.5" fill="currentColor"/>
-  <path d="M11.5 17.5C9.5 15.3 9.5 11.7 11.5 9.5M20.5 17.5C22.5 15.3 22.5 11.7 20.5 9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <path d="M8.2 20.5C4.8 16.6 4.8 10.4 8.2 6.5M23.8 20.5C27.2 16.6 27.2 10.4 23.8 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="5.2" r="1.3" fill="currentColor"/>
-  <circle cx="11" cy="6.2" r="1" fill="currentColor" fill-opacity="0.8"/>
-  <circle cx="21" cy="6.2" r="1" fill="currentColor" fill-opacity="0.8"/>
-</svg>`,
-  nodeGen: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="9.5" y="7.5" width="13" height="20" rx="4.5" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
-  <path d="M13 7.5V5.2C13 4.5 13.5 4 14.2 4H17.8C18.5 4 19 4.5 19 5.2V7.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M12.5 22.5H19.5M12.5 18H19.5M12.5 13.5H19.5" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <path d="M6.5 13.5V21.5M25.5 13.5V21.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.6" vector-effect="non-scaling-stroke"/>
-</svg>`,
-  nodeAmp: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M8.5 7.5C4.8 11.8 4.8 20.2 8.5 24.5M23.5 7.5C27.2 11.8 27.2 20.2 23.5 24.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-opacity="0.75" vector-effect="non-scaling-stroke"/>
-  <path d="M17.8 4.5L11.2 16.5H16.2L14.2 27.5L20.8 15.5H15.8L17.8 4.5Z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="8.5" cy="7.5" r="1.2" fill="currentColor"/>
-  <circle cx="23.5" cy="24.5" r="1.2" fill="currentColor"/>
-</svg>`,
-  nodeMagnet: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="16" cy="16" r="3.4" fill="currentColor" fill-opacity="0.24" stroke="currentColor" stroke-width="1.7" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="1.3" fill="currentColor"/>
-  <path d="M6 6C9.5 7.5 11.5 9.5 12.8 12.8M26 6C22.5 7.5 20.5 9.5 19.2 12.8M6 26C9.5 24.5 11.5 22.5 12.8 19.2M26 26C22.5 24.5 20.5 22.5 19.2 19.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <path d="M10.2 12.4L12.9 12.9L12.4 10.2M21.8 12.4L19.1 12.9L19.6 10.2M10.2 19.6L12.9 19.1L12.4 21.8M21.8 19.6L19.1 19.1L19.6 21.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="16" r="12.2" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 4.5" stroke-opacity="0.55" vector-effect="non-scaling-stroke"/>
-</svg>`,
-  nodeMutagen: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <polygon points="16,3.5 22.8,7.4 22.8,15.2 16,19.1 9.2,15.2 9.2,7.4" fill="currentColor" fill-opacity="0.16" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M16 7.5V15.2M12.5 11.3H19.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-  <path d="M16 19.1V25.5M13.8 21.8H18.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <path d="M16 24.5L9.5 28.5M16 24.5L22.5 28.5M14.5 23L7 25.2M17.5 23L25 25.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-</svg>`,
-  nodeIncubator: `<svg viewBox="0 0 32 32" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M16 4C21.8 4 25 10.2 25 17C25 23.2 21.2 28 16 28C10.8 28 7 23.2 7 17C7 10.2 10.2 4 16 4Z" fill="currentColor" fill-opacity="0.14" stroke="currentColor" stroke-width="1.8" vector-effect="non-scaling-stroke"/>
-  <path d="M8.5 13.5C11.5 15.2 20.5 15.2 23.5 13.5M8.2 20.5C11.8 22.2 20.2 22.2 23.8 20.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.65" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="17.2" r="3.4" fill="currentColor" fill-opacity="0.28" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
-  <circle cx="16" cy="17.2" r="1.4" fill="currentColor"/>
-  <path d="M16 4V8.5M16 28V24.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-</svg>`
+  vermis: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="p2_dv_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fda4af"/><stop offset="52%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></linearGradient></defs><path d="M7 24 C6 13 13 5 25 6 C21 12 20 17 24 22 C18 26 11 27 7 24 Z" fill="url(#p2_dv_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="17" cy="14" r="3.6" fill="#fef08a" stroke="#160e26" stroke-width="1.8"/>
+           <ellipse cx="17.5" cy="14" rx="1.2" ry="2.6" fill="#160e26"/>
+           <polygon points="22,19 28,17 24,23" fill="#fff" stroke="#160e26" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+  chimera: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="p2_dc_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></linearGradient></defs><polygon points="16,3 27,10 25,24 16,29 7,24 5,10" fill="url(#p2_dc_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <polygon points="16,8 21,15 16,24 11,15" fill="#fff7ed" opacity="0.65" stroke="#160e26" stroke-width="1.8" stroke-linejoin="round"/>
+           <path d="M7 10 L3 5 M25 10 L29 5" stroke="#160e26" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+  mycelium: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_dm_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#d9f99d"/><stop offset="58%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><rect x="12" y="18" width="8" height="10" rx="3" fill="#fef3c7" stroke="#160e26" stroke-width="2.2"/>
+           <path d="M4 19 C4 9 10 5 16 5 C22 5 28 9 28 19 Z" fill="url(#p2_dm_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="12" cy="12" r="2.4" fill="#fef08a" stroke="#160e26" stroke-width="1.4"/>
+           <circle cx="20" cy="13" r="2.6" fill="#fef08a" stroke="#160e26" stroke-width="1.4"/></svg>`,
+  symbiont: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="p2_ds_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="52%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs><polygon points="16,3 26,14 20,28 12,28 6,14" fill="url(#p2_ds_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <polygon points="16,3 20,14 16,28 12,14" fill="#fff" opacity="0.5" stroke="#160e26" stroke-width="1.6"/>
+           <circle cx="16" cy="14" r="2.2" fill="#fef08a"/></svg>`,
+  weaponSpikes: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="p2_ws_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#fb923c"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><polygon points="6,11 28,6 14,17" fill="url(#p2_ws_a)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/>
+           <polygon points="4,21 29,16 14,26" fill="url(#p2_ws_a)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/>
+           <polygon points="10,27 26,25 16,30" fill="#fde047" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  weaponOrbs: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_wo_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#2563eb"/></radialGradient></defs><circle cx="16" cy="16" r="10.5" stroke="#67e8f9" stroke-width="2.2" stroke-dasharray="4 3"/>
+           <circle cx="16" cy="5.5" r="4" fill="url(#p2_wo_a)" stroke="#160e26" stroke-width="2"/>
+           <circle cx="7" cy="21" r="4" fill="url(#p2_wo_a)" stroke="#160e26" stroke-width="2"/>
+           <circle cx="25" cy="21" r="4" fill="url(#p2_wo_a)" stroke="#160e26" stroke-width="2"/>
+           <circle cx="16" cy="16" r="3" fill="#fef08a" stroke="#160e26" stroke-width="1.8"/></svg>`,
+  weaponNova: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_wn_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#f472b6"/><stop offset="100%" stop-color="#9333ea"/></radialGradient></defs><path d="M16 2 L19 10 L28 7 L23 15 L30 20 L21 22 L22 30 L16 24 L10 30 L11 22 L2 20 L9 15 L4 7 L13 10 Z" fill="url(#p2_wn_a)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/>
+           <circle cx="16" cy="16" r="4.5" fill="#fff" stroke="#160e26" stroke-width="1.8"/></svg>`,
+  weaponAura: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_wa_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#d9f99d"/><stop offset="58%" stop-color="#4ade80"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_wa_a)" opacity="0.35" stroke="#84cc16" stroke-width="2.6" stroke-dasharray="4 3"/>
+           <circle cx="16" cy="16" r="7" fill="url(#p2_wa_a)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="14" cy="14" r="1.8" fill="#fef08a"/></svg>`,
+  skillCall: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_sc_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#2563eb"/></radialGradient></defs><path d="M5 16 A11 11 0 0 1 16 5" stroke="#67e8f9" stroke-width="2.6" stroke-linecap="round"/>
+           <path d="M27 16 A11 11 0 0 1 16 27" stroke="#67e8f9" stroke-width="2.6" stroke-linecap="round"/>
+           <path d="M16 5 A11 11 0 0 1 27 16" stroke="#fef08a" stroke-width="2.6" stroke-linecap="round"/>
+           <path d="M16 27 A11 11 0 0 1 5 16" stroke="#fef08a" stroke-width="2.6" stroke-linecap="round"/>
+           <circle cx="16" cy="16" r="6" fill="url(#p2_sc_a)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="16" cy="16" r="2.2" fill="#fff"/></svg>`,
+  nodeGen: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_ng_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></radialGradient></defs><polygon points="16,3 28,10 28,22 16,29 4,22 4,10" fill="url(#p2_ng_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <polygon points="17,8 11,17 16,17 15,24 21,15 16,15" fill="#fff" stroke="#160e26" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+  nodeAmp: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_na_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fda4af"/><stop offset="58%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_na_a)" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M16 8 L23 16 H19 V24 H13 V16 H9 Z" fill="#fef08a" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  nodeMagnet: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="p2_nm_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><circle cx="16" cy="16" r="12" fill="#1e293b" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M10 10 V17 C10 21 12.5 23.5 16 23.5 C19.5 23.5 22 21 22 17 V10 H18.5 V17 C18.5 18.8 17.4 20 16 20 C14.6 20 13.5 18.8 13.5 17 V10 Z" fill="url(#p2_nm_a)" stroke="#160e26" stroke-width="1.8" stroke-linejoin="round"/></svg>`,
+  nodeMutagen: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_nmu_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#e9d5ff"/><stop offset="58%" stop-color="#a855f7"/><stop offset="100%" stop-color="#581c87"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_nmu_a)" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M11 9 C21 12 21 16 11 19 C21 22 21 24 11 25" stroke="#fef08a" stroke-width="2.5" stroke-linecap="round"/>
+           <path d="M21 9 C11 12 11 16 21 19 C11 22 11 24 21 25" stroke="#67e8f9" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+  nodeIncubator: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_ni_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#bbf7d0"/><stop offset="58%" stop-color="#10b981"/><stop offset="100%" stop-color="#065f46"/></radialGradient></defs><path d="M16 4 C23 4 27 11 26 20 C25 25 21 28 16 28 C11 28 7 25 6 20 C5 11 9 4 16 4 Z" fill="url(#p2_ni_a)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="16" cy="17" r="5.5" fill="#fef08a" stroke="#160e26" stroke-width="2"/>
+           <circle cx="14.5" cy="15.5" r="1.5" fill="#fff"/></svg>`,
 } as const;
 
 export const ENEMY_SPRITES = {
-  grub: `<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="grub-aura" cx="54%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.45"/>
-      <stop offset="65%" stop-color="#FFFFFF" stop-opacity="0.12"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="grub-body" x1="16" y1="64" x2="112" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.28"/>
-      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.62"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.92"/>
-    </linearGradient>
-  </defs>
-  <ellipse cx="64" cy="64" rx="56" ry="38" fill="url(#grub-aura)"/>
-  <!-- Предротовые жвала -->
-  <path d="M101 52C110 47 117 49 121 56M101 76C110 81 117 79 121 72" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
-  <!-- Тело личинки -->
-  <path d="M20 64C20 45 42 35 72 37C95 38.5 108 49 108 64C108 79 95 89.5 72 91C42 93 20 83 20 64Z" fill="url(#grub-body)" stroke="#FFFFFF" stroke-width="3"/>
-  <!-- 4 сегментные насечки -->
-  <path d="M40 42C45 52 45 76 40 86" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-opacity="0.85"/>
-  <path d="M58 38C64 50 64 78 58 90" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round" stroke-opacity="0.9"/>
-  <path d="M76 38C82 50 82 78 76 90" stroke="#FFFFFF" stroke-width="2.8" stroke-linecap="round"/>
-  <path d="M92 43C96 52 96 76 92 85" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"/>
-  <!-- Внутренний био-канал и ядро -->
-  <ellipse cx="68" cy="64" rx="22" ry="9" fill="#FFFFFF" fill-opacity="0.35"/>
-  <circle cx="84" cy="64" r="6.5" fill="#FFFFFF"/>
-</svg>`,
-  runner: `<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="runner-aura" cx="62%" cy="50%" r="48%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.5"/>
-      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0.14"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="runner-body" x1="18" y1="64" x2="118" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.12"/>
-      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.65"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="1"/>
-    </linearGradient>
-  </defs>
-  <ellipse cx="68" cy="64" rx="54" ry="44" fill="url(#runner-aura)"/>
-  <!-- Хвостовые псевдоподии-шлейф -->
-  <path d="M40 50L14 44M40 78L14 84M34 64H10" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.55"/>
-  <!-- Клиновидный силуэт -->
-  <path d="M118 64L30 24C44 43 44 54 34 64C44 74 44 85 30 104L118 64Z" fill="url(#runner-body)" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>
-  <!-- Внутренние ребра жесткости -->
-  <path d="M104 64L48 42M104 64L48 86" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.75"/>
-  <!-- Кинетическое ядро -->
-  <ellipse cx="78" cy="64" rx="14" ry="6.5" fill="#FFFFFF"/>
-</svg>`,
-  spitter: `<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="spitter-aura" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85"/>
-      <stop offset="32%" stop-color="#FFFFFF" stop-opacity="0.22"/>
-      <stop offset="72%" stop-color="#FFFFFF" stop-opacity="0.16"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="64" cy="64" r="60" fill="url(#spitter-aura)"/>
-  <!-- Внешняя бугристая био-мембрана -->
-  <path d="M64 16C76 16 83 23 92 27C101 31 110 38 110 50C110 60 113 69 108 80C103 91 96 99 84 104C74 108 64 112 52 108C40 104 28 97 22 85C16 73 16 58 21 46C26 34 34 25 46 21C53 18.5 57 16 64 16Z" fill="#FFFFFF" fill-opacity="0.28" stroke="#FFFFFF" stroke-width="3.2"/>
-  <!-- Кратер поры -->
-  <circle cx="64" cy="64" r="30" fill="#FFFFFF" fill-opacity="0.14" stroke="#FFFFFF" stroke-width="3"/>
-  <!-- Сфинктерные складки -->
-  <path d="M64 26V38M64 90V102M26 64H38M90 64H102M37 37L46 46M82 82L91 91M91 37L82 46M46 82L37 91" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-opacity="0.8"/>
-  <!-- Кислотная железа в центре -->
-  <circle cx="64" cy="64" r="15" fill="#FFFFFF" fill-opacity="0.65"/>
-  <circle cx="64" cy="64" r="9" fill="#FFFFFF"/>
-  <!-- Капельки секреции по краю -->
-  <circle cx="48" cy="44" r="3.5" fill="#FFFFFF" fill-opacity="0.85"/>
-  <circle cx="84" cy="52" r="3" fill="#FFFFFF" fill-opacity="0.85"/>
-  <circle cx="60" cy="86" r="3.2" fill="#FFFFFF" fill-opacity="0.85"/>
-</svg>`,
-  brute: `<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="brute-core" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/>
-      <stop offset="52%" stop-color="#FFFFFF" stop-opacity="0.32"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="64" cy="64" r="58" fill="url(#brute-core)"/>
-  <!-- 6 внешних броневых сегментов панциря -->
-  <path d="M44 18C56 12 72 12 84 18L78 30C69 26 59 26 50 30L44 18Z" fill="#FFFFFF" fill-opacity="0.78" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M44 110C56 116 72 116 84 110L78 98C69 102 59 102 50 98L44 110Z" fill="#FFFFFF" fill-opacity="0.78" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M94 25C105 33 113 45 115 58L102 59C100 50 94 41 86 35L94 25Z" fill="#FFFFFF" fill-opacity="0.78" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M115 70C113 83 105 95 94 103L86 93C94 87 100 78 102 69L115 70Z" fill="#FFFFFF" fill-opacity="0.78" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M34 25C23 33 15 45 13 58L26 59C28 50 34 41 42 35L34 25Z" fill="#FFFFFF" fill-opacity="0.78" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M13 70C15 83 23 95 34 103L42 93C34 87 28 78 26 69L13 70Z" fill="#FFFFFF" fill-opacity="0.78" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/>
-  <!-- Плотная внутренняя оболочка -->
-  <circle cx="64" cy="64" r="32" fill="#FFFFFF" fill-opacity="0.34" stroke="#FFFFFF" stroke-width="4"/>
-  <circle cx="64" cy="64" r="18" fill="#FFFFFF" fill-opacity="0.68" stroke="#FFFFFF" stroke-width="2.5"/>
-  <circle cx="64" cy="64" r="8" fill="#FFFFFF"/>
-</svg>`,
-  pulsar: `<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="pulsar-aura" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-      <stop offset="35%" stop-color="#FFFFFF" stop-opacity="0.35"/>
-      <stop offset="75%" stop-color="#FFFFFF" stop-opacity="0.1"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="64" cy="64" r="58" fill="url(#pulsar-aura)"/>
-  <!-- 6 основных лучей-игл -->
-  <polygon points="64,6 71,36 64,44 57,36" fill="#FFFFFF" fill-opacity="0.88"/>
-  <polygon points="64,122 71,92 64,84 57,92" fill="#FFFFFF" fill-opacity="0.88"/>
-  <polygon points="114,35 92,56 81,54 85,44" fill="#FFFFFF" fill-opacity="0.88"/>
-  <polygon points="14,93 36,72 47,74 43,84" fill="#FFFFFF" fill-opacity="0.88"/>
-  <polygon points="14,35 43,44 47,54 36,56" fill="#FFFFFF" fill-opacity="0.88"/>
-  <polygon points="114,93 85,84 81,74 92,72" fill="#FFFFFF" fill-opacity="0.88"/>
-  <!-- 6 вторичных импульсных шипов -->
-  <path d="M64 64L96 18M64 64L32 18M64 64L96 110M64 64L32 110M64 64L118 64M64 64L10 64" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-opacity="0.5"/>
-  <!-- Гексагональный капсид -->
-  <polygon points="64,34 90,49 90,79 64,94 38,79 38,49" fill="#FFFFFF" fill-opacity="0.36" stroke="#FFFFFF" stroke-width="3.2" stroke-linejoin="round"/>
-  <!-- Ядро-реактор -->
-  <circle cx="64" cy="64" r="15" fill="#FFFFFF" fill-opacity="0.72"/>
-  <circle cx="64" cy="64" r="8" fill="#FFFFFF"/>
-</svg>`,
-  titan: `<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="titan-aura" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/>
-      <stop offset="48%" stop-color="#FFFFFF" stop-opacity="0.28"/>
-      <stop offset="82%" stop-color="#FFFFFF" stop-opacity="0.1"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="64" cy="64" r="62" fill="url(#titan-aura)"/>
-  <!-- Внешние 8 изогнутых био-отростков -->
-  <path d="M64 6C69 14 70 20 64 26M64 122C59 114 58 108 64 102M6 64C14 59 20 58 26 64M122 64C114 69 108 70 102 64" stroke="#FFFFFF" stroke-width="3.6" stroke-linecap="round"/>
-  <path d="M23 23C31 25 36 28 38 36M105 105C97 103 92 100 90 92M105 23C103 31 100 36 92 38M23 105C25 97 28 92 36 90" stroke="#FFFFFF" stroke-width="3.4" stroke-linecap="round"/>
-  <!-- Внешняя мембрана колосса -->
-  <circle cx="64" cy="64" r="44" fill="#FFFFFF" fill-opacity="0.2" stroke="#FFFFFF" stroke-width="3.4" stroke-dasharray="22 8" stroke-linecap="round"/>
-  <!-- Средний ребристый био-панцирь -->
-  <circle cx="64" cy="64" r="33" fill="#FFFFFF" fill-opacity="0.3" stroke="#FFFFFF" stroke-width="3"/>
-  <!-- 4 силовых узла на ободе -->
-  <circle cx="64" cy="24" r="5" fill="#FFFFFF"/>
-  <circle cx="64" cy="104" r="5" fill="#FFFFFF"/>
-  <circle cx="24" cy="64" r="5" fill="#FFFFFF"/>
-  <circle cx="104" cy="64" r="5" fill="#FFFFFF"/>
-  <!-- Связи многоядерного центра -->
-  <polygon points="64,45 80,74 48,74" fill="#FFFFFF" fill-opacity="0.32" stroke="#FFFFFF" stroke-width="2.4" stroke-linejoin="round"/>
-  <!-- 3 симбиотических ядра -->
-  <circle cx="64" cy="46" r="6.5" fill="#FFFFFF"/>
-  <circle cx="79" cy="73" r="6.5" fill="#FFFFFF"/>
-  <circle cx="49" cy="73" r="6.5" fill="#FFFFFF"/>
-  <!-- Центральная сингулярность -->
-  <circle cx="64" cy="64" r="7.5" fill="#FFFFFF" fill-opacity="0.85"/>
-  <circle cx="64" cy="64" r="3.5" fill="#FFFFFF"/>
-</svg>`
+  grub: `<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><radialGradient id="p2_grub_b" cx="40%" cy="30%" r="68%"><stop offset="0%" stop-color="#fda4af"/><stop offset="58%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></radialGradient><radialGradient id="p2_grub_t" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fecdd3"/><stop offset="58%" stop-color="#fb7185"/><stop offset="100%" stop-color="#be123c"/></radialGradient></defs><!-- Rear tail segments (-X) -->
+           <ellipse cx="26" cy="64" rx="14" ry="16" fill="url(#p2_grub_t)" stroke="#160e26" stroke-width="5"/>
+           <ellipse cx="48" cy="64" rx="20" ry="24" fill="url(#p2_grub_t)" stroke="#160e26" stroke-width="5"/>
+           <!-- Front mandibles (+X) -->
+           <path d="M100 50 Q116 44 120 55 Q111 58 103 58 Z" fill="#fef08a" stroke="#160e26" stroke-width="4" stroke-linejoin="round"/>
+           <path d="M100 78 Q116 84 120 73 Q111 70 103 70 Z" fill="#fef08a" stroke="#160e26" stroke-width="4" stroke-linejoin="round"/>
+           <!-- Main head/thorax body -->
+           <ellipse cx="76" cy="64" rx="30" ry="32" fill="url(#p2_grub_b)" stroke="#160e26" stroke-width="5.5"/>
+           <!-- Cel shadow bottom -->
+           <path d="M52 78 C64 94 94 92 102 74 C92 84 68 86 52 78 Z" fill="#4c0519" opacity="0.35"/>
+           <!-- Glossy back shine -->
+           <ellipse cx="68" cy="46" rx="11" ry="5" fill="#fff" opacity="0.55" transform="rotate(-14 68 46)"/>
+           <!-- Angry cartoon eyes facing +X -->
+           <circle cx="88" cy="52" r="8" fill="#fef08a" stroke="#160e26" stroke-width="3.5"/>
+           <circle cx="91" cy="52" r="3.4" fill="#160e26"/>
+           <circle cx="87" cy="49" r="2" fill="#fff"/>
+           <circle cx="88" cy="76" r="8" fill="#fef08a" stroke="#160e26" stroke-width="3.5"/>
+           <circle cx="91" cy="76" r="3.4" fill="#160e26"/>
+           <circle cx="87" cy="73" r="2" fill="#fff"/>
+           <!-- Cute brow lines -->
+           <path d="M80 43 L95 47" stroke="#160e26" stroke-width="3.5" stroke-linecap="round"/>
+           <path d="M80 85 L95 81" stroke="#160e26" stroke-width="3.5" stroke-linecap="round"/></svg>`,
+  runner: `<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><linearGradient id="p2_run_a" x1="0%" y1="20%" x2="100%" y2="80%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#fb923c"/><stop offset="100%" stop-color="#dc2626"/></linearGradient><linearGradient id="p2_run_f" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fdba74"/><stop offset="52%" stop-color="#ea580c"/><stop offset="100%" stop-color="#7c2d12"/></linearGradient></defs><!-- Speed trail fin back (-X) -->
+           <path d="M12 64 L40 50 L34 64 L40 78 Z" fill="#fef08a" stroke="#160e26" stroke-width="4.5" stroke-linejoin="round"/>
+           <!-- Swept-back predator wings -->
+           <path d="M70 46 L22 14 L38 52 Z" fill="url(#p2_run_f)" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <path d="M70 82 L22 114 L38 76 Z" fill="url(#p2_run_f)" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <!-- Sleek dart fuselage facing +X -->
+           <path d="M28 64 C36 42 68 34 118 64 C68 94 36 86 28 64 Z" fill="url(#p2_run_a)" stroke="#160e26" stroke-width="5.5" stroke-linejoin="round"/>
+           <!-- Racing stripe -->
+           <path d="M46 64 H98" stroke="#fff7ed" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+           <!-- Sharp glowing eyes -->
+           <polygon points="74,48 92,55 78,58" fill="#fef08a" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <polygon points="74,80 92,73 78,70" fill="#fef08a" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/></svg>`,
+  spitter: `<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><radialGradient id="p2_spit_b" cx="42%" cy="30%" r="68%"><stop offset="0%" stop-color="#d9f99d"/><stop offset="58%" stop-color="#84cc16"/><stop offset="100%" stop-color="#166534"/></radialGradient><radialGradient id="p2_spit_c" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#bef264"/><stop offset="100%" stop-color="#3f6212"/></radialGradient></defs><!-- Wavy tentacles -->
+           <g fill="none" stroke="#65a30d" stroke-width="9" stroke-linecap="round">
+             <path d="M36 78 C28 94 40 104 30 116"/>
+             <path d="M56 82 C50 98 62 108 54 120"/>
+             <path d="M72 82 C78 98 66 108 74 120"/>
+             <path d="M92 78 C100 94 88 104 98 116"/>
+           </g>
+           <g fill="none" stroke="#160e26" stroke-width="3.5" stroke-linecap="round">
+             <path d="M36 78 C28 94 40 104 30 116"/>
+             <path d="M56 82 C50 98 62 108 54 120"/>
+             <path d="M72 82 C78 98 66 108 74 120"/>
+             <path d="M92 78 C100 94 88 104 98 116"/>
+           </g>
+           <!-- Bell dome -->
+           <path d="M18 72 C18 28 38 14 64 14 C90 14 110 28 110 72 C98 84 82 78 64 84 C46 78 30 84 18 72 Z" fill="url(#p2_spit_b)" stroke="#160e26" stroke-width="5.5" stroke-linejoin="round"/>
+           <!-- Venom sac inside -->
+           <ellipse cx="64" cy="46" rx="22" ry="18" fill="url(#p2_spit_c)" stroke="#160e26" stroke-width="4"/>
+           <!-- Cheeky spitting face -->
+           <circle cx="52" cy="54" r="6" fill="#fff" stroke="#160e26" stroke-width="3"/>
+           <circle cx="53" cy="54" r="2.6" fill="#160e26"/>
+           <circle cx="76" cy="54" r="6" fill="#fff" stroke="#160e26" stroke-width="3"/>
+           <circle cx="75" cy="54" r="2.6" fill="#160e26"/>
+           <circle cx="64" cy="67" r="6" fill="#14532d" stroke="#160e26" stroke-width="3"/>
+           <ellipse cx="44" cy="30" rx="10" ry="5" fill="#fff" opacity="0.7" transform="rotate(-25 44 30)"/></svg>`,
+  brute: `<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><linearGradient id="p2_br_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fcd34d"/><stop offset="52%" stop-color="#d97706"/><stop offset="100%" stop-color="#78350f"/></linearGradient><linearGradient id="p2_br_p" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#cbd5e1"/><stop offset="52%" stop-color="#64748b"/><stop offset="100%" stop-color="#1e293b"/></linearGradient></defs><!-- Side shoulder spikes -->
+           <polygon points="8,56 30,44 28,76" fill="#fef3c7" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <polygon points="120,56 98,44 100,76" fill="#fef3c7" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <polygon points="36,12 48,32 24,36" fill="#fef3c7" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <polygon points="92,12 80,32 104,36" fill="#fef3c7" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <!-- Heavy armored hexagon shell -->
+           <polygon points="64,16 106,36 108,88 64,114 20,88 22,36" fill="url(#p2_br_a)" stroke="#160e26" stroke-width="6" stroke-linejoin="round"/>
+           <!-- Metal-chitin plate bands -->
+           <path d="M24 54 Q64 38 104 54 L100 72 Q64 58 28 72 Z" fill="url(#p2_br_p)" stroke="#160e26" stroke-width="4.5" stroke-linejoin="round"/>
+           <!-- Angry visor eyes -->
+           <path d="M36 66 L58 72 L40 78 Z" fill="#fef08a" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <path d="M92 66 L70 72 L88 78 Z" fill="#fef08a" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <!-- Jaw plate -->
+           <path d="M44 92 H84 L78 102 H50 Z" fill="#451a03" stroke="#160e26" stroke-width="4" stroke-linejoin="round"/>
+           <ellipse cx="52" cy="32" rx="14" ry="5" fill="#fff" opacity="0.45" transform="rotate(-10 52 32)"/></svg>`,
+  pulsar: `<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><radialGradient id="p2_pul_c" cx="45%" cy="40%" r="62%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="58%" stop-color="#f97316"/><stop offset="100%" stop-color="#be123c"/></radialGradient><linearGradient id="p2_pul_r" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="52%" stop-color="#ec4899"/><stop offset="100%" stop-color="#7e22ce"/></linearGradient></defs><!-- Rotating star blades -->
+           <path d="M64 8 L76 34 L104 24 L92 52 L120 64 L92 76 L104 104 L76 94 L64 120 L52 94 L24 104 L36 76 L8 64 L36 52 L24 24 L52 34 Z" fill="url(#p2_pul_r)" stroke="#160e26" stroke-width="5.5" stroke-linejoin="round"/>
+           <!-- Glowing core -->
+           <circle cx="64" cy="64" r="28" fill="url(#p2_pul_c)" stroke="#160e26" stroke-width="5.5"/>
+           <!-- Spiral hazard core -->
+           <circle cx="64" cy="64" r="14" fill="#fef08a" stroke="#160e26" stroke-width="3.5"/>
+           <circle cx="64" cy="64" r="6" fill="#dc2626"/>
+           <circle cx="56" cy="54" r="4" fill="#fff" opacity="0.85"/></svg>`,
+  titan: `<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><radialGradient id="p2_tit_b" cx="45%" cy="30%" r="68%"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="58%" stop-color="#059669"/><stop offset="100%" stop-color="#064e3b"/></radialGradient><linearGradient id="p2_tit_g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#92400e"/></linearGradient></defs><!-- Giant horn mandibles -->
+           <path d="M36 30 C20 14 26 4 46 18 L48 36 Z" fill="url(#p2_tit_g)" stroke="#160e26" stroke-width="4.5" stroke-linejoin="round"/>
+           <path d="M92 30 C108 14 102 4 82 18 L80 36 Z" fill="url(#p2_tit_g)" stroke="#160e26" stroke-width="4.5" stroke-linejoin="round"/>
+           <!-- Heavy layered carapace -->
+           <path d="M64 20 C96 20 116 44 114 74 C112 104 90 118 64 118 C38 118 16 104 14 74 C12 44 32 20 64 20 Z" fill="url(#p2_tit_b)" stroke="#160e26" stroke-width="6"/>
+           <!-- Gold dorsal ridge -->
+           <path d="M64 22 L76 48 L64 112 L52 48 Z" fill="url(#p2_tit_g)" stroke="#160e26" stroke-width="4" stroke-linejoin="round"/>
+           <!-- Four glowing titan eyes -->
+           <circle cx="42" cy="56" r="8" fill="#fef08a" stroke="#160e26" stroke-width="3.5"/>
+           <circle cx="43" cy="56" r="3" fill="#160e26"/>
+           <circle cx="86" cy="56" r="8" fill="#fef08a" stroke="#160e26" stroke-width="3.5"/>
+           <circle cx="85" cy="56" r="3" fill="#160e26"/>
+           <circle cx="34" cy="72" r="5" fill="#fb923c" stroke="#160e26" stroke-width="2.8"/>
+           <circle cx="94" cy="72" r="5" fill="#fb923c" stroke="#160e26" stroke-width="2.8"/>
+           <!-- Gloss highlight -->
+           <ellipse cx="44" cy="36" rx="9" ry="4" fill="#fff" opacity="0.55" transform="rotate(-24 44 36)"/></svg>`,
 } as const;
 
 export const PARTICLE_SPRITES = {
-  xpSoul: `<svg viewBox="0 0 64 64" width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="xp-glow" cx="68%" cy="50%" r="44%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
-      <stop offset="45%" stop-color="#FFFFFF" stop-opacity="0.4"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="xp-tail" x1="6" y1="32" x2="54" y2="32" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
-      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.45"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="1"/>
-    </linearGradient>
-  </defs>
-  <circle cx="42" cy="32" r="22" fill="url(#xp-glow)"/>
-  <!-- Капля-плазмоид с хвостом -->
-  <path d="M6 32C18 30 30 19 42 19C49.5 19 55 24.8 55 32C55 39.2 49.5 45 42 45C30 45 18 34 6 32Z" fill="url(#xp-tail)"/>
-  <!-- Яркое ядро -->
-  <circle cx="43" cy="32" r="7.5" fill="#FFFFFF"/>
-  <!-- Искры в шлейфе -->
-  <circle cx="22" cy="24" r="2" fill="#FFFFFF" fill-opacity="0.7"/>
-  <circle cx="17" cy="39" r="1.6" fill="#FFFFFF" fill-opacity="0.55"/>
-</svg>`,
-  spitVenom: `<svg viewBox="0 0 64 64" width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="venom-glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-      <stop offset="48%" stop-color="#FFFFFF" stop-opacity="0.38"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="32" cy="32" r="28" fill="url(#venom-glow)"/>
-  <!-- Органический сгусток -->
-  <path d="M32 13C41 13 49 20 50 30C51 40 43 50 32 50C21 50 14 42 15 32C16 21 23 13 32 13Z" fill="#FFFFFF" fill-opacity="0.62" stroke="#FFFFFF" stroke-width="2.4"/>
-  <!-- Ядро и пузырьки -->
-  <circle cx="33" cy="31" r="9.5" fill="#FFFFFF"/>
-  <circle cx="26" cy="25" r="3" fill="#FFFFFF" fill-opacity="0.55"/>
-  <circle cx="39" cy="38" r="2.2" fill="#FFFFFF" fill-opacity="0.6"/>
-  <!-- Мелкие брызги -->
-  <circle cx="12" cy="18" r="3" fill="#FFFFFF" fill-opacity="0.8"/>
-  <circle cx="53" cy="17" r="2.4" fill="#FFFFFF" fill-opacity="0.75"/>
-  <circle cx="52" cy="48" r="3.2" fill="#FFFFFF" fill-opacity="0.8"/>
-  <circle cx="15" cy="48" r="2" fill="#FFFFFF" fill-opacity="0.65"/>
-</svg>`
+  xpSoul: `<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><radialGradient id="p2_xp_a" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#ecfeff"/><stop offset="58%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0284c7"/></radialGradient></defs><circle cx="32" cy="32" r="26" fill="#22d3ee" opacity="0.24"/>
+           <circle cx="32" cy="32" r="19" fill="url(#p2_xp_a)" stroke="#160e26" stroke-width="3.8"/>
+           <!-- Tiny DNA sparkle inside -->
+           <path d="M32 21 L35 29 L43 32 L35 35 L32 43 L29 35 L21 32 L29 29 Z" fill="#fef9c3" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/>
+           <ellipse cx="25" cy="22" rx="4.5" ry="2.6" fill="#fff" opacity="0.9" transform="rotate(-30 25 22)"/></svg>`,
+  spitVenom: `<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><radialGradient id="p2_ven_a" cx="40%" cy="35%" r="65%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#84cc16"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><path d="M12 32 C12 18 22 10 34 12 C48 14 54 22 54 32 C54 44 44 52 32 52 C20 52 12 44 12 32 Z" fill="url(#p2_ven_a)" stroke="#160e26" stroke-width="3.8"/>
+           <circle cx="28" cy="28" r="5.5" fill="#fef9c3" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="40" cy="38" r="4" fill="#d9f99d" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="10" cy="18" r="3.5" fill="#a3e635" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="54" cy="48" r="3" fill="#84cc16" stroke="#160e26" stroke-width="2"/></svg>`,
 } as const;
 
 export const UI_DECOR = {
-  cornerFrame: `<svg viewBox="0 0 48 48" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M4 44V15L15 4H44" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M9 34V17L17 9H34" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.55" vector-effect="non-scaling-stroke"/>
-  <circle cx="15" cy="4" r="2" fill="currentColor"/>
-  <circle cx="4" cy="15" r="2" fill="currentColor"/>
-  <path d="M24 4V8M31 4V7M4 24H8M4 31H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.7" vector-effect="non-scaling-stroke"/>
-</svg>`,
-  scaleBracket: `<svg viewBox="0 0 24 48" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M20 4H11L4 12V36L11 44H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M9.5 14V34" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.55" vector-effect="non-scaling-stroke"/>
-  <path d="M13 24H19L16 21M19 24L16 27" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-  <path d="M4 18H7.5M4 30H7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
-  <circle cx="20" cy="4" r="1.6" fill="currentColor"/>
-  <circle cx="20" cy="44" r="1.6" fill="currentColor"/>
-</svg>`
+  cornerFrame: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none"><defs><linearGradient id="p2_cf_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#0ea5e9"/></linearGradient></defs><path d="M6 42 V14 C6 9 9 6 14 6 H42 L34 14 H16 C14.5 14 14 14.5 14 16 V34 Z" fill="url(#p2_cf_a)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <circle cx="14" cy="14" r="4" fill="#fef08a" stroke="#160e26" stroke-width="2"/></svg>`,
+  scaleBracket: `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 48" fill="none"><defs><linearGradient id="p2_sb_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient></defs><path d="M20 4 H10 C6 4 4 7 4 12 V36 C4 41 6 44 10 44 H20 L16 38 H11 V10 H16 Z" fill="url(#p2_sb_a)" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/>
+           <circle cx="7.5" cy="24" r="3" fill="#fef08a" stroke="#160e26" stroke-width="1.8"/></svg>`,
 } as const;
 
 export const NODE_SPRITES = {
-  gen: UI_ICONS.nodeGen.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
-  amp: UI_ICONS.nodeAmp.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
-  magnet: UI_ICONS.nodeMagnet.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
-  mutagen: UI_ICONS.nodeMutagen.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
-  incubator: UI_ICONS.nodeIncubator.replace(/currentColor/g, '#FFFFFF').replace(/width="100%" height="100%"/, 'width="128" height="128"'),
+  gen: `<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_ng_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></radialGradient></defs><polygon points="16,3 28,10 28,22 16,29 4,22 4,10" fill="url(#p2_ng_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <polygon points="17,8 11,17 16,17 15,24 21,15 16,15" fill="#fff" stroke="#160e26" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+  amp: `<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_na_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fda4af"/><stop offset="58%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_na_a)" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M16 8 L23 16 H19 V24 H13 V16 H9 Z" fill="#fef08a" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/></svg>`,
+  magnet: `<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="p2_nm_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><circle cx="16" cy="16" r="12" fill="#1e293b" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M10 10 V17 C10 21 12.5 23.5 16 23.5 C19.5 23.5 22 21 22 17 V10 H18.5 V17 C18.5 18.8 17.4 20 16 20 C14.6 20 13.5 18.8 13.5 17 V10 Z" fill="url(#p2_nm_a)" stroke="#160e26" stroke-width="1.8" stroke-linejoin="round"/></svg>`,
+  mutagen: `<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_nmu_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#e9d5ff"/><stop offset="58%" stop-color="#a855f7"/><stop offset="100%" stop-color="#581c87"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_nmu_a)" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M11 9 C21 12 21 16 11 19 C21 22 21 24 11 25" stroke="#fef08a" stroke-width="2.5" stroke-linecap="round"/>
+           <path d="M21 9 C11 12 11 16 21 19 C11 22 11 24 21 25" stroke="#67e8f9" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+  incubator: `<svg width="128" height="128" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><radialGradient id="p2_ni_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#bbf7d0"/><stop offset="58%" stop-color="#10b981"/><stop offset="100%" stop-color="#065f46"/></radialGradient></defs><path d="M16 4 C23 4 27 11 26 20 C25 25 21 28 16 28 C11 28 7 25 6 20 C5 11 9 4 16 4 Z" fill="url(#p2_ni_a)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="16" cy="17" r="5.5" fill="#fef08a" stroke="#160e26" stroke-width="2"/>
+           <circle cx="14.5" cy="15.5" r="1.5" fill="#fff"/></svg>`,
 } as const;
 
 export type EnemySpriteKey = keyof typeof ENEMY_SPRITES;
@@ -343,10 +190,22 @@ export type NodeSpriteKey = keyof typeof NODE_SPRITES;
 
 /**
  * Конвертирует SVG-строку в PixiJS v8 Texture через Data URI.
- * Белый цвет (#FFFFFF) + альфа-градиенты позволяют свободно задавать sprite.tint.
+ * Если у SVG нет явных пиксельных width/height, подставляет их из viewBox во избежание искажения в Chromium.
  */
 export async function svgToTexture(svgString: string): Promise<Texture> {
-  const dataUri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+  let normalized = svgString;
+  const vb = svgString.match(/viewBox="\s*[\d.-]+\s+[\d.-]+\s+([\d.]+)\s+([\d.]+)\s*"/);
+  if (vb) {
+    const [, w, h] = vb;
+    if (/width="100%"/.test(normalized)) {
+      normalized = normalized
+        .replace(/width="100%"/, `width="${w}"`)
+        .replace(/height="100%"/, `height="${h}"`);
+    } else if (!/\swidth="/.test(normalized.slice(0, normalized.indexOf('>')))) {
+      normalized = normalized.replace(/^<svg\s+/, `<svg width="${w}" height="${h}" `);
+    }
+  }
+  const dataUri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(normalized)}`;
   return new Promise<Texture>((resolve) => {
     const img = new Image();
     img.onload = () => {

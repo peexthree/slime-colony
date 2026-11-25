@@ -1,34 +1,6 @@
-<svg viewBox="0 0 256 256" width="256" height="256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="frac-glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.58"/>
-      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.16"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="128" cy="128" r="124" fill="url(#frac-glow)"/>
-  <!-- Внешние орбиты и рекурсивные сателлитные почки (мотив Мандельброта) -->
-  <circle cx="128" cy="128" r="112" stroke="#FFFFFF" stroke-width="1.6" stroke-dasharray="4 6" stroke-opacity="0.6"/>
-  <circle cx="128" cy="128" r="88" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.72"/>
-  <!-- 8 рекурсивных лепестков-кардиоид -->
-  <g stroke="#FFFFFF" stroke-width="2" fill="#FFFFFF" fill-opacity="0.08">
-    <circle cx="128" cy="54" r="28"/><circle cx="128" cy="202" r="28"/>
-    <circle cx="54" cy="128" r="28"/><circle cx="202" cy="128" r="28"/>
-    <circle cx="76" cy="76" r="22"/><circle cx="180" cy="180" r="22"/>
-    <circle cx="180" cy="76" r="22"/><circle cx="76" cy="180" r="22"/>
-  </g>
-  <!-- Вторичные микро-почки на вершинах -->
-  <g fill="#FFFFFF" fill-opacity="0.65">
-    <circle cx="128" cy="18" r="6"/><circle cx="128" cy="238" r="6"/>
-    <circle cx="18" cy="128" r="6"/><circle cx="238" cy="128" r="6"/>
-    <circle cx="50" cy="50" r="4.5"/><circle cx="206" cy="206" r="4.5"/>
-    <circle cx="206" cy="50" r="4.5"/><circle cx="50" cy="206" r="4.5"/>
-  </g>
-  <!-- Сакральная 8-конечная октаграмма -->
-  <polygon points="128,36 154,102 220,128 154,154 128,220 102,154 36,128 102,102" fill="#FFFFFF" fill-opacity="0.14" stroke="#FFFFFF" stroke-width="2.4" stroke-linejoin="round"/>
-  <polygon points="63,63 128,92 193,63 164,128 193,193 128,164 63,193 92,128" stroke="#FFFFFF" stroke-width="1.8" stroke-opacity="0.75" stroke-linejoin="round"/>
-  <!-- Рекурсивный центр-сингулярность -->
-  <circle cx="128" cy="128" r="32" fill="#FFFFFF" fill-opacity="0.2" stroke="#FFFFFF" stroke-width="2.6"/>
-  <polygon points="128,104 152,128 128,152 104,128" fill="#FFFFFF" fill-opacity="0.4" stroke="#FFFFFF" stroke-width="2"/>
-  <circle cx="128" cy="128" r="8" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><linearGradient id="p2_b5_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="52%" stop-color="#c084fc"/><stop offset="100%" stop-color="#6366f1"/></linearGradient></defs><circle cx="128" cy="128" r="108" stroke="url(#p2_b5_a)" stroke-width="7" opacity="0.75"/>
+           <polygon points="128,22 220,182 36,182" fill="none" stroke="#e879f9" stroke-width="6" stroke-linejoin="round" opacity="0.7"/>
+           <polygon points="128,234 220,74 36,74" fill="none" stroke="#fde047" stroke-width="6" stroke-linejoin="round" opacity="0.7"/>
+           <circle cx="128" cy="128" r="54" stroke="#a855f7" stroke-width="5" stroke-dasharray="12 10" opacity="0.8"/>
+           <polygon points="128,88 162,128 128,168 94,128" fill="url(#p2_b5_a)" opacity="0.55" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <circle cx="128" cy="128" r="14" fill="#fef9c3" stroke="#160e26" stroke-width="4"/></svg>

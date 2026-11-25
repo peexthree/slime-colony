@@ -1,23 +1,8 @@
-<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="orb-core" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
-      <stop offset="28%" stop-color="#FFFFFF" stop-opacity="0.82"/>
-      <stop offset="58%" stop-color="#FFFFFF" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="64" cy="64" r="60" fill="url(#orb-core)"/>
-  <!-- Внешние вращающиеся плазменные протуберанцы -->
-  <path d="M22 46C28 24 54 12 80 18M106 82C100 104 74 116 48 110" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-opacity="0.88"/>
-  <path d="M104 42C116 62 110 88 90 102M24 86C12 66 18 40 38 26" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-opacity="0.65"/>
-  <!-- Зигзагообразные дуги молний вокруг сферы -->
-  <path d="M30 56L40 48L38 38L52 34M98 72L88 80L90 90L76 94" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M74 28L82 38L94 38L96 52M54 100L46 90L34 90L32 76" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8"/>
-  <!-- Внутренняя магнитная клетка -->
-  <ellipse cx="64" cy="64" rx="34" ry="18" transform="rotate(35 64 64)" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.72"/>
-  <ellipse cx="64" cy="64" rx="34" ry="18" transform="rotate(-35 64 64)" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.72"/>
-  <!-- Раскалённое ядро сферы -->
-  <circle cx="64" cy="64" r="22" fill="#FFFFFF" fill-opacity="0.45" stroke="#FFFFFF" stroke-width="2.6"/>
-  <circle cx="64" cy="64" r="12" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><radialGradient id="p2_orb_a" cx="40%" cy="35%" r="65%"><stop offset="0%" stop-color="#ffffff"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#4f46e5"/></radialGradient></defs><!-- Electric outer arcs -->
+           <path d="M22 46 L12 34 L28 24 L42 14" stroke="#fef08a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+           <path d="M106 82 L116 94 L100 104 L86 114" stroke="#fef08a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+           <circle cx="64" cy="64" r="44" stroke="#67e8f9" stroke-width="4" stroke-dasharray="16 12" opacity="0.8"/>
+           <!-- Plasma orb body -->
+           <circle cx="64" cy="64" r="34" fill="url(#p2_orb_a)" stroke="#160e26" stroke-width="5.5"/>
+           <path d="M44 68 L58 52 L66 64 L84 48" stroke="#fef08a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+           <ellipse cx="50" cy="46" rx="9" ry="5" fill="#fff" opacity="0.85" transform="rotate(-30 50 46)"/></svg>

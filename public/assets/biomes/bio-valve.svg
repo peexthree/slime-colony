@@ -1,24 +1,6 @@
-<svg viewBox="0 0 256 256" width="256" height="256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="valve-depth" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.1"/>
-      <stop offset="48%" stop-color="#FFFFFF" stop-opacity="0.34"/>
-      <stop offset="86%" stop-color="#FFFFFF" stop-opacity="0.14"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="128" cy="128" r="120" fill="url(#valve-depth)"/>
-  <!-- Внешнее мышечное кольцо с радиальными складками -->
-  <circle cx="128" cy="128" r="106" stroke="#FFFFFF" stroke-width="3.2" stroke-opacity="0.72"/>
-  <circle cx="128" cy="128" r="92" stroke="#FFFFFF" stroke-width="8" stroke-dasharray="14 10" stroke-opacity="0.28"/>
-  <circle cx="128" cy="128" r="80" fill="#FFFFFF" fill-opacity="0.08" stroke="#FFFFFF" stroke-width="2.6" stroke-opacity="0.82"/>
-  <!-- 3 перекрывающиеся створки био-клапана -->
-  <path d="M128 48C164 48 192 72 198 106C174 114 148 114 128 128C114 102 114 74 128 48Z" fill="#FFFFFF" fill-opacity="0.24" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>
-  <path d="M198 168C180 198 144 212 110 206C116 180 124 156 128 128C156 128 182 142 198 168Z" fill="#FFFFFF" fill-opacity="0.24" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>
-  <path d="M58 168C40 138 46 100 68 72C90 88 108 106 128 128C114 152 88 166 58 168Z" fill="#FFFFFF" fill-opacity="0.24" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>
-  <!-- Сухожильные тяжи (хорды) клапана -->
-  <path d="M128 22V50M218 180L195 166M38 180L61 166M184 42L168 64M72 42L88 64M128 234V206" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.65"/>
-  <!-- Центральное пульсирующее отверстие сфинктера -->
-  <polygon points="128,108 145,138 111,138" fill="#FFFFFF" fill-opacity="0.45" stroke="#FFFFFF" stroke-width="2.4" stroke-linejoin="round"/>
-  <circle cx="128" cy="128" r="8" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><radialGradient id="p2_b3_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fde68a"/><stop offset="58%" stop-color="#d97706"/><stop offset="100%" stop-color="#78350f"/></radialGradient></defs><circle cx="128" cy="128" r="106" fill="#451a03" opacity="0.45" stroke="#160e26" stroke-width="7"/>
+           <!-- 3 muscular valve flaps -->
+           <path d="M128 128 L128 26 A102 102 0 0 1 216 179 Z" fill="url(#p2_b3_a)" opacity="0.72" stroke="#160e26" stroke-width="6" stroke-linejoin="round"/>
+           <path d="M128 128 L216 179 A102 102 0 0 1 40 179 Z" fill="#f59e0b" opacity="0.62" stroke="#160e26" stroke-width="6" stroke-linejoin="round"/>
+           <path d="M128 128 L40 179 A102 102 0 0 1 128 26 Z" fill="#b45309" opacity="0.68" stroke="#160e26" stroke-width="6" stroke-linejoin="round"/>
+           <circle cx="128" cy="128" r="24" fill="#fef3c7" stroke="#160e26" stroke-width="5"/></svg>

@@ -1,23 +1,12 @@
-<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="runner-aura" cx="62%" cy="50%" r="48%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.5"/>
-      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0.14"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="runner-body" x1="18" y1="64" x2="118" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.12"/>
-      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.65"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="1"/>
-    </linearGradient>
-  </defs>
-  <ellipse cx="68" cy="64" rx="54" ry="44" fill="url(#runner-aura)"/>
-  <!-- Хвостовые псевдоподии-шлейф -->
-  <path d="M40 50L14 44M40 78L14 84M34 64H10" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.55"/>
-  <!-- Клиновидный силуэт -->
-  <path d="M118 64L30 24C44 43 44 54 34 64C44 74 44 85 30 104L118 64Z" fill="url(#runner-body)" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>
-  <!-- Внутренние ребра жесткости -->
-  <path d="M104 64L48 42M104 64L48 86" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-opacity="0.75"/>
-  <!-- Кинетическое ядро -->
-  <ellipse cx="78" cy="64" rx="14" ry="6.5" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><linearGradient id="p2_run_a" x1="0%" y1="20%" x2="100%" y2="80%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#fb923c"/><stop offset="100%" stop-color="#dc2626"/></linearGradient><linearGradient id="p2_run_f" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fdba74"/><stop offset="52%" stop-color="#ea580c"/><stop offset="100%" stop-color="#7c2d12"/></linearGradient></defs><!-- Speed trail fin back (-X) -->
+           <path d="M12 64 L40 50 L34 64 L40 78 Z" fill="#fef08a" stroke="#160e26" stroke-width="4.5" stroke-linejoin="round"/>
+           <!-- Swept-back predator wings -->
+           <path d="M70 46 L22 14 L38 52 Z" fill="url(#p2_run_f)" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <path d="M70 82 L22 114 L38 76 Z" fill="url(#p2_run_f)" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <!-- Sleek dart fuselage facing +X -->
+           <path d="M28 64 C36 42 68 34 118 64 C68 94 36 86 28 64 Z" fill="url(#p2_run_a)" stroke="#160e26" stroke-width="5.5" stroke-linejoin="round"/>
+           <!-- Racing stripe -->
+           <path d="M46 64 H98" stroke="#fff7ed" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+           <!-- Sharp glowing eyes -->
+           <polygon points="74,48 92,55 78,58" fill="#fef08a" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <polygon points="74,80 92,73 78,70" fill="#fef08a" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/></svg>

@@ -1,25 +1,8 @@
-<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="pulsar-aura" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-      <stop offset="35%" stop-color="#FFFFFF" stop-opacity="0.35"/>
-      <stop offset="75%" stop-color="#FFFFFF" stop-opacity="0.1"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="64" cy="64" r="58" fill="url(#pulsar-aura)"/>
-  <!-- 6 основных лучей-игл -->
-  <polygon points="64,6 71,36 64,44 57,36" fill="#FFFFFF" fill-opacity="0.88"/>
-  <polygon points="64,122 71,92 64,84 57,92" fill="#FFFFFF" fill-opacity="0.88"/>
-  <polygon points="114,35 92,56 81,54 85,44" fill="#FFFFFF" fill-opacity="0.88"/>
-  <polygon points="14,93 36,72 47,74 43,84" fill="#FFFFFF" fill-opacity="0.88"/>
-  <polygon points="14,35 43,44 47,54 36,56" fill="#FFFFFF" fill-opacity="0.88"/>
-  <polygon points="114,93 85,84 81,74 92,72" fill="#FFFFFF" fill-opacity="0.88"/>
-  <!-- 6 вторичных импульсных шипов -->
-  <path d="M64 64L96 18M64 64L32 18M64 64L96 110M64 64L32 110M64 64L118 64M64 64L10 64" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-opacity="0.5"/>
-  <!-- Гексагональный капсид -->
-  <polygon points="64,34 90,49 90,79 64,94 38,79 38,49" fill="#FFFFFF" fill-opacity="0.36" stroke="#FFFFFF" stroke-width="3.2" stroke-linejoin="round"/>
-  <!-- Ядро-реактор -->
-  <circle cx="64" cy="64" r="15" fill="#FFFFFF" fill-opacity="0.72"/>
-  <circle cx="64" cy="64" r="8" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><radialGradient id="p2_pul_c" cx="45%" cy="40%" r="62%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="58%" stop-color="#f97316"/><stop offset="100%" stop-color="#be123c"/></radialGradient><linearGradient id="p2_pul_r" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="52%" stop-color="#ec4899"/><stop offset="100%" stop-color="#7e22ce"/></linearGradient></defs><!-- Rotating star blades -->
+           <path d="M64 8 L76 34 L104 24 L92 52 L120 64 L92 76 L104 104 L76 94 L64 120 L52 94 L24 104 L36 76 L8 64 L36 52 L24 24 L52 34 Z" fill="url(#p2_pul_r)" stroke="#160e26" stroke-width="5.5" stroke-linejoin="round"/>
+           <!-- Glowing core -->
+           <circle cx="64" cy="64" r="28" fill="url(#p2_pul_c)" stroke="#160e26" stroke-width="5.5"/>
+           <!-- Spiral hazard core -->
+           <circle cx="64" cy="64" r="14" fill="#fef08a" stroke="#160e26" stroke-width="3.5"/>
+           <circle cx="64" cy="64" r="6" fill="#dc2626"/>
+           <circle cx="56" cy="54" r="4" fill="#fff" opacity="0.85"/></svg>

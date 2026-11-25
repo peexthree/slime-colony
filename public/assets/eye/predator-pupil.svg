@@ -1,17 +1,6 @@
-<svg viewBox="0 0 64 64" width="64" height="64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="pupil-aura" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.92"/>
-      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.32"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <circle cx="32" cy="32" r="28" fill="url(#pupil-aura)"/>
-  <!-- Внешнее фокусное кольцо зрачка -->
-  <circle cx="32" cy="32" r="18" stroke="#FFFFFF" stroke-width="2" stroke-opacity="0.65"/>
-  <!-- Вертикальный щелевидный зрачок рептилии / хищника -->
-  <path d="M32 10C37.8 20 39 26 39 32C39 38 37.8 44 32 54C26.2 44 25 38 25 32C25 26 26.2 20 32 10Z" fill="#05080e" fill-opacity="0.92" stroke="#FFFFFF" stroke-width="2.6" stroke-linejoin="round"/>
-  <!-- Внутренний светящийся хищный блик в глубине зрачка -->
-  <path d="M32 17C34 24 34 40 32 47C30 40 30 24 32 17Z" fill="#FFFFFF" fill-opacity="0.5"/>
-  <circle cx="29" cy="25" r="2.2" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><radialGradient id="p2_pup_i" cx="45%" cy="42%" r="58%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#f97316"/><stop offset="100%" stop-color="#b91c1c"/></radialGradient></defs><circle cx="32" cy="32" r="24" fill="url(#p2_pup_i)" stroke="#160e26" stroke-width="4.5"/>
+           <!-- Vertical cat-predator slit -->
+           <ellipse cx="32" cy="32" rx="7.5" ry="18" fill="#160e26"/>
+           <!-- Cartoon glossy eye catchlights -->
+           <circle cx="24" cy="23" r="5.5" fill="#fff"/>
+           <circle cx="39" cy="40" r="2.8" fill="#fff" opacity="0.85"/></svg>

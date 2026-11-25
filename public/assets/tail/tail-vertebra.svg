@@ -1,30 +1,9 @@
-<svg viewBox="0 0 128 128" width="128" height="128" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="vert-glow" cx="52%" cy="50%" r="46%">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/>
-      <stop offset="52%" stop-color="#FFFFFF" stop-opacity="0.22"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="vert-chitin" x1="20" y1="64" x2="110" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.26"/>
-      <stop offset="55%" stop-color="#FFFFFF" stop-opacity="0.72"/>
-      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-    </linearGradient>
-  </defs>
-  <ellipse cx="64" cy="64" rx="54" ry="44" fill="url(#vert-glow)"/>
-  <!-- Задний шарнир-сочленение (стыкуется со следующим сегментом) -->
-  <path d="M16 54L30 48V80L16 74C12 72 12 56 16 54Z" fill="#FFFFFF" fill-opacity="0.32" stroke="#FFFFFF" stroke-width="2.4" stroke-linejoin="round"/>
-  <!-- Верхние и нижние хитиновые рёбра, отогнутые назад -->
-  <path d="M84 42C66 20 42 16 20 28C34 32 46 39 54 47" fill="#FFFFFF" fill-opacity="0.28" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M84 86C66 108 42 112 20 100C34 96 46 89 54 81" fill="#FFFFFF" fill-opacity="0.28" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  <!-- Вторичные микро-рёбра стабилизации -->
-  <path d="M62 39C52 29 40 27 29 31M62 89C52 99 40 101 29 97" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-opacity="0.65"/>
-  <!-- Основная панцирная пластина позвонка (сустав в +X) -->
-  <path d="M32 48L58 37H84L109 53C115 57 115 71 109 75L84 91H58L32 80C27 72 27 56 32 48Z" fill="url(#vert-chitin)" stroke="#FFFFFF" stroke-width="3" stroke-linejoin="round"/>
-  <!-- Передний замковый паз сочленения -->
-  <path d="M98 49C106 54 106 74 98 79" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-opacity="0.8"/>
-  <!-- Нервный канал и светящееся ядро сегмента -->
-  <path d="M22 64H106" stroke="#FFFFFF" stroke-width="2.2" stroke-opacity="0.65"/>
-  <polygon points="88,64 68,52 48,64 68,76" fill="#FFFFFF" fill-opacity="0.6" stroke="#FFFFFF" stroke-width="2.2" stroke-linejoin="round"/>
-  <circle cx="68" cy="64" r="6.5" fill="#FFFFFF"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><linearGradient id="p2_tv_b" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="52%" stop-color="#10b981"/><stop offset="100%" stop-color="#065f46"/></linearGradient><radialGradient id="p2_tv_c" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#34d399"/><stop offset="100%" stop-color="#047857"/></radialGradient></defs><!-- Dorsal & ventral cartilage fins -->
+           <path d="M44 36 L68 14 L84 36 Z" fill="#34d399" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <path d="M44 92 L68 114 L84 92 Z" fill="#34d399" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <!-- Main vertebra body aligned along +X -->
+           <path d="M18 46 C36 28 90 28 110 46 C118 54 118 74 110 82 C90 100 36 100 18 82 C10 74 10 54 18 46 Z" fill="url(#p2_tv_b)" stroke="#160e26" stroke-width="5.5"/>
+           <!-- Inner nerve node -->
+           <ellipse cx="64" cy="64" rx="28" ry="16" fill="url(#p2_tv_c)" stroke="#160e26" stroke-width="4"/>
+           <line x1="22" y1="64" x2="106" y2="64" stroke="#ecfdf5" stroke-width="3.5" stroke-linecap="round" opacity="0.65"/>
+           <ellipse cx="56" cy="46" rx="16" ry="5" fill="#fff" opacity="0.55"/></svg>
