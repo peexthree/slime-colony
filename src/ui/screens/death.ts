@@ -26,6 +26,8 @@ export function deathScreen(): string {
           <button id="restart-btn" type="button">НОВЫЙ ЗАБЕГ</button>
           <button id="endless-btn" class="ghost-btn" type="button" style="display:none"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-play"/></svg> <span>OVERDRIVE ∞</span></button>
           <button id="save-portrait" class="ghost-btn" type="button"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-camera-dna"/></svg> <span>ПОРТРЕТ PNG</span></button>
+          <button id="save-card-btn" class="ghost-btn" type="button"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-macro-scale"/></svg> <span data-i18n="card_download">КАРТОЧКА PNG</span></button>
+          <button id="copy-card-btn" class="ghost-btn" type="button" style="display:none"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-ui-export"/></svg> <span data-i18n="card_copy">КОПИРОВАТЬ</span></button>
           <button id="biolab-btn" class="ghost-btn" type="button"><svg viewBox="0 0 32 32" class="bio-emerald" aria-hidden="true"><use href="#ico-biolab"/></svg> <span>БИОЛАБ</span></button>
           <button id="death-ach-btn" class="ghost-btn" type="button"><svg viewBox="0 0 32 32" class="bio-amber" aria-hidden="true"><use href="#ico-record-badge"/></svg> <span>ДОСТИЖЕНИЯ</span></button>
         </div>

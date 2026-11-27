@@ -150,6 +150,10 @@
 
   "restart_btn": "NEW RUN",
   "save_portrait": "PORTRAIT PNG",
+  "card_download": "CARD PNG",
+  "card_copy": "COPY IMAGE",
+  "card_copied": "CARD COPIED TO CLIPBOARD",
+  "card_fail": "FAILED TO COPY THE CARD",
   "endless_btn": "OVERDRIVE ∞",
 
   "biolab_title": "BIOLAB",

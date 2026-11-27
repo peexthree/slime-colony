@@ -71,6 +71,7 @@ export interface Dom {
   restartBtn: HTMLElement;
   endlessBtn: HTMLButtonElement | null;
   savePortraitBtn: HTMLElement;
+  saveCardBtn: HTMLElement;
   branchChipEl: HTMLElement;
   // Биолаб
   biolabBtn: HTMLElement;
@@ -205,6 +206,7 @@ export function initDom(): Dom {
     restartBtn: byId('restart-btn'),
     endlessBtn: byId<HTMLButtonElement>('endless-btn'),
     savePortraitBtn: byId('save-portrait'),
+    saveCardBtn: byId('save-card-btn'),
     branchChipEl: byId('branch-chip'),
 
     biolabBtn: byId('biolab-btn'),

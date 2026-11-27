@@ -150,6 +150,10 @@
 
   "restart_btn": "НОВЫЙ ЗАБЕГ",
   "save_portrait": "ПОРТРЕТ PNG",
+  "card_download": "КАРТОЧКА PNG",
+  "card_copy": "КОПИРОВАТЬ",
+  "card_copied": "КАРТОЧКА СКОПИРОВАНА В БУФЕР ОБМЕНА",
+  "card_fail": "НЕ УДАЛОСЬ СКОПИРОВАТЬ КАРТОЧКУ",
   "endless_btn": "OVERDRIVE ∞",
 
   "biolab_title": "БИОЛАБ",

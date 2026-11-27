@@ -1,7 +1,11 @@
 // Генератор «Портрета организма» - PNG-карточка итогов забега (1280x720).
 // Стиль: неон / биолюминесценция, тёмный фон, моноширинный шрифт.
 // Исключения не бросаются: при любых проблемах рисуем максимум возможного.
-import { getLocale } from '../i18n';
+import { getLocale, t } from '../i18n';
+import type { I18nKey } from '../i18n';
+import { dnaName, hybridName, scaleName, scaleSub } from '../i18n/gameData';
+import { HYBRIDS } from './types';
+import type { DnaBranch, DnaBranchOrNeutral, HybridId } from './types';
 
 export interface PortraitInput {
   branch:
@@ -37,6 +41,7 @@ export const PORTRAIT_H = 720;
 
 type Vec = { x: number; y: number };
 type RGB = [number, number, number];
+type Box = { x: number; y: number; w: number; h: number };
 type Branch = PortraitInput['branch'];
 
 interface BranchStyle {
@@ -144,6 +149,23 @@ function fmtNum(n: number): string {
   } catch {
     return String(Math.round(n));
   }
+}
+
+/** Разбивка текста на строки по ширине (для лора шкалы и строки ДНК) */
+function wrapLine(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const words = String(text ?? '').split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let cur = '';
+  for (const w of words) {
+    const cand = cur ? `${cur} ${w}` : w;
+    if (!cur || ctx.measureText(cand).width <= maxWidth) cur = cand;
+    else {
+      lines.push(cur);
+      cur = w;
+    }
+  }
+  if (cur) lines.push(cur);
+  return lines;
 }
 
 // ---------- нормализация входа ----------
@@ -465,9 +487,22 @@ function drawOrbs(ctx: CanvasRenderingContext2D, c: Vec, r: number, col: RGB, rn
   }
 }
 
-/** Вписать организм из 960x540 в левую зону карточки с сохранением пропорций */
-function drawOrganism(ctx: CanvasRenderingContext2D, inp: NormInput, col: RGB, dim: RGB, rng: () => number): void {
-  const box = { x: 70, y: 158, w: 700, h: 448 };
+/** Минимальный вход для рисования организма (общий для портрета и карточки) */
+interface OrganismDrawInput {
+  weapons: string[];
+  tail: Vec[];
+  bodyRadius: number;
+}
+
+/** Вписать организм из 960x540 в заданную зону с сохранением пропорций */
+function drawOrganism(
+  ctx: CanvasRenderingContext2D,
+  inp: OrganismDrawInput,
+  col: RGB,
+  dim: RGB,
+  rng: () => number,
+  box: Box = { x: 70, y: 158, w: 700, h: 448 },
+): void {
   const pts = inp.tail.length ? inp.tail : [{ x: 480, y: 270 }];
   const bodySrc = pts[pts.length - 1]; // «новая» точка хвоста - у тела
   let minX = bodySrc.x - inp.bodyRadius;
@@ -532,14 +567,14 @@ function drawOrganism(ctx: CanvasRenderingContext2D, inp: NormInput, col: RGB, d
 
 // ---------- оформление карточки ----------
 
-function drawRecordBadge(ctx: CanvasRenderingContext2D, en: boolean): void {
+function drawRecordBadge(ctx: CanvasRenderingContext2D, en: boolean, cw: number = PORTRAIT_W, cy: number = 62): void {
   const label = en ? '★ RECORD' : '★ РЕКОРД';
   ctx.font = `700 20px ${MONO}`;
   setTracking(ctx, 2);
   const w = ctx.measureText(label).width + 44;
   const h = 44;
-  const x = PORTRAIT_W - 70 - w;
-  const y = 62;
+  const x = cw - 70 - w;
+  const y = cy;
   rrPath(ctx, x, y, w, h, 10);
   ctx.fillStyle = 'rgba(255,209,102,0.12)';
   ctx.fill();
@@ -682,13 +717,13 @@ function drawFooter(ctx: CanvasRenderingContext2D, en: boolean): void {
   ctx.fillText(en ? 'LUMIVORE // ORGANISM PORTRAIT' : 'LUMIVORE // ПОРТРЕТ ОРГАНИЗМА', PORTRAIT_W / 2, PORTRAIT_H - 34);
 }
 
-/** Неоновые уголки рамки + едва заметная окантовка */
-function drawFrame(ctx: CanvasRenderingContext2D, col: RGB): void {
+/** Неоновые уголки рамки + едва заметная окантовка (размер параметризован) */
+function drawFrame(ctx: CanvasRenderingContext2D, col: RGB, w: number = PORTRAIT_W, h: number = PORTRAIT_H): void {
   const inset = 22;
   const len = 30;
   ctx.strokeStyle = rgba(col, 0.14);
   ctx.lineWidth = 1;
-  ctx.strokeRect(inset, inset, PORTRAIT_W - inset * 2, PORTRAIT_H - inset * 2);
+  ctx.strokeRect(inset, inset, w - inset * 2, h - inset * 2);
   ctx.strokeStyle = rgba(col, 0.65);
   ctx.lineWidth = 2;
   const corner = (x: number, y: number, dx: number, dy: number): void => {
@@ -699,9 +734,451 @@ function drawFrame(ctx: CanvasRenderingContext2D, col: RGB): void {
     ctx.stroke();
   };
   corner(inset, inset, 1, 1);
-  corner(PORTRAIT_W - inset, inset, -1, 1);
-  corner(inset, PORTRAIT_H - inset, 1, -1);
-  corner(PORTRAIT_W - inset, PORTRAIT_H - inset, -1, -1);
+  corner(w - inset, inset, -1, 1);
+  corner(inset, h - inset, 1, -1);
+  corner(w - inset, h - inset, -1, -1);
+}
+
+// ---------- Карточка организма (шаринг-изображение 1200x630) ----------
+
+/** Размер карточки организма: формат OG-image для соцсетей и Telegram */
+export const CARD_W = 1200;
+export const CARD_H = 630;
+const CARD_BG = '#020304';
+
+/** Вход renderCreatureCard: данные забега + билд организма (все поля defensive-опциональны) */
+export interface CreatureCardInput {
+  branch?: PortraitInput['branch']; // основной геном (ветка ДНК или гибрид)
+  hybrid?: string | null; // взятый Великий Гибрид (если есть)
+  weapons?: string[]; // id активных оружий
+  wlvl?: Record<string, number>; // уровни оружий
+  dnaLvl?: Record<string, number>; // уровни веток ДНК
+  tail?: { x: number; y: number }[];
+  bodyRadius?: number;
+  stats: {
+    time?: number;
+    kills?: number;
+    level?: number;
+    scale?: number; // шкала бытия 1..15
+    record?: boolean;
+  };
+}
+
+/** Нормализованные данные карточки (результат normalizeCardInput) */
+export interface CreatureCardData {
+  branch: Branch;
+  hybrid: string | null;
+  weapons: string[];
+  wlvl: Record<string, number>;
+  dnaLvl: Record<string, number>;
+  tail: Vec[];
+  bodyRadius: number;
+  stats: { time: number; kills: number; level: number; scale: number; record: boolean };
+}
+
+export interface CardWeaponEntry { id: string; level: number }
+export interface CardDnaEntry { id: string; level: number }
+
+/** Строки билда для карточки: подписанные оружия с уровнями + строка ДНК */
+export interface CardBuildLines {
+  weapons: string[];
+  dna: string;
+}
+
+/** Подставляемые подписи для buildCardBuildLines (по умолчанию - i18n-словарь) */
+export interface CardBuildResolvers {
+  maxWeapons?: number;
+  weaponLabel?: (id: string) => string;
+  dnaLabel?: (id: string) => string;
+  lvlText?: (level: number) => string;
+  noneDna?: string;
+}
+
+/** Геометрия макета карточки: панель портрета слева, правая колонка с телеметрией */
+export interface CreatureCardLayout {
+  card: { w: number; h: number };
+  portrait: Box;
+  organism: Box;
+  right: { x: number; w: number };
+  stats: { y: number; h: number };
+  build: { y: number };
+}
+
+/** Порядок веток ДНК в строке билда */
+const DNA_ORDER: DnaBranch[] = ['vermis', 'chimera', 'mycelium', 'symbiont'];
+
+/** Чистая функция: геометрия макета 1200x630 (панель ~500x500 слева, телеметрия справа) */
+export function creatureCardLayout(): CreatureCardLayout {
+  const portrait: Box = { x: 40, y: 66, w: 500, h: 500 };
+  const rightX = portrait.x + portrait.w + 36;
+  return {
+    card: { w: CARD_W, h: CARD_H },
+    portrait,
+    organism: { x: portrait.x + 14, y: portrait.y + 14, w: portrait.w - 28, h: portrait.h - 28 },
+    right: { x: rightX, w: CARD_W - rightX - 40 },
+    stats: { y: 252, h: 64 },
+    build: { y: 352 },
+  };
+}
+
+/** Чистая функция: активные оружия (уровень >= 1), сортировка по уровню убыв., затем по id */
+export function pickActiveWeapons(wlvl: Record<string, number> | undefined, max = 6): CardWeaponEntry[] {
+  const src = (typeof wlvl === 'object' && wlvl !== null ? wlvl : {}) as Record<string, number>;
+  const out: CardWeaponEntry[] = [];
+  for (const [id, lvl] of Object.entries(src)) {
+    if (typeof lvl !== 'number' || !Number.isFinite(lvl) || lvl < 1) continue;
+    if (WEAPON_LABELS[id] === undefined) continue; // неизвестные id не попадают в карточку
+    out.push({ id, level: Math.max(1, Math.floor(lvl)) });
+  }
+  out.sort((a, b) => b.level - a.level || a.id.localeCompare(b.id));
+  return out.slice(0, Math.max(0, max));
+}
+
+/** Чистая функция: уровни 4 веток ДНК в фиксированном порядке (нули сохраняются) */
+export function collectDnaLevels(dnaLvl: Record<string, number> | undefined): CardDnaEntry[] {
+  const src = (typeof dnaLvl === 'object' && dnaLvl !== null ? dnaLvl : {}) as Record<string, number>;
+  return DNA_ORDER.map((id) => {
+    const raw = src[id];
+    const lvl = typeof raw === 'number' && Number.isFinite(raw) ? Math.max(0, Math.floor(raw)) : 0;
+    return { id, level: lvl };
+  });
+}
+
+/** Чистая функция: строка оружия вида «ШИПЫ · УР.2» */
+export function formatWeaponLine(label: string, lvlText: string): string {
+  const l = String(label ?? '').trim();
+  const lv = String(lvlText ?? '').trim();
+  return l && lv ? `${l} · ${lv}` : l || lv;
+}
+
+/** Чистая функция: строка ДНК вида «ВЕРМИС 2 · ХИМЕРА 0» (или заглушка для пустого набора) */
+export function formatDnaLine(pairs: { label: string; level: number }[], noneLabel: string): string {
+  const parts = (Array.isArray(pairs) ? pairs : [])
+    .filter((p) => !!p && typeof p.label === 'string' && p.label.trim().length > 0)
+    .map((p) => `${p.label.trim()} ${Math.max(0, Math.floor(p.level ?? 0))}`);
+  return parts.length ? parts.join(' · ') : noneLabel;
+}
+
+const defaultWeaponLabel = (id: string): string => t(`w_name_${id}` as I18nKey).toUpperCase();
+const defaultDnaLabel = (id: string): string => dnaName(id as DnaBranchOrNeutral);
+const defaultLvlText = (level: number): string => t('wh_lvl', { lvl: level }).toUpperCase();
+
+/** Чистая функция: строки билда для карточки (оружия с уровнями + уровни 4 геномов) */
+export function buildCardBuildLines(
+  wlvl: Record<string, number> | undefined,
+  dnaLvl: Record<string, number> | undefined,
+  res: CardBuildResolvers = {},
+): CardBuildLines {
+  const weapons = pickActiveWeapons(wlvl, res.maxWeapons ?? 6).map((w) =>
+    formatWeaponLine((res.weaponLabel ?? defaultWeaponLabel)(w.id), (res.lvlText ?? defaultLvlText)(w.level)),
+  );
+  const dna = formatDnaLine(
+    collectDnaLevels(dnaLvl).map((d) => ({ label: (res.dnaLabel ?? defaultDnaLabel)(d.id), level: d.level })),
+    res.noneDna ?? '-',
+  );
+  return { weapons, dna };
+}
+
+const isHybridId = (id: unknown): id is HybridId =>
+  typeof id === 'string' && HYBRIDS.some((h) => h.id === id);
+
+/** Чистая функция: нормализация входа карточки (шкала бытия 1..15, мусор отбрасывается) */
+export function normalizeCardInput(input: Partial<CreatureCardInput> | null | undefined): CreatureCardData {
+  const raw = (typeof input === 'object' && input !== null ? input : {}) as Partial<CreatureCardInput>;
+  const st = (typeof raw.stats === 'object' && raw.stats !== null ? raw.stats : {}) as Partial<NonNullable<CreatureCardInput['stats']>>;
+  const num = (v: unknown, d = 0): number => (typeof v === 'number' && Number.isFinite(v) ? v : d);
+  const b = raw.branch;
+  const branch: Branch = !!b && b in BRANCHES ? b : 'neutral';
+  const hybrid = isHybridId(raw.hybrid) ? raw.hybrid : isHybridId(branch) ? branch : null;
+  const wlvl: Record<string, number> = {};
+  if (typeof raw.wlvl === 'object' && raw.wlvl !== null) {
+    for (const [id, lvl] of Object.entries(raw.wlvl)) {
+      if (typeof lvl === 'number' && Number.isFinite(lvl)) wlvl[id] = lvl;
+    }
+  }
+  const dnaLvl: Record<string, number> = {};
+  if (typeof raw.dnaLvl === 'object' && raw.dnaLvl !== null) {
+    for (const [id, lvl] of Object.entries(raw.dnaLvl)) {
+      if (typeof lvl === 'number' && Number.isFinite(lvl)) dnaLvl[id] = lvl;
+    }
+  }
+  const tail = Array.isArray(raw.tail)
+    ? raw.tail
+        .filter(
+          (p): p is Vec =>
+            !!p && typeof p.x === 'number' && Number.isFinite(p.x) && typeof p.y === 'number' && Number.isFinite(p.y),
+        )
+        .map((p) => ({ x: p.x, y: p.y }))
+    : [];
+  return {
+    branch,
+    hybrid,
+    weapons: Array.isArray(raw.weapons) ? raw.weapons.filter((w): w is string => typeof w === 'string') : [],
+    wlvl,
+    dnaLvl,
+    tail,
+    bodyRadius: clamp(num(raw.bodyRadius, 26), 8, 130),
+    stats: {
+      time: Math.max(0, num(st.time)),
+      kills: Math.max(0, Math.floor(num(st.kills))),
+      level: Math.max(0, Math.floor(num(st.level))),
+      scale: clamp(Math.floor(num(st.scale, 1)), 1, 15), // шкала бытия 1..15 (у портрета - 1..5)
+      record: st.record === true,
+    },
+  };
+}
+
+// ---------- рисование карточки организма ----------
+
+/** Тёмный фон #020304 с лёгким фрактал-паттерном (дендриты) и споровой пылью */
+function drawCardBackground(ctx: CanvasRenderingContext2D, rng: () => number, col: RGB): void {
+  ctx.fillStyle = CARD_BG;
+  ctx.fillRect(0, 0, CARD_W, CARD_H);
+  // рекурсивные дендриты - «живой фрактал» реактора
+  const tree = (x: number, y: number, ang: number, len: number, depth: number): void => {
+    if (depth <= 0 || len < 6) return;
+    const x2 = x + Math.cos(ang) * len;
+    const y2 = y + Math.sin(ang) * len;
+    ctx.strokeStyle = rgba(col, 0.02 + 0.018 * depth);
+    ctx.lineWidth = Math.max(0.6, depth * 0.55);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    const spread = 0.36 + rng() * 0.28;
+    const shrink = 0.62 + rng() * 0.12;
+    tree(x2, y2, ang - spread, len * shrink, depth - 1);
+    tree(x2, y2, ang + spread, len * shrink, depth - 1);
+    if (rng() < 0.3) tree(x2, y2, ang + (rng() - 0.5) * 0.24, len * 0.55, depth - 1);
+  };
+  tree(170, CARD_H + 24, -Math.PI / 2, 165, 8);
+  tree(CARD_W - 150, CARD_H + 24, -Math.PI / 2 + 0.35, 135, 7);
+  tree(CARD_W * 0.52, -24, Math.PI / 2 + 0.25, 120, 7);
+  // споровая пыль
+  for (let i = 0; i < 240; i++) {
+    const a = 0.05 + rng() * 0.28;
+    const s = 0.5 + rng() * 1.4;
+    ctx.fillStyle = `rgba(190,220,230,${a.toFixed(3)})`;
+    ctx.fillRect(rng() * CARD_W, rng() * CARD_H, s, s);
+  }
+  // виньетка
+  const v = ctx.createRadialGradient(CARD_W / 2, CARD_H / 2, CARD_H * 0.32, CARD_W / 2, CARD_H / 2, CARD_W * 0.74);
+  v.addColorStop(0, 'rgba(0,0,0,0)');
+  v.addColorStop(1, 'rgba(0,0,0,0.58)');
+  ctx.fillStyle = v;
+  ctx.fillRect(0, 0, CARD_W, CARD_H);
+}
+
+/** Панель портрета слева: подложка, организм (клип по панели), рамка */
+function drawCardPortrait(
+  ctx: CanvasRenderingContext2D,
+  L: CreatureCardLayout,
+  inp: CreatureCardData,
+  col: RGB,
+  dim: RGB,
+  rng: () => number,
+  bg: HTMLCanvasElement | null,
+): void {
+  const p = L.portrait;
+  rrPath(ctx, p.x, p.y, p.w, p.h, 18);
+  ctx.fillStyle = 'rgba(4,12,18,0.72)';
+  ctx.fill();
+  ctx.save();
+  rrPath(ctx, p.x, p.y, p.w, p.h, 18);
+  ctx.clip();
+  if (bg && bg.width > 0 && bg.height > 0) {
+    try {
+      // cover-вписка снимка physarum-поля внутрь панели
+      const s = Math.max(p.w / bg.width, p.h / bg.height);
+      const w = bg.width * s;
+      const h = bg.height * s;
+      ctx.globalAlpha = 0.45;
+      ctx.drawImage(bg, p.x + (p.w - w) / 2, p.y + (p.h - h) / 2, w, h);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = 'rgba(2,6,10,0.5)';
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+    } catch {
+      ctx.globalAlpha = 1;
+    }
+  }
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  drawOrganism(ctx, inp, col, dim, rng, L.organism);
+  ctx.restore();
+  rrPath(ctx, p.x, p.y, p.w, p.h, 18);
+  ctx.strokeStyle = rgba(col, 0.5);
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+/** Правая колонка: бренд, имя организма, тег генома/гибрида, шкала бытия */
+function drawCardHeader(
+  ctx: CanvasRenderingContext2D,
+  L: CreatureCardLayout,
+  inp: CreatureCardData,
+  style: BranchStyle,
+  col: RGB,
+  en: boolean,
+): void {
+  const x = L.right.x;
+  const w = L.right.w;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  // бренд игры
+  setTracking(ctx, 4);
+  ctx.font = `500 13px ${MONO}`;
+  ctx.fillStyle = 'rgba(176,208,218,0.85)';
+  ctx.fillText('LUMIVORE // THE LIVING FRACTAL', x, 66);
+  // имя организма: гибрид из i18n, иначе имя генома
+  const name = inp.hybrid ? hybridName(inp.hybrid as HybridId) : dnaName(inp.branch as DnaBranchOrNeutral);
+  setTracking(ctx, 1);
+  ctx.font = `700 34px ${MONO}`;
+  ctx.shadowColor = rgba(col, 0.7);
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = '#f4fdff';
+  ctx.fillText(name, x - 2, 118, w);
+  ctx.shadowBlur = 0;
+  // акцентная плашка под названием
+  ctx.fillStyle = rgba(col, 0.9);
+  ctx.fillRect(x, 134, 150, 3);
+  ctx.fillStyle = rgba(col, 0.35);
+  ctx.fillRect(x + 158, 134, 90, 3);
+  // тег: ГЕНОМ/ГИБРИД - из таблицы веток
+  setTracking(ctx, 3);
+  ctx.font = `500 13px ${MONO}`;
+  ctx.fillStyle = 'rgba(176,208,218,0.92)';
+  ctx.fillText(en ? style.tagEn : style.tag, x, 162);
+  // шкала бытия: номер/15 + имя шкалы
+  setTracking(ctx, 2);
+  ctx.font = `700 20px ${MONO}`;
+  ctx.fillStyle = GOLD;
+  ctx.fillText(t('stat_scale', { n: inp.stats.scale }), x, 202);
+  setTracking(ctx, 1);
+  ctx.font = `500 15px ${MONO}`;
+  ctx.fillStyle = '#dff6ff';
+  const sName = scaleName(inp.stats.scale);
+  if (sName) ctx.fillText(sName, x, 228, w);
+}
+
+/** Два чипа телеметрии: время забега и убийства */
+function drawCardStatChips(
+  ctx: CanvasRenderingContext2D,
+  L: CreatureCardLayout,
+  col: RGB,
+  en: boolean,
+  time: number,
+  kills: number,
+): void {
+  const x0 = L.right.x;
+  const w = L.right.w;
+  const h = L.stats.h;
+  const y = L.stats.y;
+  const cw = (w - 16) / 2;
+  const chips: [string, string][] = [
+    [en ? 'TIME' : 'ВРЕМЯ', fmtTime(time)],
+    [en ? 'KILLS' : 'УБИЙСТВА', fmtNum(kills)],
+  ];
+  chips.forEach(([label, value], i) => {
+    const cx = x0 + i * (cw + 16);
+    rrPath(ctx, cx, y, cw, h, 12);
+    ctx.fillStyle = 'rgba(4,12,18,0.8)';
+    ctx.fill();
+    ctx.strokeStyle = rgba(col, 0.4);
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    setTracking(ctx, 2);
+    ctx.font = `500 11px ${MONO}`;
+    ctx.fillStyle = 'rgba(186,214,224,0.85)';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(label, cx + 18, y + 24);
+    setTracking(ctx, 0);
+    ctx.font = `700 26px ${MONO}`;
+    ctx.fillStyle = '#eafcff';
+    ctx.shadowColor = rgba(col, 0.8);
+    ctx.shadowBlur = 10;
+    ctx.fillText(value, cx + 18, y + 50);
+    ctx.shadowBlur = 0;
+  });
+}
+
+/** Блок билда: заголовок, пилюли оружий с уровнями, строка уровней ДНК */
+function drawCardBuild(
+  ctx: CanvasRenderingContext2D,
+  L: CreatureCardLayout,
+  inp: CreatureCardData,
+  col: RGB,
+  en: boolean,
+): void {
+  const x = L.right.x;
+  const w = L.right.w;
+  const y0 = L.build.y;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  setTracking(ctx, 3);
+  ctx.font = `700 13px ${MONO}`;
+  ctx.fillStyle = rgba(col, 0.88);
+  ctx.fillText(en ? 'BUILD // ARSENAL AND DNA' : 'БИЛД // АРСЕНАЛ И ДНК', x, y0);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x, y0 + 12);
+  ctx.lineTo(x + w, y0 + 12);
+  ctx.stroke();
+  // пилюли оружий: перенос по ширине колонки
+  const lines = buildCardBuildLines(inp.wlvl, inp.dnaLvl);
+  let px = x;
+  let py = y0 + 26;
+  ctx.font = `700 12px ${MONO}`;
+  setTracking(ctx, 1.5);
+  for (const line of lines.weapons) {
+    const pw = ctx.measureText(line).width + 24;
+    if (px + pw > x + w && px > x) {
+      px = x;
+      py += 36;
+    }
+    rrPath(ctx, px, py, pw, 28, 8);
+    ctx.fillStyle = rgba(col, 0.14);
+    ctx.fill();
+    ctx.strokeStyle = rgba(col, 0.48);
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.fillStyle = '#eafcff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(line, px + pw / 2, py + 14);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    px += pw + 10;
+  }
+  // строка уровней ДНК (с переносом при необходимости)
+  const dnaY = py + 48;
+  setTracking(ctx, 1);
+  ctx.font = `500 14px ${MONO}`;
+  ctx.fillStyle = 'rgba(186,214,224,0.92)';
+  const dnaLabel = `${en ? 'DNA' : 'ДНК'}: ${lines.dna}`;
+  wrapLine(ctx, dnaLabel, w)
+    .slice(0, 2)
+    .forEach((ln, i) => {
+      ctx.fillText(ln, x, dnaY + i * 20, w);
+    });
+}
+
+/** Футер карточки: лор текущей шкалы бытия (scaleSub) по центру */
+function drawCardFooter(ctx: CanvasRenderingContext2D, inp: CreatureCardData): void {
+  const lore = scaleSub(inp.stats.scale);
+  if (!lore) return;
+  setTracking(ctx, 1);
+  ctx.font = `500 12.5px ${MONO}`;
+  ctx.fillStyle = 'rgba(170,208,218,0.62)';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  const maxW = CARD_W - 160;
+  wrapLine(ctx, lore, maxW)
+    .slice(0, 2)
+    .forEach((ln, i) => {
+      ctx.fillText(ln, CARD_W / 2, CARD_H - 40 + i * 18, maxW);
+    });
 }
 
 // ---------- публичное API ----------
@@ -731,6 +1208,51 @@ export function renderPortrait(bg: HTMLCanvasElement | null, input: PortraitInpu
     drawStatsPanel(ctx, inp.stats, col, en);
     drawFooter(ctx, en);
     drawFrame(ctx, col);
+  } catch {
+    // рисование не удалось полностью - возвращаем канвас как есть, без исключений
+  }
+  return canvas;
+}
+
+/** Опции макета renderCreatureCard */
+export interface CreatureCardOptions {
+  bg?: HTMLCanvasElement | null; // снимок physarum-поля внутрь панели портрета
+  showRecord?: boolean; // плашка «РЕКОРД» (по умолчанию - из stats.record)
+}
+
+/**
+ * Отрисовать «Карточку организма» 1200x630 для шаринга в соцсети/Telegram.
+ * target - готовый канвас (или null: создаётся новый 1200x630).
+ * Отдельная от renderPortrait функция: тот же организм, но макет под OG-image -
+ * портрет слева, справа билд (оружия с уровнями + ДНК), шкала бытия и телеметрия.
+ */
+export function renderCreatureCard(
+  target: HTMLCanvasElement | null,
+  input: CreatureCardInput,
+  opts: CreatureCardOptions = {},
+): HTMLCanvasElement {
+  const canvas = target ?? document.createElement('canvas');
+  canvas.width = CARD_W;
+  canvas.height = CARD_H;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+  try {
+    const inp = normalizeCardInput(input);
+    const style = BRANCHES[inp.branch];
+    const col = hexRgb(style.color);
+    const dim = hexRgb(style.dim);
+    const en = getLocale() === 'en';
+    const seed = (inp.stats.time * 1000 + inp.stats.kills * 7 + inp.stats.level * 131 + inp.stats.scale * 17) | 0;
+    const rng = mulberry32(seed);
+    const L = creatureCardLayout();
+    drawCardBackground(ctx, rng, col);
+    drawCardPortrait(ctx, L, inp, col, dim, rng, opts.bg ?? null);
+    drawCardHeader(ctx, L, inp, style, col, en);
+    drawCardStatChips(ctx, L, col, en, inp.stats.time, inp.stats.kills);
+    drawCardBuild(ctx, L, inp, col, en);
+    drawCardFooter(ctx, inp);
+    if (opts.showRecord ?? inp.stats.record) drawRecordBadge(ctx, en, CARD_W, 40);
+    drawFrame(ctx, col, CARD_W, CARD_H);
   } catch {
     // рисование не удалось полностью - возвращаем канвас как есть, без исключений
   }

@@ -2,7 +2,9 @@
 // пасхалки и авто-пауза. Только слушатели - вся логика в game/ui-модулях.
 import { t, setLocale } from '../i18n';
 import { SIM_HEIGHT, SIM_WIDTH } from '../engine/types';
-import { downloadPortrait } from '../engine/portrait';
+import { downloadPortrait, renderCreatureCard } from '../engine/portrait';
+import type { CreatureCardInput } from '../engine/portrait';
+import { playerRadius, visibleTail } from '../game/state';
 import type { Ctx } from '../game/context';
 import type { ModalKind } from './modals';
 import {
@@ -273,6 +275,21 @@ export function wireEvents(ctx: Ctx): void {
     downloadPortrait(dom.portraitCanvas, `lumivore-${ctx.lastGenome.branch}-${Math.round(ctx.lastGenome.survivalTime)}s.png`);
   });
 
+  // ---------- Карточка организма: скачать PNG 1200x630 для шаринга ----------
+  dom.saveCardBtn.addEventListener('click', () => {
+    const input = creatureCardInput(ctx);
+    if (!input) return;
+    const card = renderCreatureCard(null, input, { bg: ctx.capturedDeathBg });
+    downloadPortrait(card, `lumivore-card-${input.branch}-${Math.round(ctx.gameTime)}s.png`);
+  });
+  // Кнопка «копировать изображение в буфер» показывается только в браузерах
+  // с Web Share API (прокси поддержки ClipboardItem: Chrome/Edge/Safari/мобильные).
+  const copyCardBtn = document.getElementById('copy-card-btn');
+  if (copyCardBtn && typeof navigator.share === 'function') {
+    copyCardBtn.style.display = '';
+    copyCardBtn.addEventListener('click', () => { void copyCardToClipboard(ctx); });
+  }
+
   // ---------- Старт / дневное испытание / достижения / справка ----------
   dom.introStartBtn.addEventListener('click', () => startOrResumeRun(ctx));
   if (dom.dailyChallengeBtn) dom.dailyChallengeBtn.addEventListener('click', () => showModal(ctx, 'daily'));
@@ -388,5 +405,50 @@ function escapeFromHelp(ctx: Ctx): void {
     showModal(ctx, null);
   } else {
     showModal(ctx, 'intro');
+  }
+}
+
+/** Собрать данные забега для карточки организма (null - забег ещё не завершён) */
+function creatureCardInput(ctx: Ctx): CreatureCardInput | null {
+  const g = ctx.lastGenome;
+  if (!g) return null;
+  return {
+    branch: ctx.mainGenome,
+    hybrid: [...ctx.hybridsTaken].pop() ?? null,
+    weapons: g.weapons,
+    wlvl: { ...ctx.wlvl },
+    dnaLvl: { ...ctx.lastDnaLvl },
+    tail: visibleTail(ctx),
+    bodyRadius: playerRadius(ctx),
+    stats: {
+      time: ctx.gameTime,
+      kills: ctx.kills,
+      level: ctx.level,
+      scale: ctx.scaleMaxReached,
+      record: g.record,
+    },
+  };
+}
+
+/** Скопировать PNG-карточку в буфер обмена (toBlob -> ClipboardItem) с тост-фидбеком */
+async function copyCardToClipboard(ctx: Ctx): Promise<void> {
+  const input = creatureCardInput(ctx);
+  if (!input) return;
+  try {
+    const card = renderCreatureCard(null, input, { bg: ctx.capturedDeathBg });
+    const blob = await new Promise<Blob | null>((resolve) => {
+      try {
+        card.toBlob((b) => resolve(b), 'image/png');
+      } catch {
+        resolve(null);
+      }
+    });
+    if (!blob || typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
+      throw new Error('clipboard-unavailable');
+    }
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    showToast(ctx, t('card_copied'), 'success');
+  } catch {
+    showToast(ctx, t('card_fail'), 'danger');
   }
 }
