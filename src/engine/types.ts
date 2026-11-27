@@ -1,6 +1,9 @@
 // Общие типы и константы LUMIVORE: THE LIVING FRACTAL
 // Bio-Evolutive Roguelite: Змейка x Spore x Vampire Survivors x Physarum
 
+/** Базовое разрешение physarum-сетки: старт игры и кламп минимума.
+ *  Адаптивный выбор под зум камеры - pickSimResolution() в src/engine/simResolution.ts
+ *  (рост до 2x на низких зумах для константной плотности текселей). */
 export const SIM_WIDTH = 960;
 export const SIM_HEIGHT = 540;
 export const MAX_BEACONS = 32;

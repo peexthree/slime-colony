@@ -1,7 +1,8 @@
 // Симуляция: оркестрация одного шага игры в исходном порядке, камера, рендер
 // и fixed timestep (аккумулятор: 1/60 с на шаг, максимум 5 подшагов за кадр).
-import { AURA, Beacon, METAMORPH, NOVA, ORBS, SCALES, STRAIN, CALL, WEAPON_MAX_LVL } from '../engine/types';
-import { SimNodeStat } from '../engine/physarumSim';
+import { AURA, Beacon, METAMORPH, NOVA, ORBS, SCALES, SIM_HEIGHT, SIM_WIDTH, STRAIN, CALL, WEAPON_MAX_LVL } from '../engine/types';
+import { SimNodeStat, SimResolutionProvider } from '../engine/physarumSim';
+import { pickSimResolution } from '../engine/simResolution';
 import { stepBioNodes } from './bioNodes';
 import { t, getLocale } from '../i18n';
 import { trNode } from '../i18n/gameData';
@@ -37,6 +38,20 @@ export function timeScaleOf(ctx: Ctx): number {
 /** Дуги Тесла-сети и лазеры Пси-сети: пересобираются каждый кадр */
 const frameArcs: { x1: number; y1: number; x2: number; y2: number; color: number }[] = [];
 const frameLasers: { x1: number; y1: number; x2: number; y2: number }[] = [];
+
+// ---------- Адаптивное разрешение physarum-сетки (аудит Scrolling/Adaptive Grid) ----------
+
+/** Период проверки адаптивного разрешения, сек игрового времени */
+const SIM_RES_CHECK_PERIOD = 0.5;
+/** Таймер последней проверки, сек сим-времени */
+let simResCheckT = -1;
+/** Бюджет текселей WebGL2-фолбэка: CPU-блюр следа растёт квадратично с сеткой */
+const WEBGL2_SIM_TEX_BUDGET = 1280 * 720;
+
+/** Множитель качества сетки: тот же ratio, что modals.ts передаёт в setQualityRatio */
+function simQualityRatio(ctx: Ctx): number {
+  return ctx.settings.quality === 'low' ? 0.5 : 1;
+}
 
 /** Кадр: фиксированные шаги симуляции -> камера (rawDt) -> рендер текущего состояния */
 export function stepFrame(ctx: Ctx, nowSec: number, rawDt: number): void {
@@ -275,13 +290,35 @@ function stepPhysarumBridge(ctx: Ctx, dt: number, _nowSec: number, lasers: typeo
       }
     }
   }
-  // Переводим маяки и узлы в видовое окно WebGPU
+  // Адаптивное разрешение сетки: троттлинг 0.5с. Реаллок делает бэкенд только
+  // при фактической смене размера (вызов с текущим размером - no-op внутри
+  // бэкенда, заодно лечит рассинхрон после пересоздания сима на device lost).
+  // Headless-мок без setResolution защищён typeof-проверкой.
+  if (ctx.simTime - simResCheckT >= SIM_RES_CHECK_PERIOD) {
+    simResCheckT = ctx.simTime;
+    const target = pickSimResolution(
+      ctx.camZoom,
+      simQualityRatio(ctx),
+      sim.backend === 'webgl2' ? WEBGL2_SIM_TEX_BUDGET : undefined,
+    );
+    if (typeof sim.setResolution === 'function') sim.setResolution(target.w, target.h);
+  }
+  // Фактическая сетка после возможного ресайза: масштаб координат из базовой
+  // системы SIM_WIDTH x SIM_HEIGHT (как отдаёт toSimX/toSimY) в текущую
+  const sized = sim as Partial<SimResolutionProvider>;
+  const curW = typeof sized.simWidth === 'number' && sized.simWidth > 0 ? sized.simWidth : SIM_WIDTH;
+  const curH = typeof sized.simHeight === 'number' && sized.simHeight > 0 ? sized.simHeight : SIM_HEIGHT;
+  const kx = curW / SIM_WIDTH;
+  const ky = curH / SIM_HEIGHT;
+  const km = (kx + ky) * 0.5;
+
+  // Переводим маяки и узлы в видовое окно симуляции (базовый маппинг x масштаб сетки)
   const mappedBeacons: Beacon[] = [];
   for (const b of simBeacons) {
-    const sx = toSimX(ctx, b.x);
-    const sy = toSimY(ctx, b.y);
-    const sr = b.radius * ctx.camZoom;
-    if (sx >= -120 && sx <= 960 + 120 && sy >= -120 && sy <= 540 + 120) {
+    const sx = toSimX(ctx, b.x) * kx;
+    const sy = toSimY(ctx, b.y) * ky;
+    const sr = b.radius * ctx.camZoom * km;
+    if (sx >= -120 && sx <= curW + 120 && sy >= -120 && sy <= curH + 120) {
       mappedBeacons.push({
         x: sx,
         y: sy,
@@ -298,21 +335,21 @@ function stepPhysarumBridge(ctx: Ctx, dt: number, _nowSec: number, lasers: typeo
     const bn = ctx.bioNodes[i];
     ctx.simNodes.push({
       id: bn.id,
-      x: toSimX(ctx, bn.x),
-      y: toSimY(ctx, bn.y),
-      radius: bn.radius * ctx.camZoom,
+      x: toSimX(ctx, bn.x) * kx,
+      y: toSimY(ctx, bn.y) * ky,
+      radius: bn.radius * ctx.camZoom * km,
       owner: bn.owner,
       capture: bn.capture,
       kind: bn.kind,
     });
   }
-  ctx.strainProbe.x = toSimX(ctx, ctx.player.x);
-  ctx.strainProbe.y = toSimY(ctx, ctx.player.y);
+  ctx.strainProbe.x = toSimX(ctx, ctx.player.x) * kx;
+  ctx.strainProbe.y = toSimY(ctx, ctx.player.y) * ky;
   ctx.simNodes.push(ctx.strainProbe);
 
   // Смещение камеры в системе координат симуляции (для удержания штаммов в мировом пространстве)
-  const simDeltaX = (ctx.camX - ctx.prevCamX) * ctx.camZoom;
-  const simDeltaY = (ctx.camY - ctx.prevCamY) * ctx.camZoom;
+  const simDeltaX = (ctx.camX - ctx.prevCamX) * ctx.camZoom * kx;
+  const simDeltaY = (ctx.camY - ctx.prevCamY) * ctx.camZoom * ky;
   ctx.prevCamX = ctx.camX;
   ctx.prevCamY = ctx.camY;
 
@@ -324,7 +361,7 @@ function stepPhysarumBridge(ctx: Ctx, dt: number, _nowSec: number, lasers: typeo
     dt,
     ctx.simNodes,
     mappedBeacons,
-    { x: toSimX(ctx, ctx.player.x), y: toSimY(ctx, ctx.player.y) },
+    { x: toSimX(ctx, ctx.player.x) * kx, y: toSimY(ctx, ctx.player.y) * ky },
     0.5 + Math.min(ctx.gameTime / 240, 1) * 0.5,
     evap,
     SCALES[ctx.scaleIdx].id,

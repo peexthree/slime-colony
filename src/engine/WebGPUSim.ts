@@ -1,16 +1,25 @@
 // WebGPU-симуляция: compute-пайплайны агентов и диффузии, ping-pong буферы, async readback
 import shaderCode from '../shaders/physarum.wgsl?raw';
 import { AGENT_COUNT, Beacon, BioNode, MAX_BEACONS, MAX_NODES, SIM_HEIGHT, SIM_WIDTH } from './types';
-import type { PhysarumBackend, PhysarumSim } from './physarumSim';
+import type { PhysarumBackend, PhysarumSim, SimResolutionProvider } from './physarumSim';
+import { roundEvenSim } from './simResolution';
 
 export interface NodeStat {
   playerDensity: number;
   enemyDensity: number;
 }
 
-export class WebGPUSim implements PhysarumSim {
+export class WebGPUSim implements PhysarumSim, SimResolutionProvider {
   private device!: GPUDevice;
   private context!: GPUCanvasContext;
+
+  // Текущая сетка симуляции (тексели): база 960x540, ресайз - setResolution()
+  private simW = SIM_WIDTH;
+  private simH = SIM_HEIGHT;
+  // Layout'ы bind groups: нужны для переподключения при адаптивном ресайзе
+  private computeLayout!: GPUBindGroupLayout;
+  private renderLayout!: GPUBindGroupLayout;
+  private canvasFormat!: GPUTextureFormat;
 
   private agentsBuffer!: GPUBuffer;
   private trailA!: GPUBuffer;
@@ -54,6 +63,15 @@ export class WebGPUSim implements PhysarumSim {
     this.activeAgentCount = Math.max(1024, Math.floor(this.agentCount * r));
   }
 
+  /** Фактический размер сетки (для адаптивного маппинга координат в bridge) */
+  get simWidth(): number {
+    return this.simW;
+  }
+
+  get simHeight(): number {
+    return this.simH;
+  }
+
   async init(canvas: HTMLCanvasElement): Promise<void> {
     if (!navigator.gpu) {
       throw new Error('WebGPU не поддерживается. Откройте игру в Chromium 113+ или включите dom.webgpu.enabled в Firefox');
@@ -77,9 +95,13 @@ export class WebGPUSim implements PhysarumSim {
 
     this.context = canvas.getContext('webgpu')!;
     const format = navigator.gpu.getPreferredCanvasFormat();
+    this.canvasFormat = format;
 
-    canvas.width = SIM_WIDTH;
-    canvas.height = SIM_HEIGHT;
+    // Init всегда стартует с базовой сетки (адаптивный ресайз - через setResolution)
+    this.simW = SIM_WIDTH;
+    this.simH = SIM_HEIGHT;
+    canvas.width = this.simW;
+    canvas.height = this.simH;
     this.context.configure({
       device: this.device,
       format,
@@ -88,7 +110,7 @@ export class WebGPUSim implements PhysarumSim {
     });
 
     this.sporeScratch = new Float32Array((this.agentCount / 2) * 4);
-    const trailBytes = SIM_WIDTH * SIM_HEIGHT * 4 * 4;
+    const trailBytes = this.simW * this.simH * 4 * 4;
     this.trailA = this.device.createBuffer({ size: trailBytes, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
     this.trailB = this.device.createBuffer({ size: trailBytes, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
     this.agentsBuffer = this.device.createBuffer({
@@ -122,6 +144,7 @@ export class WebGPUSim implements PhysarumSim {
         { binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } },
       ],
     });
+    this.computeLayout = computeLayout;
     const computePipelineLayout = this.device.createPipelineLayout({ bindGroupLayouts: [computeLayout] });
 
     this.updatePipeline = this.device.createComputePipeline({
@@ -143,6 +166,7 @@ export class WebGPUSim implements PhysarumSim {
         { binding: 1, visibility: GPUShaderStage.FRAGMENT, buffer: { type: 'read-only-storage' } },
       ],
     });
+    this.renderLayout = renderLayout;
 
     this.renderPipeline = this.device.createRenderPipeline({
       layout: this.device.createPipelineLayout({ bindGroupLayouts: [renderLayout] }),
@@ -151,38 +175,84 @@ export class WebGPUSim implements PhysarumSim {
       primitive: { topology: 'triangle-list' },
     });
 
-    const makeComputeBG = (inBuf: GPUBuffer, outBuf: GPUBuffer) =>
-      this.device.createBindGroup({
-        layout: computeLayout,
-        entries: [
-          { binding: 0, resource: { buffer: this.paramsBuffer } },
-          { binding: 1, resource: { buffer: this.agentsBuffer } },
-          { binding: 2, resource: { buffer: inBuf } },
-          { binding: 3, resource: { buffer: outBuf } },
-          { binding: 4, resource: { buffer: this.beaconsBuffer } },
-          { binding: 5, resource: { buffer: this.nodesBuffer } },
-          { binding: 6, resource: { buffer: this.nodeStatsBuffer } },
-        ],
-      });
+    this.computeBGs = [this.makeComputeBG(this.trailA, this.trailB), this.makeComputeBG(this.trailB, this.trailA)];
 
-    this.computeBGs = [makeComputeBG(this.trailA, this.trailB), makeComputeBG(this.trailB, this.trailA)];
+    this.renderBGs = [this.makeRenderBG(this.trailB), this.makeRenderBG(this.trailA)];
+    this.resetColonies();
+  }
 
-    const makeRenderBG = (buf: GPUBuffer) =>
-      this.device.createBindGroup({
-        layout: renderLayout,
-        entries: [
-          { binding: 0, resource: { buffer: this.paramsBuffer } },
-          { binding: 1, resource: { buffer: buf } },
-        ],
-      });
+  /** Compute bind group: единый layout для init и адаптивного ресайза */
+  private makeComputeBG(inBuf: GPUBuffer, outBuf: GPUBuffer): GPUBindGroup {
+    return this.device.createBindGroup({
+      layout: this.computeLayout,
+      entries: [
+        { binding: 0, resource: { buffer: this.paramsBuffer } },
+        { binding: 1, resource: { buffer: this.agentsBuffer } },
+        { binding: 2, resource: { buffer: inBuf } },
+        { binding: 3, resource: { buffer: outBuf } },
+        { binding: 4, resource: { buffer: this.beaconsBuffer } },
+        { binding: 5, resource: { buffer: this.nodesBuffer } },
+        { binding: 6, resource: { buffer: this.nodeStatsBuffer } },
+      ],
+    });
+  }
 
-    this.renderBGs = [makeRenderBG(this.trailB), makeRenderBG(this.trailA)];
+  /** Render bind group: единый layout для init и адаптивного ресайза */
+  private makeRenderBG(buf: GPUBuffer): GPUBindGroup {
+    return this.device.createBindGroup({
+      layout: this.renderLayout,
+      entries: [
+        { binding: 0, resource: { buffer: this.paramsBuffer } },
+        { binding: 1, resource: { buffer: buf } },
+      ],
+    });
+  }
+
+  /**
+   * Адаптивный ресайз сетки (см. simResolution.ts): ping-pong буферы следа
+   * пересоздаются под новый размер, bind groups переподключаются, канвас
+   * перенастраивается. Содержимое следа сбрасывается, колонии расселяются
+   * заново (сохранение следа при ресайзе не требуется по контракту).
+   * Вызов с текущим размером - no-op: ни одной GPU-реаллокации.
+   */
+  setResolution(w: number, h: number): void {
+    const nw = roundEvenSim(w);
+    const nh = roundEvenSim(h);
+    if (nw === this.simW && nh === this.simH) return; // тот же размер: early return
+    this.simW = nw;
+    this.simH = nh;
+    if (!this.device || this.deviceLost || !this.context) {
+      // До init / после потери устройства: init привяжет ресурсы к this.simW/simH
+      return;
+    }
+    const bytes = nw * nh * 4 * 4;
+    const oldA = this.trailA;
+    const oldB = this.trailB;
+    this.trailA = this.device.createBuffer({ size: bytes, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+    this.trailB = this.device.createBuffer({ size: bytes, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
+    // Переподключение bind groups под новые буферы (до уничтожения старых)
+    this.computeBGs = [this.makeComputeBG(this.trailA, this.trailB), this.makeComputeBG(this.trailB, this.trailA)];
+    this.renderBGs = [this.makeRenderBG(this.trailB), this.makeRenderBG(this.trailA)];
+    oldA.destroy();
+    oldB.destroy();
+    // Канвас: свапчейн отдаёт текстуру нового размера автоматически,
+    // configure повторяем для совместимости со старыми реализациями WebGPU
+    const canvas = this.context.canvas as HTMLCanvasElement;
+    canvas.width = nw;
+    canvas.height = nh;
+    this.context.configure({
+      device: this.device,
+      format: this.canvasFormat,
+      alphaMode: 'opaque',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+    });
+    // След сброшен, колонии расселены по всей новой сетке
     this.resetColonies();
   }
 
   resetColonies(): void {
-    // Очистка следов
-    const zeros = new Float32Array(SIM_WIDTH * SIM_HEIGHT * 4);
+    // Очистка следов (размер под текущую адаптивную сетку)
+    const zeros = new Float32Array(this.simW * this.simH * 4);
     this.device.queue.writeBuffer(this.trailA, 0, zeros);
     this.device.queue.writeBuffer(this.trailB, 0, zeros);
     this.pingPong = 0;
@@ -195,26 +265,31 @@ export class WebGPUSim implements PhysarumSim {
     for (let i = 0; i < this.agentCount; i++) {
       const isEnemy = i >= half;
       const base = i * 4;
-      data[base] = Math.random() * SIM_WIDTH;
-      data[base + 1] = Math.random() * SIM_HEIGHT;
+      data[base] = Math.random() * this.simW;
+      data[base + 1] = Math.random() * this.simH;
       data[base + 2] = Math.random() * Math.PI * 2;
       data[base + 3] = isEnemy ? 1 : 0;
     }
     this.device.queue.writeBuffer(this.agentsBuffer, 0, data);
   }
 
-  /** Вброс свежих агентов игрока: кольцевой курсор по активной первой половине буфера */
+  /** Вброс свежих агентов игрока: кольцевой курсор по активной первой половине буфера.
+   *  Координаты приходят в базовой системе SIM_WIDTH x SIM_HEIGHT и масштабируются
+   *  в текущую адаптивную сетку (радиус облака - тем же множителем). */
   spawnPlayerSpores(x: number, y: number, count = 4000): void {
     if (this.deviceLost) return;
+    const kx = this.simW / SIM_WIDTH;
+    const ky = this.simH / SIM_HEIGHT;
+    const km = (kx + ky) * 0.5;
     const half = Math.max(1, Math.floor(this.activeAgentCount / 2));
     const batch = Math.min(count, half);
     const data = this.sporeScratch;
     for (let i = 0; i < batch; i++) {
-      const r = Math.random() * 18;
+      const r = Math.random() * 18 * km;
       const a = Math.random() * Math.PI * 2;
       const base = i * 4;
-      data[base] = x + Math.cos(a) * r;
-      data[base + 1] = y + Math.sin(a) * r;
+      data[base] = x * kx + Math.cos(a) * r;
+      data[base + 1] = y * ky + Math.sin(a) * r;
       data[base + 2] = a;
       data[base + 3] = 0;
     }
@@ -239,10 +314,11 @@ export class WebGPUSim implements PhysarumSim {
   ): void {
     if (this.deviceLost) return;
     // 1. Uniform: 64 байта = 12 x f32/u32 + scaleId + pad
+    // Размер сетки - фактический (адаптивный): WGSL полностью параметризован
     const f32 = this.paramF32;
     const u32 = this.paramU32;
-    f32[0] = SIM_WIDTH;
-    f32[1] = SIM_HEIGHT;
+    f32[0] = this.simW;
+    f32[1] = this.simH;
     f32[2] = dt;
     f32[3] = time;
     u32[4] = this.activeAgentCount;
@@ -296,7 +372,7 @@ export class WebGPUSim implements PhysarumSim {
     cPass.setPipeline(this.updatePipeline);
     cPass.dispatchWorkgroups(Math.ceil(this.activeAgentCount / 64));
     cPass.setPipeline(this.diffusePipeline);
-    cPass.dispatchWorkgroups(Math.ceil(SIM_WIDTH / 8), Math.ceil(SIM_HEIGHT / 8));
+    cPass.dispatchWorkgroups(Math.ceil(this.simW / 8), Math.ceil(this.simH / 8));
 
     const shouldReadback = !this.isReadingBack && performance.now() - this.lastReadbackTime > 160;
     if (shouldReadback && nodes.length > 0) {
@@ -350,11 +426,11 @@ export class WebGPUSim implements PhysarumSim {
   async captureFrame(): Promise<HTMLCanvasElement | null> {
     try {
       const c = document.createElement('canvas');
-      c.width = SIM_WIDTH;
-      c.height = SIM_HEIGHT;
+      c.width = this.simW;
+      c.height = this.simH;
       const ctx = c.getContext('2d');
       if (!ctx) return null;
-      ctx.drawImage(this.context.canvas as HTMLCanvasElement, 0, 0, SIM_WIDTH, SIM_HEIGHT);
+      ctx.drawImage(this.context.canvas as HTMLCanvasElement, 0, 0, this.simW, this.simH);
       return c;
     } catch (e) {
       console.warn('captureFrame fallback to null:', e);

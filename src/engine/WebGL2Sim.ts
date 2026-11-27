@@ -1,19 +1,23 @@
 // WebGL2Sim.ts - фолбэк physarum-симуляции для браузеров без WebGPU
-// Архитектура: агенты и след считаются на CPU (30к агентов, сетка 480x270 - четверть
-// сетки WebGPU, ячейка = 2x2 sim px), GPU (WebGL2) используется только для
-// отображения поля. Математика сенсоров/поворотов/границ/депозита - порт
-// physarum.wgsl; депозит масштабирован на 1/4 для паритета средней плотности
-// (порог захвата STRAIN.densityThreshold 0.075 остаётся корректным).
+// Архитектура: агенты и след считаются на CPU (30к агентов, базовая сетка следа
+// 480x270 клеток - четверть базовой сетки WebGPU, клетка = 2x2 sim px),
+// GPU (WebGL2) используется только для отображения поля. Математика
+// сенсоров/поворотов/границ/депозита - порт physarum.wgsl; депозит масштабирован
+// на 1/4 для паритета средней плотности (порог захвата STRAIN.densityThreshold
+// 0.075 остаётся корректным). Размер сетки адаптивный (см. simResolution.ts):
+// setResolution() масштабирует sim px и клетку 2x2 сохраняет, поэтому плотность
+// и порог захвата инвариантны к ресайзу.
 // Поля аттрактора/токсина (b/a в WGSL) для сенсоров штампуются в ячейки,
 // а для картинки считаются во фрагментном шейдере аналитически.
 import { Beacon, BioNode, MAX_BEACONS, MAX_NODES, SIM_HEIGHT, SIM_WIDTH } from './types';
-import type { PhysarumBackend, PhysarumSim, SimNodeStat } from './physarumSim';
+import type { PhysarumBackend, PhysarumSim, SimNodeStat, SimResolutionProvider } from './physarumSim';
+import { roundEvenSim } from './simResolution';
 
 // ------------------------- константы симуляции -------------------------
 
-/** Сетка следа: четверть от 960x540 (половина по каждой оси) */
-const TRAIL_W = 480;
-const TRAIL_H = 270;
+/** Базовая сетка следа: четверть от 960x540 (половина по каждой оси) */
+const BASE_TRAIL_W = 480;
+const BASE_TRAIL_H = 270;
 /** Sim px на ячейку следа */
 const CELL = 2;
 /** Базовая популяция CPU-агентов: четверть от AGENT_COUNT WebGPU (120к) */
@@ -86,8 +90,8 @@ precision highp float;
 precision highp int;
 
 uniform sampler2D uTrail;      // RG32F: r = феромон игрока, g = феромон врага
-uniform vec2 uTrailSize;       // 480x270
-uniform vec2 uSimSize;         // 960x540
+uniform vec2 uTrailSize;       // базово 480x270, адаптивно через setResolution()
+uniform vec2 uSimSize;         // базово 960x540, адаптивно через setResolution()
 uniform float uTime;
 uniform float uScaleId;
 uniform int uNodeCount;
@@ -290,7 +294,7 @@ interface DisplayUniforms {
  * Physarum-симуляция на WebGL2: CPU-агенты + CPU-след (RG float),
  * GPU - только отображение поля. Контракт 1:1 с WebGPUSim.
  */
-export class WebGL2Sim implements PhysarumSim {
+export class WebGL2Sim implements PhysarumSim, SimResolutionProvider {
   readonly backend: PhysarumBackend = 'webgl2';
   readonly agentCount = AGENT_BASE;
   onDeviceLost?: (reason: string) => void;
@@ -303,14 +307,21 @@ export class WebGL2Sim implements PhysarumSim {
   private loc: DisplayUniforms | null = null;
   private contextLost = false;
 
+  // Текущая сетка симуляции (sim px) и следа (клетки 2x2 sim px):
+  // база 960x540 / 480x270, адаптивный ресайз - setResolution()
+  private simW = SIM_WIDTH;
+  private simH = SIM_HEIGHT;
+  private tw = BASE_TRAIL_W;
+  private th = BASE_TRAIL_H;
+
   // Агенты: [x, y, angle, species] - species 0 игрок / 1 враг
   private agents = new Float32Array(AGENT_BASE * 4);
   // След RG: [r, g] на ячейку - r игрок, g враг (b/a поля аналитические)
-  private trail = new Float32Array(TRAIL_W * TRAIL_H * 2);
-  private trailTmp = new Float32Array(TRAIL_W * TRAIL_H * 2);
+  private trail = new Float32Array(BASE_TRAIL_W * BASE_TRAIL_H * 2);
+  private trailTmp = new Float32Array(BASE_TRAIL_W * BASE_TRAIL_H * 2);
   // Штампуемые поля для сенсоров (аналог каналов b/a в WGSL)
-  private attract = new Float32Array(TRAIL_W * TRAIL_H);
-  private toxin = new Float32Array(TRAIL_W * TRAIL_H);
+  private attract = new Float32Array(BASE_TRAIL_W * BASE_TRAIL_H);
+  private toxin = new Float32Array(BASE_TRAIL_W * BASE_TRAIL_H);
 
   private activeAgentCount = AGENT_BASE;
   private sporeCursor = 0;
@@ -350,8 +361,8 @@ export class WebGL2Sim implements PhysarumSim {
     }
     this.canvas = canvas;
     this.gl = gl;
-    canvas.width = SIM_WIDTH;
-    canvas.height = SIM_HEIGHT;
+    canvas.width = this.simW;
+    canvas.height = this.simH;
     canvas.addEventListener('webglcontextlost', this.onContextLost);
     canvas.addEventListener('webglcontextrestored', this.onContextRestored);
     this.createResources(gl);
@@ -362,6 +373,56 @@ export class WebGL2Sim implements PhysarumSim {
     // Защита от NaN/Infinity: некорректное значение трактуется как максимум
     const r = Number.isFinite(ratio) ? Math.max(0.35, Math.min(1, ratio)) : 1;
     this.activeAgentCount = Math.max(MIN_ACTIVE, Math.floor(this.agentCount * r));
+  }
+
+  /** Фактический размер сетки (для адаптивного маппинга координат в bridge) */
+  get simWidth(): number {
+    return this.simW;
+  }
+
+  get simHeight(): number {
+    return this.simH;
+  }
+
+  /**
+   * Адаптивный ресайз сетки (см. simResolution.ts). Sim px растёт, клетка следа
+   * 2x2 sim px сохраняется - концентрация феромона на клетку и порог захвата
+   * STRAIN.densityThreshold инвариантны к ресайзу. CPU-массивы следа и RG32F
+   * текстура пересоздаются под новый размер (след сбрасывается - допустимо по
+   * контракту), колонии расселяются заново. Вызов с текущим размером - no-op.
+   */
+  setResolution(w: number, h: number): void {
+    const nw = roundEvenSim(w);
+    const nh = roundEvenSim(h);
+    if (nw === this.simW && nh === this.simH) return; // тот же размер: early return
+    this.simW = nw;
+    this.simH = nh;
+    this.tw = nw >> 1;
+    this.th = nh >> 1;
+    // CPU-память следа: новые нулевые массивы под новую сетку
+    this.trail = new Float32Array(this.tw * this.th * 2);
+    this.trailTmp = new Float32Array(this.tw * this.th * 2);
+    this.attract = new Float32Array(this.tw * this.th);
+    this.toxin = new Float32Array(this.tw * this.th);
+    // Колонии расселяются по новой сетке, курсор спор сбрасывается
+    this.resetColonies();
+    const gl = this.gl;
+    if (!gl || this.contextLost || !this.program || !this.loc) {
+      // До init / при потерянном контексте: restore пересоздаст ресурсы под новые поля
+      return;
+    }
+    if (this.canvas) {
+      this.canvas.width = nw;
+      this.canvas.height = nh;
+    }
+    gl.viewport(0, 0, nw, nh);
+    // RG32F-текстура следа: реаллок под новый размер
+    if (this.trailTex) gl.deleteTexture(this.trailTex);
+    this.trailTex = this.createTrailTexture(gl);
+    // Униформы размеров дисплея и следа
+    gl.useProgram(this.program);
+    gl.uniform2f(this.loc.uTrailSize, this.tw, this.th);
+    gl.uniform2f(this.loc.uSimSize, nw, nh);
   }
 
   resetColonies(): void {
@@ -377,14 +438,19 @@ export class WebGL2Sim implements PhysarumSim {
     const half = this.agentCount / 2;
     for (let i = 0; i < this.agentCount; i++) {
       const base = i * 4;
-      agents[base] = Math.random() * SIM_WIDTH;
-      agents[base + 1] = Math.random() * SIM_HEIGHT;
+      agents[base] = Math.random() * this.simW;
+      agents[base + 1] = Math.random() * this.simH;
       agents[base + 2] = Math.random() * TWO_PI;
       agents[base + 3] = i >= half ? 1 : 0;
     }
   }
 
+  /** Вброс свежих агентов: координаты в базовой системе SIM_WIDTH x SIM_HEIGHT,
+   *  масштабируются в текущую адаптивную сетку (радиус облака - тем же множителем) */
   spawnPlayerSpores(x: number, y: number, count = 4000): void {
+    const kx = this.simW / SIM_WIDTH;
+    const ky = this.simH / SIM_HEIGHT;
+    const km = (kx + ky) * 0.5;
     const half = Math.max(1, Math.floor(this.activeAgentCount / 2));
     const batch = Math.min(count, half);
     const capacity = Math.max(1, half - batch);
@@ -392,11 +458,11 @@ export class WebGL2Sim implements PhysarumSim {
     this.sporeCursor = (startIdx + batch) % capacity;
     const agents = this.agents;
     for (let i = 0; i < batch; i++) {
-      const r = Math.random() * 18;
+      const r = Math.random() * 18 * km;
       const a = Math.random() * TWO_PI;
       const base = (startIdx + i) * 4;
-      agents[base] = x + Math.cos(a) * r;
-      agents[base + 1] = y + Math.sin(a) * r;
+      agents[base] = x * kx + Math.cos(a) * r;
+      agents[base + 1] = y * ky + Math.sin(a) * r;
       agents[base + 2] = a;
       agents[base + 3] = 0;
     }
@@ -480,11 +546,11 @@ export class WebGL2Sim implements PhysarumSim {
     try {
       if (!this.canvas || !this.gl || this.contextLost) return null;
       const c = document.createElement('canvas');
-      c.width = SIM_WIDTH;
-      c.height = SIM_HEIGHT;
+      c.width = this.simW;
+      c.height = this.simH;
       const ctx = c.getContext('2d');
       if (!ctx) return null;
-      ctx.drawImage(this.canvas, 0, 0, SIM_WIDTH, SIM_HEIGHT);
+      ctx.drawImage(this.canvas, 0, 0, this.simW, this.simH);
       return c;
     } catch (e) {
       console.warn('captureFrame fallback to null:', e);
@@ -525,11 +591,22 @@ export class WebGL2Sim implements PhysarumSim {
       uBeaconFade: gl.getUniformLocation(prog, 'uBeaconFade[0]'),
     };
     gl.useProgram(prog);
-    gl.uniform2f(this.loc.uTrailSize, TRAIL_W, TRAIL_H);
-    gl.uniform2f(this.loc.uSimSize, SIM_WIDTH, SIM_HEIGHT);
+    gl.uniform2f(this.loc.uTrailSize, this.tw, this.th);
+    gl.uniform2f(this.loc.uSimSize, this.simW, this.simH);
 
     // Текстура следа RG32F (NEAREST + texelFetch: float-фильтрация не требуется)
     if (this.trailTex) gl.deleteTexture(this.trailTex);
+    this.trailTex = this.createTrailTexture(gl);
+
+    // Пустой VAO: рендер без атрибутов через gl_VertexID
+    if (this.vao) gl.deleteVertexArray(this.vao);
+    this.vao = gl.createVertexArray();
+
+    gl.viewport(0, 0, this.simW, this.simH);
+  }
+
+  /** RG32F-текстура следа под текущую сетку: init и адаптивный ресайз */
+  private createTrailTexture(gl: WebGL2RenderingContext): WebGLTexture {
     const tex = gl.createTexture();
     if (!tex) throw new Error('Не удалось создать текстуру следа');
     gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -537,14 +614,8 @@ export class WebGL2Sim implements PhysarumSim {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG32F, TRAIL_W, TRAIL_H, 0, gl.RG, gl.FLOAT, this.trail);
-    this.trailTex = tex;
-
-    // Пустой VAO: рендер без атрибутов через gl_VertexID
-    if (this.vao) gl.deleteVertexArray(this.vao);
-    this.vao = gl.createVertexArray();
-
-    gl.viewport(0, 0, SIM_WIDTH, SIM_HEIGHT);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG32F, this.tw, this.th, 0, gl.RG, gl.FLOAT, this.trail);
+    return tex;
   }
 
   private compileShader(gl: WebGL2RenderingContext, type: number, src: string): WebGLShader {
@@ -564,7 +635,7 @@ export class WebGL2Sim implements PhysarumSim {
     const gl = this.gl;
     if (!gl || !this.trailTex) return;
     gl.bindTexture(gl.TEXTURE_2D, this.trailTex);
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, TRAIL_W, TRAIL_H, gl.RG, gl.FLOAT, this.trail);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this.tw, this.th, gl.RG, gl.FLOAT, this.trail);
   }
 
   private render(time: number, scaleId: number, nodes: BioNode[], beacons: Beacon[]): void {
@@ -639,11 +710,11 @@ export class WebGL2Sim implements PhysarumSim {
     const trail = this.trail;
     const src = this.trailTmp;
     src.set(trail);
-    for (let y = 0; y < TRAIL_H; y++) {
+    for (let y = 0; y < this.th; y++) {
       const sy = y + camCy;
-      const rowD = y * TRAIL_W * 2;
-      if (sy < 0 || sy >= TRAIL_H) {
-        for (let x = 0; x < TRAIL_W; x++) {
+      const rowD = y * this.tw * 2;
+      if (sy < 0 || sy >= this.th) {
+        for (let x = 0; x < this.tw; x++) {
           trail[rowD + x * 2] = 0;
           trail[rowD + x * 2 + 1] = 0;
         }
@@ -651,20 +722,20 @@ export class WebGL2Sim implements PhysarumSim {
       }
       const y0 = Math.floor(sy);
       const ty = sy - y0;
-      const rowA = Math.min(Math.max(y0, 0), TRAIL_H - 1) * TRAIL_W * 2;
-      const rowB = Math.min(y0 + 1, TRAIL_H - 1) * TRAIL_W * 2;
-      for (let x = 0; x < TRAIL_W; x++) {
+      const rowA = Math.min(Math.max(y0, 0), this.th - 1) * this.tw * 2;
+      const rowB = Math.min(y0 + 1, this.th - 1) * this.tw * 2;
+      for (let x = 0; x < this.tw; x++) {
         const sx = x + camCx;
         const di = rowD + x * 2;
-        if (sx < 0 || sx >= TRAIL_W) {
+        if (sx < 0 || sx >= this.tw) {
           trail[di] = 0;
           trail[di + 1] = 0;
           continue;
         }
         const x0 = Math.floor(sx);
         const tx = sx - x0;
-        const xa = Math.min(Math.max(x0, 0), TRAIL_W - 1) * 2;
-        const xb = Math.min(x0 + 1, TRAIL_W - 1) * 2;
+        const xa = Math.min(Math.max(x0, 0), this.tw - 1) * 2;
+        const xb = Math.min(x0 + 1, this.tw - 1) * 2;
         const iA = rowA + xa;
         const iB = rowA + xb;
         const iC = rowB + xa;
@@ -684,22 +755,22 @@ export class WebGL2Sim implements PhysarumSim {
     const trail = this.trail;
     const tmp = this.trailTmp;
     // Горизонтальный проход
-    for (let y = 0; y < TRAIL_H; y++) {
-      const base = y * TRAIL_W * 2;
-      for (let x = 0; x < TRAIL_W; x++) {
+    for (let y = 0; y < this.th; y++) {
+      const base = y * this.tw * 2;
+      for (let x = 0; x < this.tw; x++) {
         const xa = (x > 0 ? x - 1 : 0) * 2;
-        const xb = (x < TRAIL_W - 1 ? x + 1 : TRAIL_W - 1) * 2;
+        const xb = (x < this.tw - 1 ? x + 1 : this.tw - 1) * 2;
         const i = base + x * 2;
         tmp[i] = (trail[base + xa] + trail[i] + trail[base + xb]) / 3;
         tmp[i + 1] = (trail[base + xa + 1] + trail[i + 1] + trail[base + xb + 1]) / 3;
       }
     }
     // Вертикальный проход с испарением
-    for (let y = 0; y < TRAIL_H; y++) {
-      const ya = (y > 0 ? y - 1 : 0) * TRAIL_W * 2;
-      const yb = (y < TRAIL_H - 1 ? y + 1 : TRAIL_H - 1) * TRAIL_W * 2;
-      const yc = y * TRAIL_W * 2;
-      for (let x = 0; x < TRAIL_W; x++) {
+    for (let y = 0; y < this.th; y++) {
+      const ya = (y > 0 ? y - 1 : 0) * this.tw * 2;
+      const yb = (y < this.th - 1 ? y + 1 : this.th - 1) * this.tw * 2;
+      const yc = y * this.tw * 2;
+      for (let x = 0; x < this.tw; x++) {
         const xi = x * 2;
         trail[yc + xi] = ((tmp[ya + xi] + tmp[yc + xi] + tmp[yb + xi]) / 3) * evaporation;
         trail[yc + xi + 1] = ((tmp[ya + xi + 1] + tmp[yc + xi + 1] + tmp[yb + xi + 1]) / 3) * evaporation;
@@ -723,13 +794,13 @@ export class WebGL2Sim implements PhysarumSim {
         const R2 = (bc.radius * 1.8) / CELL;
         if (R2 <= 0) continue;
         const x0 = Math.max(0, Math.floor(cx - R2));
-        const x1 = Math.min(TRAIL_W - 1, Math.ceil(cx + R2));
+        const x1 = Math.min(this.tw - 1, Math.ceil(cx + R2));
         const y0 = Math.max(0, Math.floor(cy - R2));
-        const y1 = Math.min(TRAIL_H - 1, Math.ceil(cy + R2));
+        const y1 = Math.min(this.th - 1, Math.ceil(cy + R2));
         const R2sq = R2 * R2;
         const Rsq = R * R;
         for (let y = y0; y <= y1; y++) {
-          const row = y * TRAIL_W;
+          const row = y * this.tw;
           for (let x = x0; x <= x1; x++) {
             const dx = x - cx;
             const dy = y - cy;
@@ -748,12 +819,12 @@ export class WebGL2Sim implements PhysarumSim {
         const R = bc.radius / CELL;
         if (R <= 0) continue;
         const x0 = Math.max(0, Math.floor(cx - R));
-        const x1 = Math.min(TRAIL_W - 1, Math.ceil(cx + R));
+        const x1 = Math.min(this.tw - 1, Math.ceil(cx + R));
         const y0 = Math.max(0, Math.floor(cy - R));
-        const y1 = Math.min(TRAIL_H - 1, Math.ceil(cy + R));
+        const y1 = Math.min(this.th - 1, Math.ceil(cy + R));
         const Rsq = R * R;
         for (let y = y0; y <= y1; y++) {
-          const row = y * TRAIL_W;
+          const row = y * this.tw;
           for (let x = x0; x <= x1; x++) {
             const dx = x - cx;
             const dy = y - cy;
@@ -777,12 +848,12 @@ export class WebGL2Sim implements PhysarumSim {
   private stampMax(field: Float32Array, cx: number, cy: number, R: number, amp: number): void {
     if (R <= 0) return;
     const x0 = Math.max(0, Math.floor(cx - R));
-    const x1 = Math.min(TRAIL_W - 1, Math.ceil(cx + R));
+    const x1 = Math.min(this.tw - 1, Math.ceil(cx + R));
     const y0 = Math.max(0, Math.floor(cy - R));
-    const y1 = Math.min(TRAIL_H - 1, Math.ceil(cy + R));
+    const y1 = Math.min(this.th - 1, Math.ceil(cy + R));
     const Rsq = R * R;
     for (let y = y0; y <= y1; y++) {
-      const row = y * TRAIL_W;
+      const row = y * this.tw;
       for (let x = x0; x <= x1; x++) {
         const dx = x - cx;
         const dy = y - cy;
@@ -800,12 +871,12 @@ export class WebGL2Sim implements PhysarumSim {
   private stampMin(field: Float32Array, cx: number, cy: number, R: number, k: number): void {
     if (R <= 0) return;
     const x0 = Math.max(0, Math.floor(cx - R));
-    const x1 = Math.min(TRAIL_W - 1, Math.ceil(cx + R));
+    const x1 = Math.min(this.tw - 1, Math.ceil(cx + R));
     const y0 = Math.max(0, Math.floor(cy - R));
-    const y1 = Math.min(TRAIL_H - 1, Math.ceil(cy + R));
+    const y1 = Math.min(this.th - 1, Math.ceil(cy + R));
     const Rsq = R * R;
     for (let y = y0; y <= y1; y++) {
-      const row = y * TRAIL_W;
+      const row = y * this.tw;
       for (let x = x0; x <= x1; x++) {
         const dx = x - cx;
         const dy = y - cy;
@@ -854,24 +925,24 @@ export class WebGL2Sim implements PhysarumSim {
 
   /** Билинейная выборка следа (r/g) -> this.sR / this.sG, вне поля - ноль (как в WGSL) */
   private sampleRG(x: number, y: number): void {
-    if (x < 0 || x >= TRAIL_W || y < 0 || y >= TRAIL_H) {
+    if (x < 0 || x >= this.tw || y < 0 || y >= this.th) {
       this.sR = 0;
       this.sG = 0;
       return;
     }
     const trail = this.trail;
-    const fx = x > TRAIL_W - 1 ? TRAIL_W - 1 : x;
-    const fy = y > TRAIL_H - 1 ? TRAIL_H - 1 : y;
+    const fx = x > this.tw - 1 ? this.tw - 1 : x;
+    const fy = y > this.th - 1 ? this.th - 1 : y;
     const x0 = Math.floor(fx);
     const y0 = Math.floor(fy);
-    const x1 = Math.min(x0 + 1, TRAIL_W - 1);
-    const y1 = Math.min(y0 + 1, TRAIL_H - 1);
+    const x1 = Math.min(x0 + 1, this.tw - 1);
+    const y1 = Math.min(y0 + 1, this.th - 1);
     const tx = fx - x0;
     const ty = fy - y0;
-    const i00 = (y0 * TRAIL_W + x0) * 2;
-    const i10 = (y0 * TRAIL_W + x1) * 2;
-    const i01 = (y1 * TRAIL_W + x0) * 2;
-    const i11 = (y1 * TRAIL_W + x1) * 2;
+    const i00 = (y0 * this.tw + x0) * 2;
+    const i10 = (y0 * this.tw + x1) * 2;
+    const i01 = (y1 * this.tw + x0) * 2;
+    const i11 = (y1 * this.tw + x1) * 2;
     const rTop = trail[i00] + (trail[i10] - trail[i00]) * tx;
     const rBot = trail[i01] + (trail[i11] - trail[i01]) * tx;
     this.sR = rTop + (rBot - rTop) * ty;
@@ -882,19 +953,19 @@ export class WebGL2Sim implements PhysarumSim {
 
   /** Билинейная выборка скалярного поля (attract/toxin), вне поля - ноль */
   private sampleField(field: Float32Array, x: number, y: number): number {
-    if (x < 0 || x >= TRAIL_W || y < 0 || y >= TRAIL_H) return 0;
-    const fx = x > TRAIL_W - 1 ? TRAIL_W - 1 : x;
-    const fy = y > TRAIL_H - 1 ? TRAIL_H - 1 : y;
+    if (x < 0 || x >= this.tw || y < 0 || y >= this.th) return 0;
+    const fx = x > this.tw - 1 ? this.tw - 1 : x;
+    const fy = y > this.th - 1 ? this.th - 1 : y;
     const x0 = Math.floor(fx);
     const y0 = Math.floor(fy);
-    const x1 = Math.min(x0 + 1, TRAIL_W - 1);
-    const y1 = Math.min(y0 + 1, TRAIL_H - 1);
+    const x1 = Math.min(x0 + 1, this.tw - 1);
+    const y1 = Math.min(y0 + 1, this.th - 1);
     const tx = fx - x0;
     const ty = fy - y0;
-    const v00 = field[y0 * TRAIL_W + x0];
-    const v10 = field[y0 * TRAIL_W + x1];
-    const v01 = field[y1 * TRAIL_W + x0];
-    const v11 = field[y1 * TRAIL_W + x1];
+    const v00 = field[y0 * this.tw + x0];
+    const v10 = field[y0 * this.tw + x1];
+    const v01 = field[y1 * this.tw + x0];
+    const v11 = field[y1 * this.tw + x1];
     const vTop = v00 + (v10 - v00) * tx;
     const vBot = v01 + (v11 - v01) * tx;
     return vTop + (vBot - vTop) * ty;
@@ -998,17 +1069,17 @@ export class WebGL2Sim implements PhysarumSim {
     // Отражение от границ поля со сдвигом камеры (мировой якорь)
     ax -= this.fCamX;
     ay -= this.fCamY;
-    if (ax < 1) ax += SIM_WIDTH - 2;
-    if (ax >= SIM_WIDTH - 1) ax -= SIM_WIDTH - 2;
-    if (ay < 1) ay += SIM_HEIGHT - 2;
-    if (ay >= SIM_HEIGHT - 1) ay -= SIM_HEIGHT - 2;
+    if (ax < 1) ax += this.simW - 2;
+    if (ax >= this.simW - 1) ax -= this.simW - 2;
+    if (ay < 1) ay += this.simH - 2;
+    if (ay >= this.simH - 1) ay -= this.simH - 2;
     const noise = (rnd2 - 0.5) * 1.2;
-    if (ax < 2 || ax >= SIM_WIDTH - 2) {
-      ax = Math.min(Math.max(ax, 2), SIM_WIDTH - 2);
+    if (ax < 2 || ax >= this.simW - 2) {
+      ax = Math.min(Math.max(ax, 2), this.simW - 2);
       angle = Math.PI - angle + noise;
     }
-    if (ay < 2 || ay >= SIM_HEIGHT - 2) {
-      ay = Math.min(Math.max(ay, 2), SIM_HEIGHT - 2);
+    if (ay < 2 || ay >= this.simH - 2) {
+      ay = Math.min(Math.max(ay, 2), this.simH - 2);
       angle = -angle + noise;
     }
 
@@ -1019,9 +1090,9 @@ export class WebGL2Sim implements PhysarumSim {
     // Депозит феромона в ячейку следа (масштаб 1/4: паритет средней плотности)
     let px = Math.trunc(ax);
     let py = Math.trunc(ay);
-    px = px < 0 ? 0 : px >= SIM_WIDTH ? SIM_WIDTH - 1 : px;
-    py = py < 0 ? 0 : py >= SIM_HEIGHT ? SIM_HEIGHT - 1 : py;
-    const ci = ((py >> 1) * TRAIL_W + (px >> 1)) * 2;
+    px = px < 0 ? 0 : px >= this.simW ? this.simW - 1 : px;
+    py = py < 0 ? 0 : py >= this.simH ? this.simH - 1 : py;
+    const ci = ((py >> 1) * this.tw + (px >> 1)) * 2;
     const trail = this.trail;
     if (isPlayer) {
       trail[ci] = Math.min(1, trail[ci] + DEPOSIT);
@@ -1044,20 +1115,20 @@ export class WebGL2Sim implements PhysarumSim {
     const count = Math.min(nodes.length, MAX_NODES);
     for (let i = 0; i < count; i++) {
       const nd = nodes[i];
-      if (nd.x < 0 || nd.x >= SIM_WIDTH || nd.y < 0 || nd.y >= SIM_HEIGHT) {
+      if (nd.x < 0 || nd.x >= this.simW || nd.y < 0 || nd.y >= this.simH) {
         stats.push({ playerDensity: 0, enemyDensity: 0 });
         continue;
       }
-      const cx = Math.min(Math.max(Math.trunc(nd.x / CELL), 0), TRAIL_W - 1);
-      const cy = Math.min(Math.max(Math.trunc(nd.y / CELL), 0), TRAIL_H - 1);
+      const cx = Math.min(Math.max(Math.trunc(nd.x / CELL), 0), this.tw - 1);
+      const cy = Math.min(Math.max(Math.trunc(nd.y / CELL), 0), this.th - 1);
       let accR = 0;
       let accG = 0;
       let n = 0;
       for (let dy = -6; dy <= 6; dy += 2) {
-        const sy = Math.min(Math.max(cy + dy, 0), TRAIL_H - 1);
+        const sy = Math.min(Math.max(cy + dy, 0), this.th - 1);
         for (let dx = -6; dx <= 6; dx += 2) {
-          const sx = Math.min(Math.max(cx + dx, 0), TRAIL_W - 1);
-          const idx = (sy * TRAIL_W + sx) * 2;
+          const sx = Math.min(Math.max(cx + dx, 0), this.tw - 1);
+          const idx = (sy * this.tw + sx) * 2;
           accR += trail[idx];
           accG += trail[idx + 1];
           n++;

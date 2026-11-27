@@ -35,8 +35,19 @@ export interface PhysarumSim {
   setQualityRatio(ratio: number): void;
   /** Сброс поля и расселение обоих штаммов по всей карте */
   resetColonies(): void;
-  /** Вброс свежих агентов игрока у точки (кольцевой курсор по активной половине) */
+  /**
+   * Вброс свежих агентов игрока у точки (кольцевой курсор по активной половине).
+   * Координаты - в БАЗОВОЙ системе SIM_WIDTH x SIM_HEIGHT (как отдаёт toSimX/toSimY);
+   * бэкенд сам масштабирует их в текущую адаптивную сетку.
+   */
   spawnPlayerSpores(x: number, y: number, count?: number): void;
+  /**
+   * Адаптивное разрешение сетки (см. simResolution.ts): переподключение
+   * ping-pong буферов/текстур и uniforms под новый размер. Содержимое следа
+   * НЕ сохраняется (сброс при ресайзе допустим по контракту, колонии
+   * расселяются заново). Вызов с текущим размером - no-op без реаллокаций.
+   */
+  setResolution(w: number, h: number): void;
   /** Шаг симуляции + рендер поля + асинхронная статистика узлов */
   step(
     time: number,
@@ -53,6 +64,16 @@ export interface PhysarumSim {
   ): void;
   /** Снимок последнего кадра physarum-поля (Портрет организма) */
   captureFrame(): Promise<HTMLCanvasElement | null>;
+}
+
+/**
+ * Фактический размер сетки после возможного адаптивного ресайза. Реализуют
+ * оба бэкенда; headless-моки поле не имеют - потребители читают через
+ * typeof-проверку (Partial<SimResolutionProvider>).
+ */
+export interface SimResolutionProvider {
+  readonly simWidth: number;
+  readonly simHeight: number;
 }
 
 /**
