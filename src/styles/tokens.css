@@ -249,3 +249,57 @@
   #toast.toast--warn { background: rgba(34, 22, 4, 0.94); border-color: rgba(250, 204, 21, 0.6); color: #fef08a; }
   #toast.toast--danger { background: rgba(35, 6, 10, 0.94); border-color: rgba(255, 59, 92, 0.6); color: #ffb3c0; }
 }
+
+/* Масштаб интерфейса на больших экранах: CSS zoom только для DOM-оверлеев
+   (HUD-панели, модалки, тост). Игровые канвасы (#gpu-canvas/#pixi-canvas/#bloom-canvas)
+   не трогаем - сцена остаётся полноэкранной, растёт только читаемость UI.
+   Правила живут в слое overrides (последний в каскаде), чтобы перекрывать
+   базовые max-height/width модалок из modals.css.
+   Поведение zoom стандартизировано (Chromium 128+, Firefox 126+): px-размеры
+   умножаются на коэффициент, проценты и auto/растягивание остаются
+   масштабо-инвариантными, поэтому центрирование (left: 50% + translateX)
+   и left+right-якоря не ломаются. cqh-единицы скейлятся как длины, поэтому
+   max-height модалок компенсируется делением на --ui-zoom. */
+@layer overrides {
+  @media (min-width: 1400px) {
+    :root { --ui-zoom: 1.18; }
+
+    /* Корневые контейнеры HUD: обе верхние панели, шкала бытия, босс-бар,
+       ДНК-матрица, резонанс, стек оружия, радар и тосты */
+    .hud-top,
+    #scale-hud,
+    #boss-hud,
+    #hud-left-col,
+    .resonance-hud,
+    #hud-bottom-left,
+    #petri-radar-hud,
+    #toast {
+      zoom: var(--ui-zoom);
+    }
+
+    /* Карточки модальных окон: масштабируется всё содержимое целиком
+       (шрифты, иконки, отступы). Ширина min(96%, Npx) безопасна: px-ветка
+       масштабируется, процентная остаётся в границах сцены. */
+    :where(.main-menu-card, .death-card) {
+      zoom: var(--ui-zoom);
+      max-height: calc(94cqh / var(--ui-zoom));
+    }
+    :where(.biolab-card, .codex-card, .help-card, .settings-card, .daily-card, .ach-card) {
+      zoom: var(--ui-zoom);
+      max-height: calc(92cqh / var(--ui-zoom));
+    }
+
+    /* Окно выбора мутаций: масштабируем прямых детей (заголовок, схема
+       мутаций, сетка карточек, кнопка реролла) */
+    #upgrade > * {
+      zoom: var(--ui-zoom);
+    }
+    #upgrade > #cards {
+      max-height: calc(68cqh / var(--ui-zoom));
+    }
+  }
+
+  @media (min-width: 1800px) {
+    :root { --ui-zoom: 1.32; }
+  }
+}

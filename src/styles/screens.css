@@ -107,7 +107,7 @@
     }
     .codex-header { flex-direction: column; align-items: stretch; }
     .codex-header-right { justify-content: space-between; }
-    .up-card { width: min(92vw, 290px); min-height: 96px; }
+    .up-card { width: min(92vw, 300px); min-height: 150px; }
   }
 
   @media (pointer: coarse) {

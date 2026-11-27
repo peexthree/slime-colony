@@ -3,7 +3,7 @@
 import { t, getLocale } from '../i18n';
 import { dnaName, hybridName, trChallengeTitle } from '../i18n/gameData';
 import {
-  BOSS_FIRST_AT, DNA_COLORS, DNA_LEVELS, ELITE, GROWTH, HYBRIDS, NOVA, PLAYER, SCALES, TAIL,
+  BOSS_FIRST_AT, DNA_COLORS, DNA_LEVELS, ELITE, GROWTH, HYBRIDS, NOVA, PLAYER, SCALES, SPAWN, TAIL,
   worldSize,
 } from '../engine/types';
 import type { DnaBranch, WeaponId } from '../engine/types';
@@ -172,6 +172,9 @@ export function resetRun(ctx: Ctx): void {
   ctx.pendingUps = 0;
   ctx.gameTime = 0;
   ctx.spawnT = 1;
+  ctx.spawnWaveT = SPAWN.waveFirstAt;
+  ctx.spawnWaveAnnounced = false;
+  ctx.spawnQueue = [];
   ctx.nextBossAt = BOSS_FIRST_AT;
   ctx.nextPickDelta = 0;
   ctx.incubatorSpawnT = 20;

@@ -291,7 +291,16 @@ export function wireEvents(ctx: Ctx): void {
   }
 
   // ---------- Старт / дневное испытание / достижения / справка ----------
-  dom.introStartBtn.addEventListener('click', () => startOrResumeRun(ctx));
+  dom.introStartBtn.addEventListener('click', () => {
+    // Фуллскрин сразу при старте: игра на весь экран, а не в маленьком окне
+    // (отзыв плейтеста). Запрос жестом клика - браузер разрешает. Тихо фейлим
+    // в окружениях без фуллскрина (in-app браузер и т.п.).
+    const root = document.documentElement;
+    if (!document.fullscreenElement && root.requestFullscreen) {
+      root.requestFullscreen().catch(() => {});
+    }
+    startOrResumeRun(ctx);
+  });
   if (dom.dailyChallengeBtn) dom.dailyChallengeBtn.addEventListener('click', () => showModal(ctx, 'daily'));
   if (dom.dailyStartBtn) {
     dom.dailyStartBtn.addEventListener('click', () => {

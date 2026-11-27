@@ -1,6 +1,6 @@
 // Души XP: магнит, консолидация, вражеский магнит, магнитные элиты,
 // Симбиотический Резонанс и feeding ДНК-матрицы.
-import { DNA_COLORS, HYBRIDS, TAIL } from '../engine/types';
+import { DNA_COLORS, HYBRIDS, SOUL, TAIL } from '../engine/types';
 import type { DnaBranch } from '../engine/types';
 import { t, getLocale } from '../i18n';
 import { dnaName, hybridName } from '../i18n/gameData';
@@ -67,8 +67,12 @@ export function stepSouls(ctx: Ctx, dt: number): void {
     const dy = ctx.player.y - o.y;
     const d = Math.max(1, Math.hypot(dx, dy));
     if (d < effMagnet) {
-      o.vx += (dx / d) * 900 * dt;
-      o.vy += (dy / d) * 900 * dt;
+      // Притяжение + гашение поперечной скорости: душа в магнитном поле
+      // впитывается, а не крутится по орбите и не отлетает (отзыв плейтеста)
+      o.vx += (dx / d) * SOUL.magnetAccel * dt;
+      o.vy += (dy / d) * SOUL.magnetAccel * dt;
+      o.vx -= o.vx * Math.min(1, dt * 3.2);
+      o.vy -= o.vy * Math.min(1, dt * 3.2);
     } else if (ctx.orbToEnemies) {
       // Вражеский магнит (🧲): души утекают к ближайшему врагу и съедаются им
       let best: { x: number; y: number } | null = null;
@@ -105,7 +109,7 @@ export function stepSouls(ctx: Ctx, dt: number): void {
     o.y += o.vy * dt;
     o.x = Math.max(10, Math.min(ctx.curWorldW - 10, o.x));
     o.y = Math.max(10, Math.min(ctx.curWorldH - 10, o.y));
-    if (d >= 12) continue;
+    if (d >= SOUL.pickupR) continue;
     collectSoul(ctx, o);
     ctx.orbs.splice(i, 1);
   }
@@ -129,6 +133,9 @@ function collectSoul(ctx: Ctx, o: XpOrb): void {
 
   ctx.xp += o.value * ctx.xpMul * ctx.mutagenXpMul * ctx.dailyXpMul * ctx.resonanceMult;
   ctx.tailLen = Math.min(maxTail(ctx), ctx.tailLen + o.value * TAIL.soulGain);
+  // Каждая душа лечит организм (запрос плейтеста: без этого сущность
+  // отличается только регеном убеганием)
+  ctx.player.hp = Math.min(ctx.maxHp, ctx.player.hp + SOUL.heal);
   ctx.sinceSoul = 0;
   ctx.svc.sfx.eat();
   ctx.dnaXp[o.dna] += o.value;

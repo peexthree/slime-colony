@@ -1,8 +1,8 @@
 // Состояние забега: единый mutable-объект вместо гигантского замыкания main.ts.
 // Все таймеры, массивы сущностей, множители и флаги одного забега + производные
 // геттеры (эффективный урон, ёмкость хвоста, ДНК-уровень) над этим состоянием.
-import type { BioNode, DnaBranch, DnaBranchOrNeutral, HybridId, WeaponId } from '../engine/types';
-import { BOSS_FIRST_AT, DNA_LEVELS, ELITE, HYBRIDS, IFRAME, PLAYER, SCALES, TAIL, WEAPON_BRANCH, worldSize } from '../engine/types';
+import type { BioNode, DnaBranch, DnaBranchOrNeutral, EnemyType, HybridId, WeaponId } from '../engine/types';
+import { BOSS_FIRST_AT, DNA_LEVELS, ELITE, HYBRIDS, IFRAME, PLAYER, SCALES, SPAWN, TAIL, WEAPON_BRANCH, worldSize } from '../engine/types';
 import { getCodexBonuses } from '../engine/codex';
 import type { CodexBonusSummary } from '../engine/codex';
 import { getDailyChallenge } from '../engine/challenge';
@@ -200,6 +200,12 @@ export interface RunState {
   gameOver: boolean;
   gameTime: number;
   spawnT: number;
+  /** Волновой пейсинг: таймер до следующего прилива биомассы */
+  spawnWaveT: number;
+  /** Телеграф волны уже показан (тост за 2с до прилива) */
+  spawnWaveAnnounced: boolean;
+  /** Очередь прилива: враги с задержкой старта (волна заходит пачкой, не ручейком) */
+  spawnQueue: { type: EnemyType; delay: number }[];
   nextBossAt: number;
 
   // ---------- Ввод ----------
@@ -387,6 +393,9 @@ export function createRunState(): RunState {
     gameOver: false,
     gameTime: 0,
     spawnT: 1,
+    spawnWaveT: SPAWN.waveFirstAt,
+    spawnWaveAnnounced: false,
+    spawnQueue: [],
     nextBossAt: BOSS_FIRST_AT,
 
     mouse: { x: w.w / 2, y: w.h / 2, active: false },

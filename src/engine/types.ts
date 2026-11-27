@@ -254,6 +254,25 @@ export const PLAYER = {
   magnet: 90,
 } as const;
 
+/** Души (сферы ДНК): поглощение и лечение организма */
+export const SOUL = {
+  heal: 1,        // каждая съеденная душа лечит 1 HP (запрос плейтеста)
+  pickupR: 16,    // радиус поглощения (было 12 - души крутились по орбите и отлетали)
+  magnetAccel: 900,
+} as const;
+
+/** Волновой пейсинг спавна: поле читается, давление приходит приливами */
+export const SPAWN = {
+  trickleInterval: 2.6,  // фоновый ручеёк между волнами (сек на врага)
+  wavePeriod: 22,        // период прилива биомассы
+  waveFirstAt: 14,       // первая волна
+  waveBase: 8,           // базовый размер прилива
+  wavePer40s: 1,         // +1 враг за волну каждые 40с забега
+  wavePerScale: 3,       // +1 враг за волну за каждую шкалу
+  stagger: 0.24,         // разлёт волны во времени
+  telegraph: 2,          // тост-предупреждение за N секунд до прилива
+} as const;
+
 export const PROJ_SPEED = 330;
 export const PROJ_LIFE = 1.3;
 export const PROJ_RADIUS = 5;

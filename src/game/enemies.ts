@@ -1,7 +1,7 @@
 // Враги: спавн по спавн-таблице и волнам, смерть с экосистемой расщеплений,
 // ИИ (погоня/отступление/мембрана/навыки/хвостик/заражение/элиты), рейды на башни.
-import { getLocale } from '../i18n';
-import { BOSS_EVERY, DNA_COLORS, ELITE, ENEMIES, ENEMY_CAP, PLAYER, SCALES, SPAWN_TABLE } from '../engine/types';
+import { getLocale, t } from '../i18n';
+import { BOSS_EVERY, DNA_COLORS, ELITE, ENEMIES, ENEMY_CAP, PLAYER, SCALES, SPAWN, SPAWN_TABLE } from '../engine/types';
 import type { DnaBranch, EliteMutation, EnemyType } from '../engine/types';
 import { WaveDirector } from '../engine/waves';
 import { unlockCodexEntry } from '../engine/codex';
@@ -236,18 +236,41 @@ export function stepSpawns(ctx: Ctx, dt: number): void {
     ctx.nextSpawnElite = true;
     showToast(ctx, `<svg class="bio-icon bio-magenta" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-node-mutagen"/></svg> ${getLocale() === 'en' ? 'MUTATION: elite approaching' : 'МУТАЦИЯ: элита приближается'}`);
   }
-  // Спавн-таблица новых организмов вытесняет старый рол по мере времени
-  ctx.spawnT -= dt;
+  // ---------- Волновой пейсинг (запрос плейтеста: "миллиард пикселей летает") ----------
+  // Поле читается: лёгкий фоновый ручеёк + давление приходит приливами раз в
+  // SPAWN.wavePeriod с телеграфом за SPAWN.telegraph секунд (тост).
   ctx.svc.waves.update(dt, ctx.gameTime);
+
+  // Фоновый ручеёк
+  ctx.spawnT -= dt;
   if (ctx.spawnT <= 0 && ctx.svc.waves.canSpawn() && ctx.enemies.length < ENEMY_CAP) {
-    // Калибровка ранней кривой (плейтест + headless-сим): grace-период -
-    // 1.25с между спавнами на старте (0.8/с < килрейт шипов ур.1), к 60-й
-    // секунде разгон до 0.97с; пачки растут каждые 120с - ступенька 1->2
-    // совпадает с открытием второго оружия.
-    ctx.spawnT = Math.max(0.3, 1.25 - (ctx.gameTime / 60) * 0.14);
-    const batch = 1 + Math.floor(ctx.gameTime / 120);
-    for (let i2 = 0; i2 < batch; i2++) {
-      spawnEnemy(ctx, rollSpawnType(ctx));
+    ctx.spawnT = SPAWN.trickleInterval;
+    spawnEnemy(ctx, rollSpawnType(ctx));
+  }
+
+  // Телеграф прилива
+  ctx.spawnWaveT -= dt;
+  if (!ctx.spawnWaveAnnounced && ctx.spawnWaveT <= SPAWN.telegraph) {
+    ctx.spawnWaveAnnounced = true;
+    showToast(ctx, `<svg class="bio-icon bio-amber" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-wave-tide"/></svg> ${t('toast_wave_incoming')}`, 'warn');
+  }
+
+  // Прилив: пачка врагов заходит с разлётом SPAWN.stagger
+  if (ctx.spawnWaveT <= 0) {
+    ctx.spawnWaveT = SPAWN.wavePeriod;
+    ctx.spawnWaveAnnounced = false;
+    const size = SPAWN.waveBase + Math.floor(ctx.gameTime / 40) + ctx.scaleIdx * SPAWN.wavePerScale;
+    for (let i2 = 0; i2 < size; i2++) {
+      ctx.spawnQueue.push({ type: rollSpawnType(ctx), delay: i2 * SPAWN.stagger });
+    }
+  }
+
+  // Распределение очереди прилива по времени
+  if (ctx.spawnQueue.length > 0) {
+    for (const q of ctx.spawnQueue) q.delay -= dt;
+    while (ctx.spawnQueue.length > 0 && ctx.spawnQueue[0].delay <= 0 && ctx.svc.waves.canSpawn() && ctx.enemies.length < ENEMY_CAP) {
+      const q = ctx.spawnQueue.shift()!;
+      spawnEnemy(ctx, q.type);
     }
   }
 }

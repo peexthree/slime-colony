@@ -1,6 +1,6 @@
 // Улучшения: пул карточек, геномы/гены/гибриды/проклятия, окно выбора и реролл.
 import { t, getLocale } from '../i18n';
-import { hybridDesc, hybridName, trUpgrade } from '../i18n/gameData';
+import { dnaName, hybridDesc, hybridName, trUpgrade } from '../i18n/gameData';
 import { HYBRIDS, MAX_EQUIPPED_WEAPONS, STAT_MAX_STACKS, WEAPON_MAX_LVL } from '../engine/types';
 import type { DnaBranch, HybridId, WeaponId } from '../engine/types';
 import { canUnlockWeapon, canUpgradeWeapon, equippedWeaponCount } from '../game/progression';
@@ -9,7 +9,7 @@ import type { Ctx } from '../game/context';
 import { toSimX, toSimY } from '../game/context';
 import { dnaLvl, mainBranchForWeapons, refreshCodexBonuses, refreshResonance } from '../game/state';
 import { updateBranchChip, syncStagePhase } from './hud';
-import { renderHybridHunt } from './hybridHunt';
+import { BRANCH_CSS, HYBRID_CSS, branchLevelFrac, hybridPairState, hybridPairText, renderHybridHunt } from './hybridHunt';
 import { showToast } from './toast';
 
 /** Определение карточки улучшения: доступность и эффект замыкаются на ctx */
@@ -283,32 +283,68 @@ export function openUpgrades(ctx: Ctx): void {
     card.className = 'up-card';
     card.dataset.id = u.id;
     const upIco = UPGRADE_CARD_ICONS[u.id];
-    let crestHtml = '';
     if (u.branch) card.classList.add(`branch-${u.branch}`);
-    if (u.curse) {
-      card.classList.add('curse');
-      const curseIco = upIco ?? { id: 'ico-skull-hazard', vb: '0 0 32 32' };
-      crestHtml = `<div class="card-crest curse-crest"><svg class="inline-card-ico" viewBox="${curseIco.vb}" aria-hidden="true"><use href="#${curseIco.id}"/></svg> ${t('badge_pathology')}</div>`;
-    }
+    if (u.curse) card.classList.add('curse');
     if (u.hybrid) card.classList.add('hybrid');
-    let branchTag = '';
+    // Бейдж-пиктограмма: ветка ДНК / гибрид / оружие или стат
+    let badgeHtml = '';
     if (u.hybrid) {
-      const hybridColors: Record<string, string> = {
-        plasma_leviathan: '#ff6b2b',
-        ouroboros: '#00ff9d',
-        phase_serpent: '#66fcf1',
-        spore_reactor: '#39ff14',
-        ion_colossus: '#ffb800',
-        psi_web: '#b55cff',
-      };
       const hybridSlug = u.hybrid.replace(/_/g, '-');
-      const color = hybridColors[u.hybrid] || '#ffd166';
-      branchTag = `<span class="b-ico"><svg class="inline-card-ico" style="color:${color}" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-hybrid-${hybridSlug}"/></svg></span> `;
-      crestHtml = `<div style="text-align:center;margin:4px 0;"><svg class="hybrid-crest" style="color:${color}" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-hybrid-${hybridSlug}"/></svg></div>`;
-    } else if (upIco && !u.curse) {
-      branchTag = `<span class="b-ico"><svg class="up-card-ico" viewBox="${upIco.vb}" aria-hidden="true"><use href="#${upIco.id}"/></svg></span>`;
+      badgeHtml = `<span class="uc-badge" style="color:${HYBRID_CSS[u.hybrid]}"><svg viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-hybrid-${hybridSlug}"/></svg></span>`;
     } else if (u.branch) {
-      branchTag = `<span class="b-ico"><svg class="inline-card-ico" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-${u.branch}"/></svg></span> `;
+      badgeHtml = `<span class="uc-badge" style="color:${BRANCH_CSS[u.branch]}"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-${u.branch}"/></svg></span>`;
+    } else if (upIco) {
+      badgeHtml = `<span class="uc-badge"><svg viewBox="${upIco.vb}" aria-hidden="true"><use href="#${upIco.id}"/></svg></span>`;
+    }
+    // Тег класса карточки: патология / прото-органелла
+    let tagHtml = '';
+    if (u.curse) tagHtml = `<span class="uc-tag uc-tag-cur">${t('badge_pathology')}</span>`;
+    else if (u.id.startsWith('relic_')) tagHtml = `<span class="uc-tag uc-tag-relic">${t('badge_organelle')}</span>`;
+    // Футер ветки ДНК: чип "→ ВЕРМИС 2/3" с мини-прогрессом до уровня 3
+    // и путь к гибриду; у гибрид-карт - родители с уровнями
+    let footHtml = '';
+    if (u.hybrid) {
+      const hDef = HYBRIDS.find((h) => h.id === u.hybrid)!;
+      const hs = hybridPairState(ctx, hDef);
+      const chip = (b: DnaBranch, lvl: number) =>
+        `<span class="uc-dna-chip" style="color:${BRANCH_CSS[b]}">${dnaName(b)} <span class="uc-lvl">${lvl}/3</span></span>`;
+      footHtml =
+        `<div class="uc-foot">` +
+        `<div class="uc-dna-row">${chip(hDef.a, hs.aLvl)}<span class="uc-plus">+</span>${chip(hDef.b, hs.bLvl)}</div>` +
+        `<div class="uc-path">${hybridPairText(hs, dnaName(hDef.a), dnaName(hDef.b), hybridName(u.hybrid))}</div>` +
+        `</div>`;
+    } else if (u.branch) {
+      const bs = branchLevelFrac(ctx, u.branch);
+      const pct = ((bs.lvl + bs.frac) / 3 * 100).toFixed(1);
+      const css = BRANCH_CSS[u.branch];
+      // Ближайший невзятый гибрид этой ветки: максимум min-прогресса пары геномов
+      const candidates = HYBRIDS
+        .filter((h) => (h.a === u.branch || h.b === u.branch) && !ctx.hybridsTaken.has(h.id))
+        .map((h) => ({ h, ps: hybridPairState(ctx, h) }))
+        .sort(
+          (x, y) =>
+            Math.min(y.ps.aLvl + y.ps.aFrac, y.ps.bLvl + y.ps.bFrac) -
+            Math.min(x.ps.aLvl + x.ps.aFrac, x.ps.bLvl + x.ps.bFrac),
+        );
+      let pathHtml = '';
+      if (candidates.length > 0) {
+        const best = candidates[0]!.h;
+        const bestSlug = best.id.replace(/_/g, '-');
+        const allNames = candidates.map((c) => hybridName(c.h.id)).join(' · ');
+        pathHtml =
+          `<div class="uc-path" title="${allNames}">` +
+          `<svg class="uc-path-ico" style="color:${HYBRID_CSS[best.id]}" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-hybrid-${bestSlug}"/></svg>` +
+          `<span>${t('card_path_label')}: <b>${hybridName(best.id)}</b></span>` +
+          `</div>`;
+      }
+      footHtml =
+        `<div class="uc-foot">` +
+        `<div class="uc-dna-row">` +
+        `<span class="uc-dna-chip" style="color:${css}">→ ${dnaName(u.branch)} <span class="uc-lvl">${bs.lvl}/3</span></span>` +
+        `<span class="uc-dna-bar"><i style="width:${pct}%;background:${css};box-shadow:0 0 6px ${css}"></i></span>` +
+        `</div>` +
+        pathHtml +
+        `</div>`;
     }
     const trUp = trUpgrade(u.id, u.title, u.desc);
     const cleanTitle = trUp.title.replace(/^[^\w\sа-яА-ЯёЁ]+/, '').trim();
@@ -317,7 +353,9 @@ export function openUpgrades(ctx: Ctx): void {
       <svg class="corner tr" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
       <svg class="corner bl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
       <svg class="corner br" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
-      <h3><span class="key-hint" style="opacity:0.68;font-size:10px;margin-right:4px;">[${cardIdx + 1}]</span>${branchTag}${cleanTitle}${weaponLvlTag(ctx, u.id)}</h3>${crestHtml}<p>${resolveCardDesc(ctx, u)}</p>
+      <div class="uc-top">${badgeHtml}<h3><span class="key-hint" style="opacity:0.68;font-size:10px;margin-right:4px;">[${cardIdx + 1}]</span>${cleanTitle}${weaponLvlTag(ctx, u.id)}</h3>${tagHtml}</div>
+      <p class="uc-desc">${resolveCardDesc(ctx, u)}</p>
+      ${footHtml}
     `;
     cardsEl.appendChild(card);
   }
