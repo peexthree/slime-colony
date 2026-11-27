@@ -136,7 +136,16 @@ async function bootstrap(): Promise<void> {
           mycelium: ctx.dnaXp.mycelium, symbiont: ctx.dnaXp.symbiont,
         },
         hybrids: [...ctx.hybridsTaken], genes: [...ctx.genes], tailLen: ctx.tailLen, level: ctx.level, kills: ctx.kills,
+        player: { x: Math.round(ctx.player.x), y: Math.round(ctx.player.y), hp: Math.round(ctx.player.hp) },
+        world: { w: ctx.curWorldW, h: ctx.curWorldH },
+        // Диагностика гейта Титана: почему метаморфоз не срабатывает (плейтест)
+        titanGate: {
+          biomass: Math.round(ctx.biomass), goal: SCALES[ctx.scaleIdx].biomassGoal,
+          pending: ctx.titanPending, hasTitan: ctx.enemies.some((e) => e.titan), morphT: Math.round(ctx.metamorphT * 100) / 100,
+        },
       }),
+      // Позиции врагов для плейтест-автопилота и отладки (только DEV)
+      enemies: () => ctx.enemies.map((e) => ({ x: Math.round(e.x), y: Math.round(e.y), r: e.radius })),
     };
     (window as unknown as Record<string, unknown>).__lumivore = debugApi;
     // DEV-панель (F9 / `): динамический import, чтобы модуль не попадал в prod-бандл
@@ -148,7 +157,16 @@ async function bootstrap(): Promise<void> {
   const frame = (now: number): void => {
     const rawDt = (now - lastTime) / 1000;
     lastTime = now;
-    stepFrame(ctx, now / 1000, rawDt);
+    // Защита цикла: исключение в шаге не должно молча убивать rAF (плейтест:
+    // зависание игры без единой ошибки в консоли). Логируем и продолжаем.
+    try {
+      stepFrame(ctx, now / 1000, rawDt);
+    } catch (err) {
+      console.error('[LUMIVORE] frame error:', err);
+      const w = window as unknown as { __frameErrors?: unknown[] };
+      (w.__frameErrors ??= []).push(err instanceof Error ? `${err.message}\n${err.stack}` : String(err));
+      if (((w.__frameErrors as unknown[]).length ?? 0) > 20) (w.__frameErrors as unknown[]).shift();
+    }
     requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);

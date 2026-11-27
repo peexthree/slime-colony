@@ -111,7 +111,7 @@ export interface EnemyDef {
 }
 
 export const ENEMIES: Record<EnemyType, EnemyDef> = {
-  grub:     { hp: 13,  speed: 44, dmg: 9,  radius: 7,  xp: 1,  color: 0xc084fc, tail: 6,  dna: 'vermis' },
+  grub:     { hp: 13,  speed: 44, dmg: 8,  radius: 7,  xp: 2,  color: 0xc084fc, tail: 6,  dna: 'vermis' },
   runner:   { hp: 10,  speed: 74, dmg: 11, radius: 6,  xp: 2,  color: 0xe879f9, tail: 8,  dna: 'symbiont' },
   brute:    { hp: 66,  speed: 26, dmg: 17, radius: 12, xp: 6,  color: 0xa855f7, tail: 10, dna: 'mycelium' },
   boss:     { hp: 920, speed: 22, dmg: 25, radius: 22, xp: 40, color: 0xd946ef, tail: 18, dna: 'vermis' },
@@ -180,9 +180,15 @@ export type LevelTable = readonly [number, number, number, number];
 
 /** Шипы: авто-выстрел в ближайшую цель. Таблицы по уровням 1..4 */
 export const SPIKES = {
-  cd:    [1.35, 1.18, 1.02, 0.88] as LevelTable,
-  dmg:   [9, 12, 16, 21] as LevelTable,
-  count: [1, 1, 2, 3] as LevelTable,
+  // Калибровка ранней кривой (плейтест + headless-сим): ур.1 должен биться
+  // с базовым давлением спавна (~1.05 врага/с x 13 hp), иначе рой растёт
+  // монотонно и окружает игрока до первой карты апгрейда.
+  cd:    [1.2, 1.1, 1.0, 0.9] as LevelTable,
+  dmg:   [12, 15, 19, 24] as LevelTable,
+  count: [2, 2, 2, 3] as LevelTable,
+  // Радиус таргетинга: без лимита иглы били по всей арене, души падали в
+  // 300-400px от игрока и не долетали (11 убийств -> 0 XP за 19с в плейтесте)
+  range: 280,
 } as const;
 
 /** Молния-орбиты: сферы вращаются вокруг игрока (открываются с 5 ур.) */
@@ -242,16 +248,16 @@ export const WEAPON_MAX_LVL = 4;
 export const STAT_MAX_STACKS = 3;
 
 export const PLAYER = {
-  hp: 100,
+  hp: 120, // +20% запаса: плейтест показал смерть за ~12с после первого окружения
   speed: 120,
   radius: 6,
-  magnet: 66,
+  magnet: 90,
 } as const;
 
 export const PROJ_SPEED = 330;
 export const PROJ_LIFE = 1.3;
 export const PROJ_RADIUS = 5;
-export const IFRAME = 0.35;
+export const IFRAME = 0.45;
 export const ENEMY_CAP = 260;
 
 /** Первый босс и период появления следующих */
@@ -267,7 +273,9 @@ export const TAIL = {
   minLen: 6,
   baseMax: 16,
   maxPerLvl: 2,      // ёмкость хвоста растёт с уровнем
-  moveCost: 1.0,     // сегментов в секунду при движении (умножается на размер):
+  moveCost: 0.7,     // сегментов в секунду при движении (умножается на размер):
+                     // плейтест: при 1.0 хвост падал до минимума за ~9с движения,
+                     // раньше, чем спиннулся килл-движок шипов (0.7 даёт ~25с)
                      // движение - естественный режим охотника, тает дешевле метаболизма
   idleCost: 1.45,    // сегментов в секунду без движения: неподвижность тает БЫСТРЕЕ
                      // движения - поощряет движение (аудит баланса: было наоборот)

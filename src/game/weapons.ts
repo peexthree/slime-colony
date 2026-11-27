@@ -34,12 +34,14 @@ export function stepSpikes(ctx: Ctx, dt: number): void {
   const maxTargets = Math.min(count, 3);
   const closestTargets: Enemy[] = [];
   const closestD2: number[] = [];
+  const range2 = SPIKES.range * SPIKES.range;
   for (let j = 0; j < ctx.enemies.length; j++) {
     const e = ctx.enemies[j];
     if (e.hp <= 0) continue;
     const dx = e.x - ctx.player.x;
     const dy = e.y - ctx.player.y;
     const d2 = dx * dx + dy * dy;
+    if (d2 > range2) continue; // цели вне боевого радиуса не обстреливаются
     if (closestTargets.length < maxTargets) {
       closestTargets.push(e);
       closestD2.push(d2);

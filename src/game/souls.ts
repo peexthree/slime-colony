@@ -93,6 +93,12 @@ export function stepSouls(ctx: Ctx, dt: number): void {
       o.vx *= Math.max(0, 1 - dt * 4);
       o.vy *= Math.max(0, 1 - dt * 4);
     }
+    // Глобальный дрейф душ к игроку: кайт оставляет лут позади, и без
+    // слабого вакуума уровни стоят до событий (находка плейтеста/сима).
+    // Затухание x4 даёт терминальную скорость ~140 px/с - деликатно.
+    const driftA = Math.min(1, d / 500) * 560;
+    o.vx += (dx / d) * driftA * dt;
+    o.vy += (dy / d) * driftA * dt;
     o.vx += windAcc.x * dt;
     o.vy += windAcc.y * dt;
     o.x += o.vx * dt;

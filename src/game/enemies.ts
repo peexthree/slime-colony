@@ -240,8 +240,12 @@ export function stepSpawns(ctx: Ctx, dt: number): void {
   ctx.spawnT -= dt;
   ctx.svc.waves.update(dt, ctx.gameTime);
   if (ctx.spawnT <= 0 && ctx.svc.waves.canSpawn() && ctx.enemies.length < ENEMY_CAP) {
-    ctx.spawnT = Math.max(0.26, 0.75 - (ctx.gameTime / 60) * 0.12);
-    const batch = 1 + Math.floor(ctx.gameTime / 75);
+    // Калибровка ранней кривой (плейтест + headless-сим): grace-период -
+    // 1.25с между спавнами на старте (0.8/с < килрейт шипов ур.1), к 60-й
+    // секунде разгон до 0.97с; пачки растут каждые 120с - ступенька 1->2
+    // совпадает с открытием второго оружия.
+    ctx.spawnT = Math.max(0.3, 1.25 - (ctx.gameTime / 60) * 0.14);
+    const batch = 1 + Math.floor(ctx.gameTime / 120);
     for (let i2 = 0; i2 < batch; i2++) {
       spawnEnemy(ctx, rollSpawnType(ctx));
     }
@@ -252,7 +256,7 @@ export function stepSpawns(ctx: Ctx, dt: number): void {
 export function rollSpawnType(ctx: Ctx): EnemyType {
   const pool: { type: EnemyType; weight: number }[] = [{ type: 'grub', weight: 0.45 }];
   if (ctx.gameTime > 40) pool.push({ type: 'runner', weight: 0.30 });
-  if (ctx.gameTime > 90) pool.push({ type: 'brute', weight: 0.15 });
+  if (ctx.gameTime > 110) pool.push({ type: 'brute', weight: 0.15 });
   for (const row of SPAWN_TABLE) {
     if (ctx.gameTime >= row.since) pool.push({ type: row.type, weight: row.chance });
   }
