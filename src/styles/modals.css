@@ -1077,6 +1077,7 @@
   }
 
   /* Карточки шкал бытия во вкладке Кодекса (public/assets/codex/scale-XX.webp) */
+  .codex-grid.scale-grid { grid-auto-rows: auto; }
   .codex-item.scale-item { background: rgba(13, 22, 35, 0.66); }
   .codex-scale-img-wrap {
     position: relative;

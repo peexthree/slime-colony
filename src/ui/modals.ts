@@ -263,9 +263,13 @@ export function renderCodex(ctx: Ctx): void {
   codexGridEl.innerHTML = '';
 
   if (codexCategory === 'scale') {
+    // Chromium не растягивает minmax(Npx, max-content) под flex-элементы,
+    // поэтому для карточек с иллюстрациями строки грида - чистый auto.
+    codexGridEl.classList.add('scale-grid');
     renderScaleCards(codexGridEl);
     return;
   }
+  codexGridEl.classList.remove('scale-grid');
 
   const start = codexPage * CODEX_PAGE_SIZE;
   const pageItems = filtered.slice(start, start + CODEX_PAGE_SIZE);
