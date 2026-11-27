@@ -1,13 +1,14 @@
 // WebGPU-симуляция: compute-пайплайны агентов и диффузии, ping-pong буферы, async readback
 import shaderCode from '../shaders/physarum.wgsl?raw';
 import { AGENT_COUNT, Beacon, BioNode, MAX_BEACONS, MAX_NODES, SIM_HEIGHT, SIM_WIDTH } from './types';
+import type { PhysarumBackend, PhysarumSim } from './physarumSim';
 
 export interface NodeStat {
   playerDensity: number;
   enemyDensity: number;
 }
 
-export class WebGPUSim {
+export class WebGPUSim implements PhysarumSim {
   private device!: GPUDevice;
   private context!: GPUCanvasContext;
 
@@ -41,6 +42,8 @@ export class WebGPUSim {
   private beaconScratch = new Float32Array(MAX_BEACONS * 8);
   private sporeScratch = new Float32Array(0);
   private deviceLost = false;
+  /** Бэкенд симуляции: для диагностики и общего контракта PhysarumSim */
+  readonly backend: PhysarumBackend = 'webgpu';
   onDeviceLost?: (reason: string) => void;
   readonly agentCount = AGENT_COUNT;
   private activeAgentCount = AGENT_COUNT;

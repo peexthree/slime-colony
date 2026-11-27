@@ -3,7 +3,7 @@
 // Сущности на CPU + Pixi-пулы, physarum-симуляция живёт вместе с игроком
 import { PixiOverlay, AnomalyView } from './engine/PixiOverlay';
 import { PetriRadar } from './engine/radar';
-import { WebGPUSim, NodeStat } from './engine/WebGPUSim';
+import { createPhysarumSim, SimNodeStat } from './engine/physarumSim';
 import { Sfx } from './engine/audio';
 import { WaveDirector } from './engine/waves';
 import {
@@ -214,7 +214,7 @@ async function bootstrap() {
     radar.init(radarCanvas, radarBadgeEl, radarSweepSvg);
   }
 
-  const sim = new WebGPUSim();
+  const sim = await createPhysarumSim(); // WebGPU при наличии, WebGL2-фолбэк иначе
   const overlay = new PixiOverlay();
   const sfx = new Sfx();
   const joystick = createJoystick(stage, pixiCanvas);
@@ -4609,7 +4609,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       }
 
       // GPU readback теперь отслеживает только плотность штаммов непосредственно под игроком
-      const onNodeStatsCb = (stats: NodeStat[]): void => {
+      const onNodeStatsCb = (stats: SimNodeStat[]): void => {
         if (stats.length > bioNodes.length) {
           const s = stats[bioNodes.length];
           trailOwn = s.playerDensity >= STRAIN.densityThreshold;
