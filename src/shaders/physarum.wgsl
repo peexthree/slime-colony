@@ -225,7 +225,11 @@ fn updateAgents(@builtin(global_invocation_id) id: vec3<u32>) {
     cell.r = min(1.0, cell.r + 0.015);
     cell.g = max(0.0, cell.g - 0.02);
   } else {
-    cell.g = min(1.0, cell.g + 0.015);
+    // Отзыв плейтеста: вражеские штаммы спамили карту яркими красными венами.
+    // Депозит снижен (0.015 -> 0.008) - штамм-механика (ЧУЖОЙ ШТАММ под
+    // игроком) жива: свежие тропы врагов всё ещё пробивают порог 0.075,
+    // но фон больше не зарастает сплошным багровым ковром.
+    cell.g = min(1.0, cell.g + 0.008);
     cell.r = max(0.0, cell.r - 0.02);
   }
   trailIn[pIdx] = cell;
@@ -250,6 +254,8 @@ fn diffuse(@builtin(global_invocation_id) id: vec3<u32>) {
     }
   }
   var blurred = (sum / 9.0) * params.evaporation;
+  // Вражеский канал (g) тает быстрее: красные вены не копятся в ковёр
+  blurred.g *= 0.94;
 
   var attractField = 0.0;
   var toxinField = 0.0;
@@ -524,7 +530,8 @@ fn fragMain(in: VsOut) -> @location(0) vec4<f32> {
   let pDensity = cell.r;
   let eDensity = cell.g;
   col += palP * (pDensity * 0.12 + pow(pDensity, 1.8) * 0.22);
-  col += palE * (eDensity * 0.09 + pow(eDensity, 1.8) * 0.18);
+  // Вражеское поле приглушено: штамм виден, но не превращает карту в муть
+  col += palE * (eDensity * 0.05 + pow(eDensity, 1.8) * 0.10);
 
   // Поля маяков: аттрактор игрока (b > 0) и ИИ-маяк (b < 0)
   col += vec3<f32>(0.10, 0.32, 0.38) * max(cell.b, 0.0) * 0.12;

@@ -6,6 +6,10 @@
   <meta name="theme-color" content="#020304" />
   <!-- Манифест и ссылка на него добавляются автоматически vite-plugin-pwa (manifest.webmanifest) -->
   <title>LUMIVORE // THE LIVING FRACTAL</title>
+  <link rel="icon" href="/icons/lumivore-icon.ico" sizes="32x32" />
+  <link rel="icon" type="image/png" href="/icons/lumivore-icon.png" sizes="512x512" />
+  <link rel="apple-touch-icon" href="/icons/lumivore-icon.png" />
+  <link rel="preload" as="image" href="/assets/menu/menu-keyart.webp" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet" />
@@ -116,9 +120,22 @@
 
     <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
+    <div id="scale-splash" role="img" aria-hidden="true">
+      <div class="scale-splash-inner">
+        <img id="scale-splash-img" alt="" />
+        <div class="scale-splash-caption">
+          <div class="scale-splash-kicker" id="scale-splash-kicker">МЕТАМОРФОЗ</div>
+          <div class="scale-splash-name" id="scale-splash-name"></div>
+          <div class="scale-splash-sub" id="scale-splash-sub"></div>
+        </div>
+      </div>
+    </div>
+
     <div id="screens-slot-pre" hidden></div>
 
     <div id="intro" class="show" role="dialog" aria-modal="true" aria-labelledby="menu-logo-title">
+      <div class="menu-keyart" aria-hidden="true"></div>
+      <div class="menu-keyart-vignette" aria-hidden="true"></div>
       <div class="intro-card main-menu-card">
         <svg class="corner tl" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>
         <svg class="corner tr" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-corner-frame"/></svg>

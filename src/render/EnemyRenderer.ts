@@ -254,7 +254,9 @@ export class EnemyRenderer {
         }
       }
 
-      // Хвостик врага: мультяшные сегменты (или fallback glowTex)
+      // Хвостик врага: мультяшные сегменты (или fallback glowTex).
+      // Отзыв плейтеста: яркие розовые капсулы читались как мусор на карте -
+      // хвостик приглушён (альфа и размер снижены), механика отрыва в душу не тронута.
       const et = e.tail;
       const en = et.length;
       const tailSegTex = this.tex.v4?.enemyTailSegment;
@@ -264,13 +266,13 @@ export class EnemyRenderer {
         if (tailSegTex) {
           const seg = this.registry.makeSprite('etail', isDead ? 0xff3b5c : 0xffffff, 'normal', tailSegTex);
           alignTailSegment(seg, et[i].x, et[i].y, nextPt.x, nextPt.y);
-          seg.scale.set((e.radius * (0.9 - 0.52 * frac)) / 64);
-          seg.alpha = 0.82 * (1 - frac * 0.65);
+          seg.scale.set((e.radius * (0.62 - 0.36 * frac)) / 64);
+          seg.alpha = 0.4 * (1 - frac * 0.6);
         } else {
           const seg = this.registry.makeSprite('etail', ENEMY_COLORS[e.type], 'normal');
           seg.position.set(et[i].x, et[i].y);
-          seg.scale.set((e.radius * (0.85 - 0.55 * frac)) / 64);
-          seg.alpha = 0.55 * (1 - frac) + 0.12;
+          seg.scale.set((e.radius * (0.6 - 0.4 * frac)) / 64);
+          seg.alpha = 0.34 * (1 - frac) + 0.08;
         }
       }
 

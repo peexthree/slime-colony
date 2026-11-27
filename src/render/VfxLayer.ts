@@ -313,18 +313,23 @@ export class VfxLayer {
     this.registry.releasePool('orb');
     let i = 0;
     for (const o of state.xpOrbs) {
+      // Дальние души притушены: после волновой зачистки поле не устилается
+      // капсулами - душа вспыхивает, когда игрок к ней приближается
+      const dxo = o.x - px;
+      const dyo = o.y - py;
+      const distFade = Math.max(0.28, 1 - Math.max(0, Math.hypot(dxo, dyo) - 420) / 520);
       const xpTex = this.tex.particles?.xpSoul;
       if (xpTex) {
         const g = this.registry.makeSprite('orbGlow', o.color, 'add');
         g.position.set(o.x, o.y);
         g.scale.set((24 + Math.min(o.value, 10)) / 64);
-        g.alpha = 0.45 + 0.15 * Math.sin(time * 6 + i * 1.3);
+        g.alpha = (0.45 + 0.15 * Math.sin(time * 6 + i * 1.3)) * distFade;
       }
       const sp = this.registry.makeSprite('orb', xpTex ? 0xffffff : o.color, xpTex ? 'normal' : 'add', xpTex);
       sp.position.set(o.x, o.y);
       const ow = xpTex?.width || 64;
       sp.scale.set((16 + Math.min(o.value, 10)) / ow);
-      sp.alpha = xpTex ? 0.96 : (0.75 + 0.25 * Math.sin(time * 6 + i * 1.3));
+      sp.alpha = xpTex ? 0.96 * distFade : (0.75 + 0.25 * Math.sin(time * 6 + i * 1.3)) * distFade;
       sp.rotation = xpTex ? 0 : Math.atan2(py - o.y, px - o.x);
       i++;
     }

@@ -142,6 +142,7 @@ export function applyI18n(ctx: Ctx): void {
     enemy: CODEX_ENTRIES.filter((e) => e.category === 'enemy').length,
     hybrid: CODEX_ENTRIES.filter((e) => e.category === 'hybrid').length,
     branch: CODEX_ENTRIES.filter((e) => e.category === 'branch').length,
+    scale: 15, // шкалы бытия: иллюстрации public/assets/codex, считаются отдельно от записей
   };
   document.querySelectorAll('.codex-tab').forEach((tab) => {
     const cat = tab.getAttribute('data-cat') || 'all';

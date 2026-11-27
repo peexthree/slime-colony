@@ -9,7 +9,9 @@ import { finishRun } from './runFlow';
 import { spawnEnemy } from './enemies';
 import { syncBiomeFxScale } from './biomeFx';
 import { updateScaleHud, updateStageBiome } from '../ui/hud';
+import { showScaleSplash } from '../ui/scaleSplash';
 import { showToast } from '../ui/toast';
+import { unlockScale } from '../engine/codex';
 
 /** Метаморфоз: переход на следующую шкалу - bullet-time, рост мира, эволюция хвоста */
 export function startMetamorphosis(ctx: Ctx): void {
@@ -31,8 +33,10 @@ export function startMetamorphosis(ctx: Ctx): void {
   }
   ctx.scaleIdx++;
   ctx.scaleMaxReached = Math.max(ctx.scaleMaxReached, SCALES[ctx.scaleIdx].id);
+  unlockScale(SCALES[ctx.scaleIdx].id); // прогресс для вкладки «Шкалы бытия» в Кодексе
   ctx.biomass = 0;
   ctx.metamorphT = METAMORPH.slowT + METAMORPH.zoomT;
+  showScaleSplash(SCALES[ctx.scaleIdx].id);
   sfx.metamorph();
   showToast(
     ctx,

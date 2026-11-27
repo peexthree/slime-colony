@@ -29,6 +29,7 @@ export function codexScreen(): string {
           <button class="codex-tab" type="button" role="tab" aria-selected="false" data-cat="enemy">ВРАГИ РОЯ (12)</button>
           <button class="codex-tab" type="button" role="tab" aria-selected="false" data-cat="hybrid">ВЕЛИКИЕ ГИБРИДЫ (6)</button>
           <button class="codex-tab" type="button" role="tab" aria-selected="false" data-cat="branch">ШТАММЫ ДНК (4)</button>
+          <button class="codex-tab" type="button" role="tab" aria-selected="false" data-cat="scale">ШКАЛЫ БЫТИЯ (15)</button>
         </div>
 
         <div id="codex-grid" class="codex-grid"></div>

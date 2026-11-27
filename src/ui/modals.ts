@@ -1,8 +1,9 @@
 // Модальные окна: главное меню, биолаб, дневное испытание, достижения, кодекс,
 // справка, настройки + переключатели звука/полноэкранного режима и пауза.
 import { t, getLocale } from '../i18n';
-import { dnaName, trBiolab, trChallengeTitle, trCodex } from '../i18n/gameData';
-import { CODEX_ENTRIES, loadCodex } from '../engine/codex';
+import { dnaName, scaleName, scaleSub, trBiolab, trChallengeTitle, trCodex } from '../i18n/gameData';
+import { CODEX_ENTRIES, loadCodex, loadMaxScale } from '../engine/codex';
+import { SCALES } from '../engine/types';
 import { ACHIEVEMENTS, loadAchievements } from '../engine/achievements';
 import { addBiolabPoints, BIOLAB_UNLOCKS, BiolabCategory, MAX_ACTIVE_BIOLAB, getActiveIds, isActive, loadBiolab } from '../engine/biolab';
 import { getDailyChallenge, isDailyCompleted } from '../engine/challenge';
@@ -208,7 +209,7 @@ export function closeHelpModal(ctx: Ctx): void {
 
 // ---------- Бестиарий и Кодекс Гибридов: постраничная кнопочная навигация (Без скролла) ----------
 
-let codexCategory: 'all' | 'enemy' | 'hybrid' | 'branch' = 'all';
+let codexCategory: 'all' | 'enemy' | 'hybrid' | 'branch' | 'scale' = 'all';
 let codexPage = 0;
 const CODEX_PAGE_SIZE = 6;
 
@@ -261,6 +262,11 @@ export function renderCodex(ctx: Ctx): void {
   if (!codexGridEl) return;
   codexGridEl.innerHTML = '';
 
+  if (codexCategory === 'scale') {
+    renderScaleCards(codexGridEl);
+    return;
+  }
+
   const start = codexPage * CODEX_PAGE_SIZE;
   const pageItems = filtered.slice(start, start + CODEX_PAGE_SIZE);
 
@@ -293,8 +299,34 @@ export function renderCodex(ctx: Ctx): void {
   }
 }
 
+/** Кодекс: карточки 15 шкал бытия с иллюстрациями public/assets/codex */
+function renderScaleCards(grid: HTMLElement): void {
+  const maxScale = loadMaxScale();
+  for (const scale of SCALES) {
+    const visited = scale.id <= maxScale;
+    const glowHex = `#${scale.glow.toString(16).padStart(6, '0')}`;
+    const item = document.createElement('div');
+    item.className = 'codex-item scale-item ' + (visited ? 'unlocked scale-visited' : 'locked scale-ahead');
+    item.innerHTML = `
+      <div class="codex-scale-img-wrap">
+        <img loading="lazy" src="/assets/codex/scale-${String(scale.id).padStart(2, '0')}.webp" alt="${scaleName(scale.id)}" />
+        <span class="codex-scale-num">${scale.id}/15</span>
+      </div>
+      <div class="codex-item-top">
+        <div class="codex-meta">
+          <span class="codex-cat-badge" style="color: ${glowHex};">${t('codex_cat_scale')}</span>
+          <div class="codex-item-title" style="color: ${visited ? glowHex : '#9ab0c4'};">${scaleName(scale.id)}</div>
+        </div>
+      </div>
+      <div class="codex-lore">${scaleSub(scale.id)}</div>
+      <div class="codex-bonus">${t(visited ? 'codex_scale_visited' : 'codex_scale_ahead')}</div>
+    `;
+    grid.appendChild(item);
+  }
+}
+
 /** Переключение вкладки кодекса (кнопки-фильтры) */
-export function setCodexCategory(ctx: Ctx, cat: 'all' | 'enemy' | 'hybrid' | 'branch'): void {
+export function setCodexCategory(ctx: Ctx, cat: 'all' | 'enemy' | 'hybrid' | 'branch' | 'scale'): void {
   codexCategory = cat;
   codexPage = 0;
   renderCodex(ctx);

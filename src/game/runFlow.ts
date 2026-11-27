@@ -11,7 +11,8 @@ import { xpRequiredForLevel } from './progression';
 import { isActive, loadBiolab, pointsEarned, recordRun } from '../engine/biolab';
 import type { RunGenome } from '../engine/biolab';
 import { checkAchievements } from '../engine/achievements';
-import { CODEX_ENTRIES, loadCodex } from '../engine/codex';
+import { CODEX_ENTRIES, loadCodex, unlockScale } from '../engine/codex';
+import { hideScaleSplash } from '../ui/scaleSplash';
 import { recordLeaderboardEntry } from '../engine/leaderboard';
 import { renderPortrait } from '../engine/portrait';
 import { getDailyChallenge } from '../engine/challenge';
@@ -219,6 +220,7 @@ export function resetRun(ctx: Ctx): void {
   ctx.svc.overlay.reset();
   ctx.nodesHeldMax = 0;
   ctx.scaleMaxReached = 1;
+  unlockScale(1); // шкала 1 посещена в любом забеге
   ctx.biomass = 0;
   ctx.titanPending = false;
   ctx.metamorphT = 0;
@@ -290,6 +292,7 @@ export function finishRun(ctx: Ctx, win: boolean): void {
   ctx.dying = false;
   ctx.gameOver = true;
   ctx.winRun = win;
+  hideScaleSplash();
   const sfx = ctx.svc.sfx;
   sfx.setTailDrone(false);
   sfx.stopBgm();

@@ -240,6 +240,30 @@ export function unlockCodexEntry(id: string): boolean {
   return true;
 }
 
+// ---------- Шкалы бытия: прогресс для вкладки Кодекса ----------
+
+const MAX_SCALE_KEY = 'lumivore-max-scale-v1';
+
+/** Наивысшая достигнутая шкала за все забеги (1..15) */
+export function loadMaxScale(): number {
+  try {
+    const raw = localStorage.getItem(MAX_SCALE_KEY);
+    const n = raw ? parseInt(raw, 10) : 0;
+    return Number.isFinite(n) ? Math.min(Math.max(n, 1), 15) : 1;
+  } catch {
+    return 1;
+  }
+}
+
+/** Фиксация достигнутой шкалы; true если это новый рекорд */
+export function unlockScale(id: number): boolean {
+  if (id <= loadMaxScale()) return false;
+  try {
+    localStorage.setItem(MAX_SCALE_KEY, String(id));
+  } catch {}
+  return true;
+}
+
 export interface CodexBonusSummary {
   tailCapMul: number;
   explosiveDmgMul: number;

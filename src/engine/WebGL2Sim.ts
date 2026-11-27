@@ -250,7 +250,8 @@ void main() {
   float pDensity = strain.r;
   float eDensity = strain.g;
   col += palP * (pDensity * 0.12 + pow(pDensity, 1.8) * 0.22);
-  col += palE * (eDensity * 0.09 + pow(eDensity, 1.8) * 0.18);
+  // Вражеское поле приглушено: штамм виден, но не превращает карту в муть
+  col += palE * (eDensity * 0.05 + pow(eDensity, 1.8) * 0.10);
 
   // Поля маяков: аттрактор игрока (b > 0) и ИИ-маяк (b < 0)
   vec2 fld = fieldsAt(px);
@@ -773,7 +774,8 @@ export class WebGL2Sim implements PhysarumSim, SimResolutionProvider {
       for (let x = 0; x < this.tw; x++) {
         const xi = x * 2;
         trail[yc + xi] = ((tmp[ya + xi] + tmp[yc + xi] + tmp[yb + xi]) / 3) * evaporation;
-        trail[yc + xi + 1] = ((tmp[ya + xi + 1] + tmp[yc + xi + 1] + tmp[yb + xi + 1]) / 3) * evaporation;
+        // Вражеский канал (g) тает быстрее: вены не копятся (см. physarum.wgsl)
+        trail[yc + xi + 1] = ((tmp[ya + xi + 1] + tmp[yc + xi + 1] + tmp[yb + xi + 1]) / 3) * evaporation * 0.94;
       }
     }
   }
@@ -1098,7 +1100,8 @@ export class WebGL2Sim implements PhysarumSim, SimResolutionProvider {
       trail[ci] = Math.min(1, trail[ci] + DEPOSIT);
       trail[ci + 1] = Math.max(0, trail[ci + 1] - DEPLETE);
     } else {
-      trail[ci + 1] = Math.min(1, trail[ci + 1] + DEPOSIT);
+      // Отзыв плейтеста: вражеский след не должен заливать карту (см. physarum.wgsl)
+      trail[ci + 1] = Math.min(1, trail[ci + 1] + DEPOSIT * 0.53);
       trail[ci] = Math.max(0, trail[ci] - DEPLETE);
     }
   }

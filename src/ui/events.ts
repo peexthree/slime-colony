@@ -117,7 +117,7 @@ export function wireEvents(ctx: Ctx): void {
       });
       tabBtn.classList.add('active');
       tabBtn.setAttribute('aria-selected', 'true');
-      const cat = (tabBtn.getAttribute('data-cat') || 'all') as 'all' | 'enemy' | 'hybrid' | 'branch';
+      const cat = (tabBtn.getAttribute('data-cat') || 'all') as 'all' | 'enemy' | 'hybrid' | 'branch' | 'scale';
       setCodexCategory(ctx, cat);
     });
   });
@@ -293,11 +293,20 @@ export function wireEvents(ctx: Ctx): void {
   // ---------- Старт / дневное испытание / достижения / справка ----------
   dom.introStartBtn.addEventListener('click', () => {
     // Фуллскрин сразу при старте: игра на весь экран, а не в маленьком окне
-    // (отзыв плейтеста). Запрос жестом клика - браузер разрешает. Тихо фейлим
-    // в окружениях без фуллскрина (in-app браузер и т.п.).
+    // (отзыв плейтеста). Запрос жестом клика - браузер разрешает. Если API
+    // нет или отказал (in-app браузер и т.п.) - подсказка вместо тихого фейла.
     const root = document.documentElement;
-    if (!document.fullscreenElement && root.requestFullscreen) {
-      root.requestFullscreen().catch(() => {});
+    if (!document.fullscreenElement) {
+      const el = root as HTMLElement & { webkitRequestFullscreen?: () => Promise<void> | void };
+      try {
+        const p = el.requestFullscreen ? el.requestFullscreen() : el.webkitRequestFullscreen?.();
+        if (p && typeof (p as Promise<void>).catch === 'function') {
+          (p as Promise<void>).catch(() => showToast(ctx, t('toast_fullscreen_hint'), 'warn'));
+        }
+      } catch {
+        // некоторые движки бросают синхронно при отказе
+        showToast(ctx, t('toast_fullscreen_hint'), 'warn');
+      }
     }
     startOrResumeRun(ctx);
   });

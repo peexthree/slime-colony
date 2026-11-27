@@ -32,7 +32,12 @@
     padding: clamp(8px, 2cqh, 20px);
     overflow: hidden;
   }
-  #intro { z-index: 12; }
+  #intro {
+    z-index: 12;
+    /* keyart под карточкой: подложка светлее, чем у прочих модалок */
+    background: radial-gradient(circle at center, rgba(6, 16, 26, 0.45), rgba(2, 4, 8, 0.78));
+    backdrop-filter: blur(6px);
+  }
   #upgrade {
     z-index: 15;
     flex-direction: column;
@@ -126,7 +131,8 @@
     position: relative;
     width: min(96%, 560px);
     max-height: 94cqh;
-    background: linear-gradient(160deg var(--in-oklab), rgba(8, 18, 28, 0.96), rgba(3, 7, 12, 0.98));
+    background: linear-gradient(160deg var(--in-oklab), rgba(8, 18, 28, 0.62), rgba(3, 7, 12, 0.74));
+    backdrop-filter: blur(10px);
     border: 1px solid rgba(102, 252, 241, 0.35);
     border-radius: 14px;
     box-shadow: 0 0 50px rgba(0, 0, 0, 0.85), 0 0 35px rgba(102, 252, 241, 0.15);
@@ -1037,4 +1043,101 @@
   .ghost-btn:hover { background: rgba(102, 252, 241, 0.2); }
   .ghost-btn:active { scale: 0.97; }
   .ghost-btn svg { width: 17px; height: 17px; filter: drop-shadow(0 0 5px currentColor); }
+
+  /* Keyart главного меню: подложка под карточкой (public/assets/menu/menu-keyart.webp) */
+  .menu-keyart {
+    position: absolute;
+    inset: 0;
+    background: url('/assets/menu/menu-keyart.webp') center / cover no-repeat;
+    opacity: 0.85;
+    pointer-events: none;
+    transform: scale(1.06);
+    animation: keyartDrift 48s ease-in-out infinite alternate;
+  }
+  .menu-keyart-vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(2, 4, 8, 0) 0%, rgba(2, 4, 8, 0.22) 58%, rgba(2, 4, 8, 0.62) 100%);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes keyartDrift {
+      from { transform: scale(1.06) translateY(-0.6%); }
+      to { transform: scale(1.12) translateY(0.6%); }
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .menu-keyart { animation: none; }
+  }
+  /* keyart стал первым ребёнком #intro: pop-in анимируем карточку, а не подложку */
+  @media (prefers-reduced-motion: no-preference) {
+    #intro.show > .intro-card.main-menu-card { animation: modalPopIn 180ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+    #intro.show > .menu-keyart-vignette { animation: none; }
+    #intro.show > .menu-keyart { animation: keyartDrift 48s ease-in-out infinite alternate; }
+  }
+
+  /* Карточки шкал бытия во вкладке Кодекса (public/assets/codex/scale-XX.webp) */
+  .codex-item.scale-item { background: rgba(13, 22, 35, 0.66); }
+  .codex-scale-img-wrap {
+    position: relative;
+    height: 132px;
+    flex-shrink: 0; /* иначе flex со space-between сжимает обёртку в полоску */
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(102, 252, 241, 0.22);
+    background: #060d14;
+  }
+  .codex-scale-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .codex-item.scale-ahead .codex-scale-img-wrap img { filter: grayscale(0.85) brightness(0.55); }
+  .codex-scale-num {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #eafffb;
+    background: rgba(2, 4, 8, 0.62);
+    border: 1px solid rgba(102, 252, 241, 0.28);
+    border-radius: 99px;
+    padding: 2px 8px;
+    text-shadow: 0 0 8px rgba(102, 252, 241, 0.6);
+  }
+
+  /* Сплэш шкалы бытия на время метаморфоза */
+  #scale-splash {
+    position: absolute;
+    inset: 0;
+    z-index: 20; /* выше #intro(12)/#upgrade(15), ниже модалок(30) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    background: radial-gradient(ellipse at center, rgba(4, 10, 18, 0.42), rgba(2, 4, 8, 0.88));
+  }
+  #scale-splash.show { opacity: 1; }
+  .scale-splash-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: min(86vw, 780px);
+  }
+  #scale-splash-img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid rgba(102, 252, 241, 0.35);
+    box-shadow: 0 0 60px rgba(102, 252, 241, 0.18), 0 0 24px rgba(0, 0, 0, 0.8);
+    transform: scale(0.985);
+    transition: transform 2.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  #scale-splash.show #scale-splash-img { transform: scale(1.015); }
+  .scale-splash-caption { text-align: center; }
+  .scale-splash-kicker { font-size: 10px; font-weight: 700; letter-spacing: 0.22em; color: #84fff7; text-shadow: 0 0 12px rgba(102, 252, 241, 0.5); }
+  .scale-splash-name { font-size: clamp(18px, 3cqw, 30px); font-weight: 900; letter-spacing: 0.14em; color: #eafffb; text-shadow: 0 0 18px rgba(102, 252, 241, 0.55); margin-top: 4px; }
+  .scale-splash-sub { font-size: 11px; color: var(--text-secondary); letter-spacing: 0.06em; margin-top: 4px; }
 }
