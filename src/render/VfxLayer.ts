@@ -1,7 +1,7 @@
 // Слой эффектов LUMIVORE: пульс-кольца, вспышки полигона, пятна био-крови,
 // призрачный шлейф рывка, снаряды и души, цифры урона, био-радар и параллакс боке/снега.
 // Все частицы живут в спрайтовых пулах: нулевые аллокации в горячем кадре.
-import { Container, Graphics, Sprite, Texture } from 'pixi.js';
+import { Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
 import { SCALES } from '../engine/types';
 import { RenderState, RenderTextures } from './views';
 import { SpritePool, SpritePoolRegistry } from './SpritePool';
@@ -43,9 +43,12 @@ export class VfxLayer {
   /** Призрачный шлейф Фазового рывка */
   private afterimages: { x: number; y: number; r: number; life: number; color: number }[] = [];
   private afterimageCd = 0;
-  /** Всплывающие цифры урона: спрайтовый пул с кэшированными текстурами */
-  private dmgPool: SpritePool<Sprite>;
-  private dmgTextureCache = new Map<string, Texture>();
+  /** Всплывающие цифры урона: пул Text-объектов.
+   *  Раньше здесь был самодельный кэш canvas-текстур: браузер под давлением
+   *  памяти вытесняет backing store офскрин-канвасов, Pixi перезаливает мусор
+   *  при повторном использовании - цифры «размывались и заплывали» в кляксы
+   *  (отзыв плейтеста). Text перерисовывает глифы всегда корректно. */
+  private dmgPool: SpritePool<Text>;
   private dmgLive: { x: number; y: number; vy: number; life: number; color: number; txt: string }[] = [];
 
   /** Глубокий параллакс: пул боке-клеток и их данные */
@@ -66,12 +69,20 @@ export class VfxLayer {
     private readonly registry: SpritePoolRegistry,
     private readonly tex: RenderTextures,
   ) {
-    // Пул цифр урона: текстура назначается при выдаче (кэш по строке)
-    this.dmgPool = new SpritePool<Sprite>(() => {
-      const sp = new Sprite(Texture.EMPTY);
-      sp.anchor.set(0.5);
-      this.world.addChild(sp);
-      return sp;
+    // Пул цифр урона: Text-объекты (стиль назначается при выдаче)
+    this.dmgPool = new SpritePool<Text>(() => {
+      const tx = new Text({
+        text: '',
+        style: {
+          fontFamily: '"JetBrains Mono", Consolas, monospace',
+          fontSize: 13,
+          fontWeight: 'bold',
+          fill: 0xffffff,
+        },
+      });
+      tx.anchor.set(0.5);
+      this.world.addChild(tx);
+      return tx;
     });
 
     // Процедурные частицы микромира: глубокие клетки боке и планктонный морской снег
@@ -117,27 +128,6 @@ export class VfxLayer {
         alpha: 0.25 + (i % 4) * 0.15,
       });
     }
-  }
-
-  /** Кэш текстур цифр урона: canvas-растеризация строки, переиспользуется между кадрами */
-  private getDamageTexture(txt: string): Texture {
-    let tex = this.dmgTextureCache.get(txt);
-    if (!tex) {
-      const c = document.createElement('canvas');
-      const ctx = c.getContext('2d')!;
-      ctx.font = 'bold 13px "JetBrains Mono", Consolas, monospace';
-      const m = ctx.measureText(txt);
-      c.width = Math.ceil(m.width) + 8;
-      c.height = 20;
-      ctx.font = 'bold 13px "JetBrains Mono", Consolas, monospace';
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(txt, c.width / 2, c.height / 2);
-      tex = Texture.from(c);
-      this.dmgTextureCache.set(txt, tex);
-    }
-    return tex;
   }
 
   // ================= Публичные спавн-методы (вызываются фасадом) =================
@@ -388,9 +378,9 @@ export class VfxLayer {
     for (let j = 0; j < this.dmgLive.length; j++) {
       const d = this.dmgLive[j];
       const sp = this.dmgPool.acquire();
-      sp.texture = this.getDamageTexture(d.txt);
+      sp.text = d.txt;
+      sp.style.fill = `#${d.color.toString(16).padStart(6, '0')}`;
       sp.position.set(d.x, d.y);
-      sp.tint = d.color;
       sp.scale.set(1 + Math.max(0, d.life - 0.35) * 0.65);
       sp.alpha = Math.min(1, d.life / 0.35);
     }
