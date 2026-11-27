@@ -366,8 +366,13 @@ export class VfxLayer {
     }
   }
 
-  /** Всплывающие цифры урона (спрайтовый пул с кэшированными текстурами) */
+  /** Всплывающие цифры урона (пул Text-объектов) */
   updateDamageNumbers(dt: number): void {
+    // КРИТИЧНО: пул цифр - единственный без пофреймового releaseAll. Курсор
+    // рос каждый кадр, пул раздувался, а самые первые цифры ("11" - две
+    // вертикальные палочки) навсегда застывали на карте - те самые белые
+    // кляксы-пары из плейтеста.
+    this.dmgPool.releaseAll();
     for (let j = this.dmgLive.length - 1; j >= 0; j--) {
       const d = this.dmgLive[j];
       d.life -= dt;
@@ -384,7 +389,6 @@ export class VfxLayer {
       sp.scale.set(1 + Math.max(0, d.life - 0.35) * 0.65);
       sp.alpha = Math.min(1, d.life / 0.35);
     }
-    this.dmgPool.hideRest();
   }
 
   /** Вспышки полигона Кольца Смерти */
