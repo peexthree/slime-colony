@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- LUMIVORE: живой фрактал - иконка PWA (тёмный фон, циановое ядро, красный ореол) -->
+  <defs>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d9fdff"/>
+      <stop offset="45%" stop-color="#66fcf1"/>
+      <stop offset="100%" stop-color="#0a4f55"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff7b93" stop-opacity="0.55"/>
+      <stop offset="70%" stop-color="#ff7b93" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#ff7b93" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="96" fill="#020304"/>
+  <circle cx="256" cy="256" r="236" fill="url(#halo)"/>
+
+  <!-- фрактальные щупальца организма -->
+  <g fill="none" stroke="#66fcf1" stroke-linecap="round" filter="url(#glow)">
+    <path d="M256 256 C 256 170, 210 120, 150 96" stroke-width="14" opacity="0.9"/>
+    <path d="M256 256 C 320 200, 380 170, 416 176" stroke-width="14" opacity="0.85"/>
+    <path d="M256 256 C 250 330, 300 380, 368 408" stroke-width="14" opacity="0.9"/>
+    <path d="M256 256 C 190 300, 130 320, 84 300" stroke-width="14" opacity="0.8"/>
+    <path d="M256 256 C 262 200, 300 150, 352 116" stroke-width="9" opacity="0.65"/>
+    <path d="M256 256 C 210 260, 150 250, 104 210" stroke-width="9" opacity="0.6"/>
+    <path d="M256 256 C 256 330, 240 390, 200 440" stroke-width="9" opacity="0.65"/>
+    <path d="M256 256 C 300 280, 350 290, 420 272" stroke-width="9" opacity="0.6"/>
+  </g>
+
+  <!-- почки на концах щупалец -->
+  <g fill="#66fcf1" filter="url(#glow)">
+    <circle cx="150" cy="96" r="16"/>
+    <circle cx="416" cy="176" r="14"/>
+    <circle cx="368" cy="408" r="16"/>
+    <circle cx="84" cy="300" r="12"/>
+    <circle cx="352" cy="116" r="9"/>
+    <circle cx="104" cy="210" r="8"/>
+    <circle cx="200" cy="440" r="9"/>
+    <circle cx="420" cy="272" r="8"/>
+  </g>
+
+  <!-- ДНК-спираль в ядре -->
+  <g fill="none" stroke="#ff7b93" stroke-width="7" stroke-linecap="round" opacity="0.9">
+    <path d="M226 206 C 246 226, 266 226, 286 206"/>
+    <path d="M226 256 C 246 276, 266 276, 286 256"/>
+    <path d="M226 306 C 246 326, 266 326, 286 306"/>
+    <path d="M286 206 C 266 226, 246 226, 226 206" opacity="0.35"/>
+    <path d="M286 256 C 266 276, 246 276, 226 256" opacity="0.35"/>
+    <path d="M286 306 C 266 326, 246 326, 226 306" opacity="0.35"/>
+  </g>
+
+  <!-- ядро -->
+  <circle cx="256" cy="256" r="58" fill="url(#core)" filter="url(#glow)"/>
+  <circle cx="238" cy="238" r="14" fill="#ffffff" opacity="0.85"/>
+</svg>
