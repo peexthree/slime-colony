@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><radialGradient id="p2_pul_c" cx="45%" cy="40%" r="62%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="58%" stop-color="#f97316"/><stop offset="100%" stop-color="#be123c"/></radialGradient><linearGradient id="p2_pul_r" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="52%" stop-color="#ec4899"/><stop offset="100%" stop-color="#7e22ce"/></linearGradient></defs><!-- Rotating star blades -->
-           <path d="M64 8 L76 34 L104 24 L92 52 L120 64 L92 76 L104 104 L76 94 L64 120 L52 94 L24 104 L36 76 L8 64 L36 52 L24 24 L52 34 Z" fill="url(#p2_pul_r)" stroke="#160e26" stroke-width="5.5" stroke-linejoin="round"/>
-           <!-- Glowing core -->
-           <circle cx="64" cy="64" r="28" fill="url(#p2_pul_c)" stroke="#160e26" stroke-width="5.5"/>
-           <!-- Spiral hazard core -->
-           <circle cx="64" cy="64" r="14" fill="#fef08a" stroke="#160e26" stroke-width="3.5"/>
-           <circle cx="64" cy="64" r="6" fill="#dc2626"/>
-           <circle cx="56" cy="54" r="4" fill="#fff" opacity="0.85"/></svg>

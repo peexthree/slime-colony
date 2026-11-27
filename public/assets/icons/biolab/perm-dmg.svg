@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><linearGradient id="pd_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fda4af"/><stop offset="52%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></linearGradient><linearGradient id="pd_b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#f97316"/></linearGradient></defs><path d="M18 10 C46 18 46 30 18 38 C46 46 46 54 18 56" stroke="url(#pd_a)" stroke-width="6.5" stroke-linecap="round"/>
-           <path d="M46 10 C18 18 18 30 46 38 C18 46 18 54 46 56" stroke="url(#pd_b)" stroke-width="6.5" stroke-linecap="round"/>
-           <line x1="22" y1="16" x2="42" y2="16" stroke="#160e26" stroke-width="3" stroke-linecap="round"/>
-           <line x1="22" y1="32" x2="42" y2="32" stroke="#160e26" stroke-width="3" stroke-linecap="round"/>
-           <line x1="22" y1="48" x2="42" y2="48" stroke="#160e26" stroke-width="3" stroke-linecap="round"/>
-           <polygon points="54,28 45,32 54,36" fill="#fef08a" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
-           <polygon points="10,28 19,32 10,36" fill="#fef08a" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/></svg>

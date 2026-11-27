@@ -1,4 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="p2_ct2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#cbd5e1"/><stop offset="52%" stop-color="#64748b"/><stop offset="100%" stop-color="#334155"/></linearGradient></defs><path d="M5 10 H10 L12 6 H20 L22 10 H27 C28.5 10 29 11 29 12.5 V25 C29 26.5 28 27.5 26.5 27.5 H5.5 C4 27.5 3 26.5 3 25 V12.5 C3 11 3.5 10 5 10 Z" fill="url(#p2_ct2)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
-           <circle cx="16" cy="18.5" r="5.5" fill="#38bdf8" stroke="#160e26" stroke-width="2.2"/>
-           <circle cx="14.5" cy="17" r="1.8" fill="#fff"/>
-           <circle cx="24" cy="13.5" r="1.5" fill="#fef08a"/></svg>

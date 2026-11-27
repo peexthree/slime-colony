@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><radialGradient id="p2_pup_i" cx="45%" cy="42%" r="58%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#f97316"/><stop offset="100%" stop-color="#b91c1c"/></radialGradient></defs><circle cx="32" cy="32" r="24" fill="url(#p2_pup_i)" stroke="#160e26" stroke-width="4.5"/>
-           <!-- Vertical cat-predator slit -->
-           <ellipse cx="32" cy="32" rx="7.5" ry="18" fill="#160e26"/>
-           <!-- Cartoon glossy eye catchlights -->
-           <circle cx="24" cy="23" r="5.5" fill="#fff"/>
-           <circle cx="39" cy="40" r="2.8" fill="#fff" opacity="0.85"/></svg>

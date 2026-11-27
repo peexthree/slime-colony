@@ -1,5 +1,22 @@
-node_modules
-dist
-.mimosa
+# зависимости
+node_modules/
+
+# сборка и кэш
+dist/
+coverage/
+.vite/
+
+# логи
+*.log
+
+# системные файлы
 .DS_Store
+Thumbs.db
+
+# окружение
+.env
+.env.*
+
+# утилиты
+.mimosa/
 *.local

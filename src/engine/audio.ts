@@ -1,9 +1,77 @@
 // Синтезированный звук на Web Audio API - без ассетов, всё генерируется на лету.
-// Один контекст, мастер-гейн, гейт от спама одинаковых звуков.
+// Один контекст, мастер-цепочка voiceBus -> компрессор -> лимитер -> masterGain,
+// гейт от спама одинаковых звуков и voice stealing при переполнении голосов.
+
+/** Лимит одновременных голосов всего */
+export const MAX_VOICES = 24;
+/** Отдельный лимит для шумовых голосов (перкуссия, взрывы) */
+export const MAX_PERC_VOICES = 10;
+
+/** Референс активного голоса для чистых функций voice stealing */
+export interface VoiceRef {
+  /** Порядковый номер голоса */
+  id: number;
+  /** Время старта голоса */
+  t: number;
+}
+
+/** Активный голос с его узлами WebAudio */
+interface VoiceEntry extends VoiceRef {
+  /** Шумовой голос (перкуссия/взрыв) */
+  perc: boolean;
+  src: AudioScheduledSourceNode;
+  gain: GainNode;
+}
+
+/** Самый старый голос: минимальный t, при равенстве - минимальный id */
+export function oldestVoice<T extends VoiceRef>(voices: readonly T[]): T | null {
+  let best: T | null = null;
+  for (const v of voices) {
+    if (!best || v.t < best.t || (v.t === best.t && v.id < best.id)) best = v;
+  }
+  return best;
+}
+
+/**
+ * Voice stealing: при достижении лимита вернуть id жертвы (самый старый голос),
+ * иначе null. Чистая функция - тестируется в node без AudioContext.
+ */
+export function voiceStealing(active: readonly VoiceRef[], max: number): number | null {
+  if (active.length < max) return null;
+  const victim = oldestVoice(active);
+  return victim ? victim.id : null;
+}
+
+/**
+ * Категорийный выбор жертвы: переполненный лимит перкуссии глушит старейший
+ * шумовой голос (это освобождает и общий лимит), иначе глушится старейший
+ * голос вообще.
+ */
+export function pickVoiceVictim(
+  active: readonly (VoiceRef & { perc?: boolean })[],
+  maxTotal: number,
+  maxPerc: number,
+  isPerc: boolean,
+): number | null {
+  const percCount = active.reduce((n, v) => n + (v.perc ? 1 : 0), 0);
+  if (isPerc && percCount >= maxPerc) {
+    const victim = oldestVoice(active.filter((v) => v.perc));
+    return victim ? victim.id : null;
+  }
+  if (active.length >= maxTotal) {
+    const victim = oldestVoice(active);
+    return victim ? victim.id : null;
+  }
+  return null;
+}
+
 export class Sfx {
   private ctx: AudioContext | null = null;
   private master!: GainNode;
+  private voiceBus!: GainNode;
   private noiseBuf!: AudioBuffer;
+  private voices: VoiceEntry[] = [];
+  private voiceIdSeq = 0;
   private droneOsc: OscillatorNode | null = null;
   private droneGain: GainNode | null = null;
   private droneLfo: OscillatorNode | null = null;
@@ -22,11 +90,29 @@ export class Sfx {
     this.ctx = new AC();
     this.master = this.ctx.createGain();
     this.master.gain.value = this.muted ? 0 : 0.5 * this.sfxVol;
+
+    // Мастер-цепочка: все голоса -> voiceBus -> компрессор -> лимитер -> masterGain
+    this.voiceBus = this.ctx.createGain();
+    const comp = this.ctx.createDynamicsCompressor();
+    comp.threshold.value = -18;
+    comp.knee.value = 24;
+    comp.ratio.value = 6;
+    comp.attack.value = 0.003;
+    comp.release.value = 0.25;
+    const limiter = this.ctx.createDynamicsCompressor();
+    limiter.threshold.value = -1.5;
+    limiter.knee.value = 0;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.001;
+    limiter.release.value = 0.1;
+    this.voiceBus.connect(comp);
+    comp.connect(limiter);
+    limiter.connect(this.master);
     this.master.connect(this.ctx.destination);
 
     this.bgmGain = this.ctx.createGain();
     this.bgmGain.gain.value = 0.35 * this.bgmVol;
-    this.bgmGain.connect(this.master);
+    this.bgmGain.connect(this.voiceBus);
 
     // Буфер белого шума для перкуссии
     const len = Math.floor(this.ctx.sampleRate * 0.4);
@@ -65,9 +151,47 @@ export class Sfx {
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + attack + decay);
   }
 
+  /** Зарегистрировать голос в реестре; onended сам уберёт его по завершении */
+  private trackVoice(src: AudioScheduledSourceNode, gain: GainNode, t0: number, perc: boolean): void {
+    const entry: VoiceEntry = { id: ++this.voiceIdSeq, t: t0, perc, src, gain };
+    this.voices.push(entry);
+    src.onended = () => {
+      const i = this.voices.indexOf(entry);
+      if (i >= 0) this.voices.splice(i, 1);
+      src.onended = null;
+    };
+  }
+
+  /** Освободить место под новый голос: глушить старейших при переполнении */
+  private admitVoice(perc: boolean): void {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    for (let guard = 0; guard < MAX_VOICES; guard++) {
+      const victimId = pickVoiceVictim(this.voices, MAX_VOICES, MAX_PERC_VOICES, perc);
+      if (victimId === null) break;
+      const idx = this.voices.findIndex((v) => v.id === victimId);
+      if (idx < 0) break;
+      const [entry] = this.voices.splice(idx, 1);
+      this.killVoice(entry, now);
+    }
+  }
+
+  /** Мгновенно заглушить и остановить жертву voice stealing */
+  private killVoice(entry: VoiceEntry, now: number): void {
+    try {
+      entry.gain.gain.cancelScheduledValues(now);
+      entry.gain.gain.setValueAtTime(Math.max(0.0001, entry.gain.gain.value), now);
+      entry.gain.gain.linearRampToValueAtTime(0.0001, now + 0.015);
+      entry.src.stop(now + 0.02);
+    } catch {
+      // узел уже завершился - не критично
+    }
+  }
+
   private tone(type: OscillatorType, f0: number, f1: number, dur: number, peak: number, delay = 0): void {
     if (!this.ctx || this.muted) return;
     const t0 = this.ctx.currentTime + delay;
+    this.admitVoice(false);
     const o = this.ctx.createOscillator();
     const g = this.ctx.createGain();
     o.type = type;
@@ -75,14 +199,16 @@ export class Sfx {
     o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t0 + dur);
     this.env(g, t0, 0.006, peak, dur);
     o.connect(g);
-    g.connect(this.master);
+    g.connect(this.voiceBus);
     o.start(t0);
     o.stop(t0 + dur + 0.08);
+    this.trackVoice(o, g, t0, false);
   }
 
   private burst(dur: number, peak: number, freq: number, q = 0.8, delay = 0): void {
     if (!this.ctx || this.muted) return;
     const t0 = this.ctx.currentTime + delay;
+    this.admitVoice(true);
     const src = this.ctx.createBufferSource();
     src.buffer = this.noiseBuf;
     src.loop = true;
@@ -94,9 +220,10 @@ export class Sfx {
     this.env(g, t0, 0.004, peak, dur);
     src.connect(f);
     f.connect(g);
-    g.connect(this.master);
+    g.connect(this.voiceBus);
     src.start(t0);
     src.stop(t0 + dur + 0.08);
+    this.trackVoice(src, g, t0, true);
   }
 
   // ---------- игровые события ----------
@@ -234,7 +361,7 @@ export class Sfx {
       g.gain.setValueAtTime(0.0001, t);
       g.gain.linearRampToValueAtTime(0.075, t + 0.5);
       o.connect(g);
-      g.connect(this.master);
+      g.connect(this.voiceBus);
       o.start(t);
       lfo.start(t);
       this.droneOsc = o;

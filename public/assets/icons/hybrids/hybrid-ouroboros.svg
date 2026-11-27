@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none"><defs><linearGradient id="p2_h2_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="52%" stop-color="#10b981"/><stop offset="100%" stop-color="#0ea5e9"/></linearGradient></defs><circle cx="24" cy="24" r="16" stroke="url(#p2_h2_a)" stroke-width="8"/>
-           <circle cx="24" cy="24" r="20" stroke="#160e26" stroke-width="2.6"/>
-           <circle cx="24" cy="24" r="12" stroke="#160e26" stroke-width="2.6"/>
-           <!-- Serpent head -->
-           <path d="M20 4 L34 9 L22 15 Z" fill="#fef08a" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
-           <circle cx="25" cy="8.5" r="1.6" fill="#160e26"/></svg>

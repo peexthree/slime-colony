@@ -19,7 +19,7 @@ import { AchievementDef, ACHIEVEMENTS, checkAchievements, loadAchievements } fro
 import { recordLeaderboardEntry } from './engine/leaderboard';
 import { getDailyChallenge, isDailyCompleted, markDailyCompleted, mulberry32 } from './engine/challenge';
 import { getLocale, setLocale, t, I18nKey } from './i18n';
-import { trBiolab, trChallengeTitle, trCodex, trDnaName, trHybrid, trNode, trScale, trUpgrade } from './i18n/gameData';
+import { dnaName, hybridDesc, hybridName, scaleName, scaleSub, trBiolab, trChallengeTitle, trCodex, trNode, trUpgrade } from './i18n/gameData';
 import { inPoly, polyArea, segIsect } from './game/ringOfDeath';
 import { SpatialHashGrid } from './game/spatialHash';
 import { canUnlockWeapon, canUpgradeWeapon, equippedWeaponCount, FOREIGN_BRANCH_PENALTY, xpRequiredForLevel } from './game/progression';
@@ -27,8 +27,8 @@ import { stepBioNodes } from './game/bioNodes';
 import { ENEMY_SPRITES, ENEMY_SPRITES_V2, ENEMY_SPRITES_V4 } from './engine/svgAssets';
 import {
   AURA, Beacon, BioNode, BOSS_EVERY, BOSS_FIRST_AT, CALL, CYSTS, DASH, DNA_COLORS, DNA_LEVELS,
-  DNA_NAMES, ELITE, ENEMIES, ENEMY_CAP, EnemyType, GROWTH, HybridId, HYBRIDS, IFRAME, MANDIBLES,
-  MAX_EQUIPPED_WEAPONS, METAMORPH, NOVA, NODE_SHIELD_SEC, NodeKind, ORBS, PLAYER, PROJ_LIFE, PROJ_RADIUS, PROJ_SPEED, RING,
+  ELITE, ENEMIES, ENEMY_CAP, EnemyType, GROWTH, HybridId, HYBRIDS, IFRAME, MANDIBLES,
+  MAX_EQUIPPED_WEAPONS, METAMORPH, NOVA, NODE_SHIELD_SEC, NodeKind, ORBS, PLAYER, PROJ_LIFE, PROJ_RADIUS, PROJ_SPEED, RING, ringMinArea,
   SCALES, SIM_HEIGHT, SIM_WIDTH, SPAWN_TABLE, SPIKES, STAT_MAX_STACKS, STRAIN, TAIL,
   WeaponId, WEAPON_BRANCH, WEAPON_MAX_LVL, WEAPON_UNLOCK_LEVEL, WORLD, worldSize,
 } from './engine/types';
@@ -933,12 +933,10 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     hybridsTaken.add(id);
     if (unlockCodexEntry(id)) refreshCodexBonuses();
     sfx.hybrid();
-    const def = HYBRIDS.find((h) => h.id === id)!;
-    const trH = trHybrid(id, def.name, def.desc);
     const hybridSlug = id.replace(/_/g, '-');
     showToast(
       `<svg class="bio-icon bio-amber" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-hybrid-${hybridSlug}"/></svg> ` +
-      `${getLocale() === 'en' ? 'HYBRIDIZATION' : 'ГИБРИДИЗАЦИЯ'}: ${trH.name}`,
+      `${getLocale() === 'en' ? 'HYBRIDIZATION' : 'ГИБРИДИЗАЦИЯ'}: ${hybridName(id)}`,
       'warn'
     );
     overlay.spawnPulse(player.x, player.y, 0xffd166, 160);
@@ -1052,12 +1050,12 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     { id: 'overload', branch: 'symbiont', title: 'Перегрузка', desc: 'Перезарядка Новы -25%', avail: () => geneAvail('symbiont', 'overload'), apply: () => genes.add('overload') },
     { id: 'resonance', branch: 'symbiont', title: 'Гармоника орбит', desc: 'Электроорбиты: +25% к радиусу и +20% к урону', avail: () => geneAvail('symbiont', 'resonance'), apply: () => genes.add('resonance') },
     // --- 6 Великих Гибридов: золотые карты слияния двух геномов на 3+3 ---
-    { id: 'hy_plasma_leviathan', hybrid: 'plasma_leviathan', title: 'ПЛАЗМЕННЫЙ ЛЕВИАФАН', desc: HYBRIDS.find((h) => h.id === 'plasma_leviathan')!.desc, avail: () => hybridAvail('plasma_leviathan'), apply: () => applyHybrid('plasma_leviathan') },
-    { id: 'hy_ouroboros', hybrid: 'ouroboros', title: 'УРОБОРОС-ПАРАЗИТ', desc: HYBRIDS.find((h) => h.id === 'ouroboros')!.desc, avail: () => hybridAvail('ouroboros'), apply: () => applyHybrid('ouroboros') },
-    { id: 'hy_phase_serpent', hybrid: 'phase_serpent', title: 'ФАЗОВЫЙ ЗМЕЙ', desc: HYBRIDS.find((h) => h.id === 'phase_serpent')!.desc, avail: () => hybridAvail('phase_serpent'), apply: () => applyHybrid('phase_serpent') },
-    { id: 'hy_spore_reactor', hybrid: 'spore_reactor', title: 'СПОРОВЫЙ РЕАКТОР', desc: HYBRIDS.find((h) => h.id === 'spore_reactor')!.desc, avail: () => hybridAvail('spore_reactor'), apply: () => applyHybrid('spore_reactor') },
-    { id: 'hy_ion_colossus', hybrid: 'ion_colossus', title: 'ИОННЫЙ КОЛОСС', desc: HYBRIDS.find((h) => h.id === 'ion_colossus')!.desc, avail: () => hybridAvail('ion_colossus'), apply: () => applyHybrid('ion_colossus') },
-    { id: 'hy_psi_web', hybrid: 'psi_web', title: 'ПСИ-СЕТЬ', desc: HYBRIDS.find((h) => h.id === 'psi_web')!.desc, avail: () => hybridAvail('psi_web'), apply: () => applyHybrid('psi_web') },
+    { id: 'hy_plasma_leviathan', hybrid: 'plasma_leviathan', title: 'ПЛАЗМЕННЫЙ ЛЕВИАФАН', desc: hybridDesc('plasma_leviathan'), avail: () => hybridAvail('plasma_leviathan'), apply: () => applyHybrid('plasma_leviathan') },
+    { id: 'hy_ouroboros', hybrid: 'ouroboros', title: 'УРОБОРОС-ПАРАЗИТ', desc: hybridDesc('ouroboros'), avail: () => hybridAvail('ouroboros'), apply: () => applyHybrid('ouroboros') },
+    { id: 'hy_phase_serpent', hybrid: 'phase_serpent', title: 'ФАЗОВЫЙ ЗМЕЙ', desc: hybridDesc('phase_serpent'), avail: () => hybridAvail('phase_serpent'), apply: () => applyHybrid('phase_serpent') },
+    { id: 'hy_spore_reactor', hybrid: 'spore_reactor', title: 'СПОРОВЫЙ РЕАКТОР', desc: hybridDesc('spore_reactor'), avail: () => hybridAvail('spore_reactor'), apply: () => applyHybrid('spore_reactor') },
+    { id: 'hy_ion_colossus', hybrid: 'ion_colossus', title: 'ИОННЫЙ КОЛОСС', desc: hybridDesc('ion_colossus'), avail: () => hybridAvail('ion_colossus'), apply: () => applyHybrid('ion_colossus') },
+    { id: 'hy_psi_web', hybrid: 'psi_web', title: 'ПСИ-СЕТЬ', desc: hybridDesc('psi_web'), avail: () => hybridAvail('psi_web'), apply: () => applyHybrid('psi_web') },
   ];
 
   type GenomeId = DnaBranchOrNeutral | HybridId;
@@ -1271,16 +1269,15 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   function updateBranchChip(): void {
     const hy = HYBRIDS.find((h) => h.id === mainGenome);
     if (hy) {
-      const trH = trHybrid(hy.id, hy.name, hy.desc);
       const hybridSlug = hy.id.replace(/_/g, '-');
-      branchChipEl.innerHTML = `<svg class="chip-ico" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-hybrid-${hybridSlug}"/></svg> ${trH.name}`;
+      branchChipEl.innerHTML = `<svg class="chip-ico" viewBox="0 0 48 48" aria-hidden="true"><use href="#ico-hybrid-${hybridSlug}"/></svg> ${hybridName(hy.id)}`;
       branchChipEl.dataset.branch = 'hybrid';
       return;
     }
     const b = mainGenome as DnaBranchOrNeutral;
     branchChipEl.innerHTML = b === 'neutral'
       ? t('hud_specimen')
-      : `<svg class="chip-ico" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-${b}"/></svg> ${trDnaName(b, DNA_NAMES[b])}`;
+      : `<svg class="chip-ico" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-${b}"/></svg> ${dnaName(b)}`;
     branchChipEl.dataset.branch = b;
   }
 
@@ -1306,9 +1303,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   /** Шкала бытия: имя масштаба и заполнение биомассы до Титана */
   function updateScaleHud(): void {
     const sc = SCALES[scaleIdx];
-    const trS = trScale(sc.id, sc.name, sc.sub);
-    scaleChipEl.textContent = `${t('hud_scale')} ${sc.id} — ${trS.name}`;
-    scaleChipEl.title = trS.sub;
+    scaleChipEl.textContent = `${t('hud_scale')} ${sc.id} — ${scaleName(sc.id)}`;
+    scaleChipEl.title = scaleSub(sc.id);
     const goal = sc.biomassGoal;
     const frac = Math.min(1, biomass / goal);
     bioFillEl.style.width = `${(frac * 100).toFixed(1)}%`;
@@ -2182,7 +2178,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     const ch = getDailyChallenge();
     const en = getLocale() === 'en';
     const done = isDailyCompleted(ch.dayKey);
-    const dnaName = trDnaName(ch.branch, DNA_NAMES[ch.branch]);
+    const dnaTitle = dnaName(ch.branch);
     const modName = en ? ch.modNameEn : ch.modNameRu;
     const modDesc = en ? ch.modDescEn : ch.modDescRu;
     const goalDesc = en ? ch.goalDescEn : ch.goalDescRu;
@@ -2194,7 +2190,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       </div>
       <div class="daily-box">
         <h3>${t('daily_genome_title', { day: ch.dayKey })}</h3>
-        <p><svg class="chip-ico" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-${ch.branch}"/></svg><strong>${dnaName}</strong> · ${challengeTitle}</p>
+        <p><svg class="chip-ico" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-${ch.branch}"/></svg><strong>${dnaTitle}</strong> · ${challengeTitle}</p>
       </div>
       <div class="daily-box full">
         <h3>${t('daily_mods_title', { name: modName })}</h3>
@@ -2769,10 +2765,9 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     biomass = 0;
     metamorphT = METAMORPH.slowT + METAMORPH.zoomT;
     sfx.metamorph();
-    const trSc = trScale(SCALES[scaleIdx].id, SCALES[scaleIdx].name, SCALES[scaleIdx].sub);
     showToast(
       `<svg class="bio-icon bio-cyan" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-macro-scale"/></svg> ` +
-      `${getLocale() === 'en' ? 'METAMORPHOSIS' : 'МЕТАМОРФОЗ'}: ${trSc.name} — ${trSc.sub}`
+      `${getLocale() === 'en' ? 'METAMORPHOSIS' : 'МЕТАМОРФОЗ'}: ${scaleName(SCALES[scaleIdx].id)} — ${scaleSub(SCALES[scaleIdx].id)}`
     );
     overlay.spawnPulse(player.x, player.y, 0xffffff, 280);
     overlay.beginShake(0.5);
@@ -2879,8 +2874,8 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     const trMainGenome = mainGenome === 'neutral'
       ? t('hud_specimen')
       : hybridDef
-        ? trHybrid(hybridDef.id, hybridDef.name, hybridDef.desc).name
-        : trDnaName(mainGenome as DnaBranch, DNA_NAMES[mainGenome as DnaBranch] ?? mainGenome);
+        ? hybridName(hybridDef.id)
+        : dnaName(mainGenome as DnaBranch);
     const genomeLabel = mainGenome === 'neutral'
       ? t('genome_base')
       : hybridDef
@@ -2958,7 +2953,9 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         for (let k = i + 1; k < n; k++) poly.push({ x: pts[k].x, y: pts[k].y });
         poly.push({ x: bx, y: by });
         const area = polyArea(poly);
-        if (area >= RING.minArea) {
+        // Порог площади динамический: замкнуть кольцо коротким хвостом физически
+        // невозможно (ringMinArea растёт квадратично от длины хвоста)
+        if (area >= ringMinArea(tailLen)) {
           triggerRing(poly);
           return;
         }
@@ -3301,9 +3298,13 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         playerDirX = mx / mLen;
         playerDirY = my / mLen;
       }
-      // Симбиоз со штаммом: свой след ускоряет, чужой растворяет хвост
+      // Симбиоз со штаммом: свой след ускоряет, чужой растворяет хвост.
+      // Скорость Шкалы бытия - отдельный множитель: мир растёт 1.24^k,
+      // а зум падает медленнее, поэтому базовую скорость нельзя терять из moveSpeed
+      // (там уже сидят апгрейды x0.7/x1.08/x1.10)
       const dashMul = dashT > 0 ? DASH.speedMul : 1;
       const spdNow = moveSpeed
+        * SCALES[scaleIdx].playerSpeedMul
         * codexBonuses.moveSpeedMul
         * dashMul
         * (trailOwn ? STRAIN.ownSpeedMul : 1)
@@ -3451,10 +3452,9 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
         titan.titan = true;
         titan.hp = titan.maxHp = Math.round(titan.maxHp * (1 + scaleIdx * 0.35));
         overlay.spawnPulse(titan.x, titan.y, 0xffffff, 150);
-        const trS = trScale(SCALES[scaleIdx].id, SCALES[scaleIdx].name, SCALES[scaleIdx].sub);
         showToast(
           `<svg class="bio-icon bio-amber" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-macro-scale"/></svg> ` +
-          `${getLocale() === 'en' ? `SCALE TITAN AWAKENED — ${trS.name}` : `ТИТАН МАСШТАБА ПРОБУДИЛСЯ — ${trS.name}`}`,
+          `${getLocale() === 'en' ? `SCALE TITAN AWAKENED — ${scaleName(SCALES[scaleIdx].id)}` : `ТИТАН МАСШТАБА ПРОБУДИЛСЯ — ${scaleName(SCALES[scaleIdx].id)}`}`,
           'warn'
         );
         sfx.boss();
@@ -4483,7 +4483,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           if (lvl > lastDnaLvl[o.dna]) {
             lastDnaLvl[o.dna] = lvl;
             const en = getLocale() === 'en';
-            showToast(`<svg class="bio-icon" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-${o.dna}"/></svg> ${en ? 'DNA' : 'ДНК'} ${trDnaName(o.dna, DNA_NAMES[o.dna])}: ${en ? 'level' : 'уровень'} ${lvl}`);
+            showToast(`<svg class="bio-icon" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-${o.dna}"/></svg> ${en ? 'DNA' : 'ДНК'} ${dnaName(o.dna)}: ${en ? 'level' : 'уровень'} ${lvl}`);
             sfx.levelUp();
             overlay.spawnPulse(player.x, player.y, DNA_COLORS[o.dna], 70);
             updateDnaHud();
@@ -4492,8 +4492,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           for (const h of HYBRIDS) {
             if (hybridAvail(h.id) && !hybridNotified.has(h.id)) {
               hybridNotified.add(h.id);
-              const trH = trHybrid(h.id, h.name, h.desc);
-              showToast(`<svg class="bio-icon bio-amber" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-node-mutagen"/></svg> ${getLocale() === 'en' ? 'HYBRIDIZATION READY' : 'ГИБРИДИЗАЦИЯ ВОЗМОЖНА'}: ${trH.name}`);
+              showToast(`<svg class="bio-icon bio-amber" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-node-mutagen"/></svg> ${getLocale() === 'en' ? 'HYBRIDIZATION READY' : 'ГИБРИДИЗАЦИЯ ВОЗМОЖНА'}: ${hybridName(h.id)}`);
               sfx.capture(true);
             }
           }
@@ -4733,8 +4732,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           bossHudEl.classList.add('show');
           bossHudEl.classList.toggle('titan', Boolean(activeBoss.titan));
           const sc = SCALES[scaleIdx];
-          const trS = trScale(sc.id, sc.name, sc.sub);
-          const baseName = activeBoss.titan ? `${t('boss_titan')} · ${trS.name}` : t('boss_guardian');
+          const baseName = activeBoss.titan ? `${t('boss_titan')} · ${scaleName(sc.id)}` : t('boss_guardian');
           bossNameEl.textContent = activeBoss.enragedPhase ? `${baseName} · ${t('boss_enraged')}` : baseName;
           if (bossHudIcoUse) bossHudIcoUse.setAttribute('href', activeBoss.titan ? '#ico-macro-scale' : '#ico-skull-hazard');
           const bPct = Math.max(0, Math.min(100, (activeBoss.hp / Math.max(1, activeBoss.maxHp)) * 100));

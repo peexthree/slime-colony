@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><linearGradient id="sd_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="52%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#2563eb"/></linearGradient><linearGradient id="sd_b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#818cf8"/></linearGradient></defs><!-- Phase afterimage ghosts -->
-           <path d="M8 22 H24 L18 32 L24 42 H8 L14 32 Z" fill="url(#sd_b)" opacity="0.45" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
-           <path d="M18 18 H34 L28 32 L34 46 H18 L24 32 Z" fill="url(#sd_b)" opacity="0.72" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/>
-           <!-- Main aerodynamic arrow/cell dart -->
-           <path d="M26 14 L58 32 L26 50 L33 32 Z" fill="url(#sd_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
-           <!-- Speed lines & glossy core -->
-           <path d="M34 22 L50 32 L34 32 Z" fill="#ffffff" opacity="0.65"/>
-           <line x1="6" y1="14" x2="18" y2="14" stroke="#67e8f9" stroke-width="3" stroke-linecap="round"/>
-           <line x1="6" y1="50" x2="20" y2="50" stroke="#67e8f9" stroke-width="3" stroke-linecap="round"/></svg>

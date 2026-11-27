@@ -71,27 +71,27 @@ export const DNA_COLORS: Record<DnaBranch, number> = {
   symbiont: 0xffd166, // золото - фаза
 };
 
-export const DNA_NAMES: Record<DnaBranch, string> = { vermis: 'ВЕРМИС', chimera: 'ХИМЕРА', mycelium: 'МИЦЕЛИЙ', symbiont: 'СИМБИОНТ' };
+// Имена геномов (ВЕРМИС/ХИМЕРА/...) и все тексты гибридов живут в src/i18n/ru.json
+// (доступ через trDnaName/dnaName в src/i18n/gameData.ts) - здесь только идентификаторы.
 
 /** Пороги накопленной ДНК-биомассы для уровней 1..3 ветки */
 export const DNA_LEVELS = [15, 35, 60] as const;
 
 export interface HybridDef {
   id: HybridId;
-  name: string;
-  desc: string;
   a: DnaBranch;
   b: DnaBranch;
 }
 
-/** Шесть Великих Гибридов: уникальная механика слияния двух геномов */
+/** Шесть Великих Гибридов: уникальная механика слияния двух геномов.
+ *  Имена/описания - в i18n (hybrid_*_name / hybrid_*_desc). */
 export const HYBRIDS: HybridDef[] = [
-  { id: 'plasma_leviathan', name: 'ПЛАЗМЕННЫЙ ЛЕВИАФАН', desc: 'Огненный Удав: Кольцо Смерти наносит x4 урона и аннигилирует обычных врагов внутри', a: 'vermis', b: 'chimera' },
-  { id: 'ouroboros', name: 'УРОБОРОС-ПАРАЗИТ', desc: 'Живой Инкубатор: враги, убитые хвостом, прирастают живыми сегментами', a: 'vermis', b: 'mycelium' },
-  { id: 'phase_serpent', name: 'ФАЗОВЫЙ ЗМЕЙ', desc: 'Грави-Хлыст: хвост перехватывает вражеские снаряды и швыряет их обратно', a: 'vermis', b: 'symbiont' },
-  { id: 'spore_reactor', name: 'СПОРОВЫЙ РЕАКТОР', desc: 'Чумная Сверхновая: Нова заражает врагов спорами, их тела детонируют цепью', a: 'chimera', b: 'mycelium' },
-  { id: 'ion_colossus', name: 'ИОННЫЙ КОЛОСС', desc: 'Тесла-Сеть: электроорбиты бьют дугами по ближайшим врагам', a: 'chimera', b: 'symbiont' },
-  { id: 'psi_web', name: 'ПСИ-СЕТЬ', desc: 'Сверхразум: узлы захватываются быстрее, а ваши узлы бьют лазерами', a: 'mycelium', b: 'symbiont' },
+  { id: 'plasma_leviathan', a: 'vermis', b: 'chimera' },
+  { id: 'ouroboros', a: 'vermis', b: 'mycelium' },
+  { id: 'phase_serpent', a: 'vermis', b: 'symbiont' },
+  { id: 'spore_reactor', a: 'chimera', b: 'mycelium' },
+  { id: 'ion_colossus', a: 'chimera', b: 'symbiont' },
+  { id: 'psi_web', a: 'mycelium', b: 'symbiont' },
 ];
 
 export interface EnemyDef {
@@ -133,10 +133,16 @@ export const ELITE = {
   haloColor: 0xffd166,
 } as const;
 
-/** Время появления новых организмов в спавн-таблице */
+/**
+ * Время появления новых организмов в спавн-таблице (сек от начала забега).
+ * Баланс веток ДНК: каждая из 4 веток должна быть представлена в первые 30 секунд
+ * (vermis - базовый grub в пуле main.ts, chimera - spitter с 10-й секунды,
+ * mycelium - splitter с 20-й, symbiont - runner с 25-й).
+ */
 export const SPAWN_TABLE: { since: number; type: EnemyType; chance: number }[] = [
-  { since: 35,  type: 'splitter', chance: 0.10 },
-  { since: 55,  type: 'spitter',  chance: 0.11 },
+  { since: 10,  type: 'spitter',  chance: 0.10 }, // Химера: ранний носитель ДНК, ветка не голодает до Новы
+  { since: 20,  type: 'splitter', chance: 0.10 }, // Мицелий
+  { since: 25,  type: 'runner',   chance: 0.09 }, // Симбионт: души этого генома в первые полминуты забега
   { since: 75,  type: 'healer',   chance: 0.08 },
   { since: 95,  type: 'pulsar',   chance: 0.06 },
   { since: 145, type: 'colony',   chance: 0.05 },
@@ -160,47 +166,50 @@ export const WEAPON_BRANCH: Record<WeaponId, DnaBranch> = {
 export const WEAPON_UNLOCK_LEVEL: Record<WeaponId, number> = {
   spikes: 1,
   mandibles: 3,
+  nova: 4,   // родное оружие Химеры: без него ветка без арсенала до 9 ур. (аудит баланса)
   orbs: 5,
   aura: 7,
-  nova: 9,
   cysts: 13, // мины - капстоун поздней стадии: мощно, но открывается в конце
 };
 
+/** Таблица значений оружия по уровням 1..4: кортеж фиксированной длины WEAPON_MAX_LVL */
+export type LevelTable = readonly [number, number, number, number];
+
 /** Шипы: авто-выстрел в ближайшую цель. Таблицы по уровням 1..4 */
 export const SPIKES = {
-  cd:    [1.35, 1.18, 1.02, 0.88],
-  dmg:   [9, 12, 16, 21],
-  count: [1, 1, 2, 3],
+  cd:    [1.35, 1.18, 1.02, 0.88] as LevelTable,
+  dmg:   [9, 12, 16, 21] as LevelTable,
+  count: [1, 1, 2, 3] as LevelTable,
 } as const;
 
 /** Молния-орбиты: сферы вращаются вокруг игрока (открываются с 5 ур.) */
 export const ORBS = {
-  count:  [1, 2, 3, 4],
-  dmg:    [7, 10, 13, 17],
-  radius: [50, 56, 63, 70],
+  count:  [1, 2, 3, 4] as LevelTable,
+  dmg:    [7, 10, 13, 17] as LevelTable,
+  radius: [50, 56, 63, 70] as LevelTable,
   speed:  2.3,
   orbCd:  0.45,
 } as const;
 
-/** Нова-импульс: периодический взрыв-кольцо с отбросом (открывается с 9 ур.) */
+/** Нова-импульс: периодический взрыв-кольцо с отбросом (родное оружие Химеры, 4 ур.) */
 export const NOVA = {
-  cd:     [6.5, 5.8, 5.1, 4.4],
-  dmg:    [20, 27, 35, 45],
-  radius: [80, 92, 104, 118],
+  cd:     [6.5, 5.8, 5.1, 4.4] as LevelTable,
+  dmg:    [20, 27, 35, 45] as LevelTable,
+  radius: [80, 92, 104, 118] as LevelTable,
 } as const;
 
 /** Токсин-аура: постоянный урон вокруг игрока (открывается с 7 ур.) */
 export const AURA = {
-  dps:    [5, 8, 12, 17],
-  radius: [38, 45, 53, 62],
+  dps:    [5, 8, 12, 17] as LevelTable,
+  radius: [38, 45, 53, 62] as LevelTable,
   tick:   0.25,
 } as const;
 
 /** Жвалы: рассекающий фронтальный укус перед организмом (открываются с 3 ур.) */
 export const MANDIBLES = {
-  cd:     [1.7, 1.45, 1.25, 1.05],
-  dmg:    [22, 30, 40, 52],
-  range:  [54, 62, 70, 80],
+  cd:     [1.7, 1.45, 1.25, 1.05] as LevelTable,
+  dmg:    [22, 30, 40, 52] as LevelTable,
+  range:  [54, 62, 70, 80] as LevelTable,
   arc:    Math.PI * 0.62, // ~112 градусов сектор удара
 } as const;
 
@@ -208,11 +217,11 @@ export const MANDIBLES = {
  *  Капстоун мицелия поздней стадии: открывается с 13 ур. при ДНК мицелия 2+,
  *  поэтому мощность в разы выше ранних оружий. */
 export const CYSTS = {
-  cd:       [3.4, 3.0, 2.6, 2.2],
-  dmg:      [30, 42, 56, 74],
-  radius:   [42, 50, 58, 68],
-  maxCysts: [4, 5, 6, 8],
-  perDrop:  [1, 1, 2, 2],
+  cd:       [3.4, 3.0, 2.6, 2.2] as LevelTable,
+  dmg:      [30, 42, 56, 74] as LevelTable,
+  radius:   [42, 50, 58, 68] as LevelTable,
+  maxCysts: [4, 5, 6, 8] as LevelTable,
+  perDrop:  [1, 1, 2, 2] as LevelTable,
   moveDist: 85,
   armTime:  0.55,
   blastMul: 1.45,
@@ -255,8 +264,10 @@ export const TAIL = {
   minLen: 6,
   baseMax: 16,
   maxPerLvl: 2,      // ёмкость хвоста растёт с уровнем
-  moveCost: 1.25,    // сегментов в секунду при движении (умножается на размер)
-  idleCost: 1.15,    // сегментов в секунду без движения (метаболизм формы — поощряет движение)
+  moveCost: 1.0,     // сегментов в секунду при движении (умножается на размер):
+                     // движение - естественный режим охотника, тает дешевле метаболизма
+  idleCost: 1.45,    // сегментов в секунду без движения: неподвижность тает БЫСТРЕЕ
+                     // движения - поощряет движение (аудит баланса: было наоборот)
   soulGain: 0.9,     // сегментов за единицу ценности души
   dpsBase: 2,
   dpsPerSeg: 0.35,   // хвост бьёт тем сильнее, чем он длиннее
@@ -276,12 +287,29 @@ export const GROWTH = {
 
 /** Замыкание траектории хвоста в полигон: схлопывание вакуума внутри */
 export const RING = {
-  minArea: 3800,     // минимальная площадь полигона в px симуляции
   cooldown: 2.5,     // сек между схлопываниями
   dmgPerSeg: 1.6,    // урон внутри = длина хвоста x этот множитель
   historyWindow: 130,// сегментов траектории в поиске замыкания
   skipAdj: 5,        // соседние сегменты не считаются пересечением
 } as const;
+
+/**
+ * Минимальная площадь Кольца Смерти как функция длины хвоста (аудит баланса).
+ * Геометрия: максимальная площадь замкнутого полигона из N сегментов хвоста
+ * с шагом TAIL.segSpacing - это круг с длиной окружности N * segSpacing:
+ *   A_max = (N * segSpacing)^2 / (4 * PI)
+ * Для стартового хвоста 16 сегментов с шагом 5px это ~509 px^2, поэтому
+ * прежняя константа minArea 3800 была физически недостижима.
+ * Игрок не рисует идеальную окружность, поэтому порог = 75% от максимума:
+ *   ringMinArea(16) = 0.75 * (16 * 5)^2 / (4 * PI) ~= 382 px^2
+ */
+export const RING_AREA_FACTOR = 0.75;
+
+export function ringMinArea(tailLen: number): number {
+  const n = Math.max(1, Math.floor(tailLen));
+  const circumference = n * TAIL.segSpacing;
+  return Math.round((RING_AREA_FACTOR * circumference * circumference) / (4 * Math.PI));
+}
 
 // ============================ ШТАММЫ PHYSARUM ============================
 
@@ -297,14 +325,16 @@ export const STRAIN = {
 
 export interface ScaleTheme {
   id: number;
-  name: string;
-  sub: string;
-  zoom: number;          // целевой зум камеры после метаморфоза
-  enemyHpMul: number;    // множитель HP врагов на шкале
-  enemyDmgMul: number;   // множитель урона врагов на шкале
-  enemySizeMul: number;  // множитель физического размера врагов
-  enemySpeedMul: number; // множитель скорости врагов
-  biomassGoal: number;   // биомасса для созревания Титана
+  zoom: number;           // целевой зум камеры после метаморфоза
+  enemyHpMul: number;     // множитель HP врагов на шкале
+  enemyDmgMul: number;    // множитель урона врагов на шкале
+  enemySizeMul: number;   // множитель физического размера врагов
+  enemySpeedMul: number;  // множитель скорости врагов
+  playerSpeedMul: number; // множитель скорости игрока: мир растёт 1.24^k,
+                          // а зум падает лишь до 0.45 - игрок должен успевать за миром
+  biomassGoal: number;    // биомасса для созревания Титана
+  core: number;           // цвет ядра тела игрока (палитра шкалы)
+  glow: number;           // цвет ореола/ауры игрока (палитра шкалы)
 }
 
 /**
@@ -312,24 +342,37 @@ export interface ScaleTheme {
  * и в его реакторе очнулась капля забытой биомассы. Она прорастает сквозь агару,
  * тело носителя, выходит на поверхность планеты, поднимается в её небо
  * и переступает предел биологии. Каждая локация - зумаут и новый биом.
+ *
+ * Кривая HP (аудит баланса): после 5-й шкалы рост enemyHpMul резко сглажен
+ * (было 1.0 -> 45.5, экспоненциальная стена: TTK босса вырастал с 12с до 168с).
+ * Оружие игрока ограничено 3 слотами и 4 уровнями, поэтому поздний рост сложности
+ * идёт за счёт плотности роя и урона врагов, а не квадратичных HP.
+ * Первые 5 шкал не тронуты - их кривая сбалансирована.
+ * Имена/описания шкал - в i18n (scale_*_name / scale_*_sub).
  */
 export const SCALES: ScaleTheme[] = [
-  { id: 1, name: 'ПЕРВИЧНАЯ КАПЛЯ', sub: 'Реактор зонда «ЕвроКорп-3»: капля биомассы очнулась в колбе', zoom: 1.0, enemyHpMul: 1.0, enemyDmgMul: 1.0, enemySizeMul: 1.0, enemySpeedMul: 1.0, biomassGoal: 130 },
-  { id: 2, name: 'АГАРА-МАТРИЦА', sub: 'Чаша Петри: поля питательной агры, первые охотничьи угодья', zoom: 0.92, enemyHpMul: 1.4, enemyDmgMul: 1.15, enemySizeMul: 1.12, enemySpeedMul: 1.04, biomassGoal: 240 },
-  { id: 3, name: 'КРОВЕНОСНЫЙ ТРАКТ', sub: 'Ткань носителя: пульсирующие стенки сосуда', zoom: 0.84, enemyHpMul: 2.0, enemyDmgMul: 1.33, enemySizeMul: 1.25, enemySpeedMul: 1.08, biomassGoal: 350 },
-  { id: 4, name: 'ЛИМФАТИЧЕСКИЙ ПРИЛИВ', sub: 'Лимфа носителя: белёсые реки несут чужаков к фильтрам', zoom: 0.77, enemyHpMul: 2.8, enemyDmgMul: 1.53, enemySizeMul: 1.4, enemySpeedMul: 1.13, biomassGoal: 470 },
-  { id: 5, name: 'ВНУТРЕННИЙ ОКЕАН', sub: 'Орган: чёрная желчь и биолюминесцентная взвесь', zoom: 0.71, enemyHpMul: 3.9, enemyDmgMul: 1.76, enemySizeMul: 1.56, enemySpeedMul: 1.18, biomassGoal: 600 },
-  { id: 6, name: 'КОСТНЫЙ ЛАБИРИНТ', sub: 'Скелет носителя: остовы рёбер и хрящевые арки', zoom: 0.66, enemyHpMul: 5.3, enemyDmgMul: 2.02, enemySizeMul: 1.74, enemySpeedMul: 1.23, biomassGoal: 740 },
-  { id: 7, name: 'СИНАПТИЧЕСКАЯ ПУСТОШЬ', sub: 'Нервная система: мысли носителя вспыхивают грозой', zoom: 0.62, enemyHpMul: 7.1, enemyDmgMul: 2.32, enemySizeMul: 1.95, enemySpeedMul: 1.28, biomassGoal: 890 },
-  { id: 8, name: 'ВЫДОХ НОСИТЕЛЯ', sub: 'Наружу: с выдохом организм покидает тело и видит звёзды Ξ-9', zoom: 0.58, enemyHpMul: 9.4, enemyDmgMul: 2.67, enemySizeMul: 2.18, enemySpeedMul: 1.33, biomassGoal: 1050 },
-  { id: 9, name: 'ГРИБНЫЕ ТАЙГИ', sub: 'Поверхность Ξ-9: леса спор высотой в километры, и они поют', zoom: 0.55, enemyHpMul: 12.2, enemyDmgMul: 3.07, enemySizeMul: 2.44, enemySpeedMul: 1.39, biomassGoal: 1220 },
-  { id: 10, name: 'РЖАВЫЕ ДЮНЫ', sub: 'Окисленные пустоши: железо мёртвых кораблей колонизаторов', zoom: 0.52, enemyHpMul: 15.6, enemyDmgMul: 3.53, enemySizeMul: 2.73, enemySpeedMul: 1.45, biomassGoal: 1400 },
-  { id: 11, name: 'КОНТИНЕНТАЛЬНЫЙ РАЗЛОМ', sub: 'Кора полушария: магма обнажила память планеты', zoom: 0.50, enemyHpMul: 19.7, enemyDmgMul: 4.06, enemySizeMul: 3.06, enemySpeedMul: 1.51, biomassGoal: 1590 },
-  { id: 12, name: 'ПОЛЯРНЫЙ ЩИТ', sub: 'Ледяная мантия: мерзлота хранит цивилизации прошлого', zoom: 0.48, enemyHpMul: 24.6, enemyDmgMul: 4.67, enemySizeMul: 3.42, enemySpeedMul: 1.57, biomassGoal: 1790 },
-  { id: 13, name: 'НЕБЕСНЫЙ ПЛАНКТОН', sub: 'Верхняя атмосфера: парящие споры плетут живые облака', zoom: 0.47, enemyHpMul: 30.4, enemyDmgMul: 5.37, enemySizeMul: 3.6, enemySpeedMul: 1.64, biomassGoal: 2000 },
-  { id: 14, name: 'ИОНОСФЕРА', sub: 'Разрыв неба: авроральные бури переписывают ДНК всего живого', zoom: 0.46, enemyHpMul: 37.3, enemyDmgMul: 6.17, enemySizeMul: 3.75, enemySpeedMul: 1.7, biomassGoal: 2220 },
-  { id: 15, name: 'ФРАКТАЛ БЕСКОНЕЧНОСТИ', sub: 'Метаматематика: выход за пределы биологии', zoom: 0.45, enemyHpMul: 45.5, enemyDmgMul: 7.1, enemySizeMul: 3.9, enemySpeedMul: 1.77, biomassGoal: 2450 },
+  { id: 1, zoom: 1.0, enemyHpMul: 1.0, enemyDmgMul: 1.0, enemySizeMul: 1.0, enemySpeedMul: 1.0, playerSpeedMul: 1.0, biomassGoal: 130, core: 0xeafffb, glow: 0x66fcf1 },
+  { id: 2, zoom: 0.92, enemyHpMul: 1.4, enemyDmgMul: 1.15, enemySizeMul: 1.12, enemySpeedMul: 1.04, playerSpeedMul: 1.06, biomassGoal: 240, core: 0xf2ffe4, glow: 0x9ae66e },
+  { id: 3, zoom: 0.84, enemyHpMul: 2.0, enemyDmgMul: 1.33, enemySizeMul: 1.25, enemySpeedMul: 1.08, playerSpeedMul: 1.12, biomassGoal: 350, core: 0xeafff4, glow: 0x57e6a9 },
+  { id: 4, zoom: 0.77, enemyHpMul: 2.8, enemyDmgMul: 1.53, enemySizeMul: 1.4, enemySpeedMul: 1.13, playerSpeedMul: 1.19, biomassGoal: 470, core: 0xe9fbff, glow: 0x38bdf8 },
+  { id: 5, zoom: 0.71, enemyHpMul: 3.9, enemyDmgMul: 1.76, enemySizeMul: 1.56, enemySpeedMul: 1.18, playerSpeedMul: 1.26, biomassGoal: 600, core: 0xe8f2ff, glow: 0x4d8dff },
+  { id: 6, zoom: 0.66, enemyHpMul: 4.6, enemyDmgMul: 2.02, enemySizeMul: 1.74, enemySpeedMul: 1.23, playerSpeedMul: 1.34, biomassGoal: 740, core: 0xf5f7fa, glow: 0xe2e8f0 },
+  { id: 7, zoom: 0.62, enemyHpMul: 5.2, enemyDmgMul: 2.32, enemySizeMul: 1.95, enemySpeedMul: 1.28, playerSpeedMul: 1.42, biomassGoal: 890, core: 0xf1ecff, glow: 0x8b5cf6 },
+  { id: 8, zoom: 0.58, enemyHpMul: 5.8, enemyDmgMul: 2.67, enemySizeMul: 2.18, enemySpeedMul: 1.33, playerSpeedMul: 1.5, biomassGoal: 1050, core: 0xfff6e0, glow: 0xfbbf24 },
+  { id: 9, zoom: 0.55, enemyHpMul: 6.3, enemyDmgMul: 3.07, enemySizeMul: 2.44, enemySpeedMul: 1.39, playerSpeedMul: 1.59, biomassGoal: 1220, core: 0xeafff2, glow: 0x34d399 },
+  { id: 10, zoom: 0.52, enemyHpMul: 6.8, enemyDmgMul: 3.53, enemySizeMul: 2.73, enemySpeedMul: 1.45, playerSpeedMul: 1.69, biomassGoal: 1400, core: 0xfff0e2, glow: 0xf97316 },
+  { id: 11, zoom: 0.5, enemyHpMul: 7.2, enemyDmgMul: 4.06, enemySizeMul: 3.06, enemySpeedMul: 1.51, playerSpeedMul: 1.79, biomassGoal: 1590, core: 0xfff1e0, glow: 0xff8a3d },
+  { id: 12, zoom: 0.48, enemyHpMul: 7.6, enemyDmgMul: 4.67, enemySizeMul: 3.42, enemySpeedMul: 1.57, playerSpeedMul: 1.9, biomassGoal: 1790, core: 0xeaf7ff, glow: 0x7dd3fc },
+  { id: 13, zoom: 0.47, enemyHpMul: 8.0, enemyDmgMul: 5.37, enemySizeMul: 3.6, enemySpeedMul: 1.64, playerSpeedMul: 2.01, biomassGoal: 2000, core: 0xe6feff, glow: 0xa5f3fc },
+  { id: 14, zoom: 0.46, enemyHpMul: 8.4, enemyDmgMul: 6.17, enemySizeMul: 3.75, enemySpeedMul: 1.7, playerSpeedMul: 2.13, biomassGoal: 2220, core: 0xfdeaff, glow: 0xf0abfc },
+  { id: 15, zoom: 0.45, enemyHpMul: 8.8, enemyDmgMul: 7.1, enemySizeMul: 3.9, enemySpeedMul: 1.77, playerSpeedMul: 2.26, biomassGoal: 2450, core: 0xf4ecff, glow: 0xa86bff },
 ];
+
+/** Скорость игрока с учётом Шкалы бытия (0..14): базовая скорость x множитель шкалы */
+export function playerSpeed(scaleIdx: number): number {
+  const idx = Math.max(0, Math.min(SCALES.length - 1, Math.floor(scaleIdx)));
+  return PLAYER.speed * SCALES[idx].playerSpeedMul;
+}
 
 export const METAMORPH = {
   slowT: 1.6,       // длительность bullet-time
@@ -359,24 +402,8 @@ export function worldSize(scaleIdx: number): { w: number; h: number } {
 
 // ============================ ВИЗУАЛЬНАЯ ЭВОЛЮЦИЯ ============================
 
-/** Тело игрока: цвет ядра и ореола по шкале бытия (синхронно с wgsl-палитрой) */
-export const SCALE_FORM: Record<number, { core: number; glow: number }> = {
-  1: { core: 0xeafffb, glow: 0x66fcf1 },
-  2: { core: 0xf2ffe4, glow: 0x9ae66e },
-  3: { core: 0xeafff4, glow: 0x57e6a9 },
-  4: { core: 0xe9fbff, glow: 0x38bdf8 },
-  5: { core: 0xe8f2ff, glow: 0x4d8dff },
-  6: { core: 0xf5f7fa, glow: 0xe2e8f0 },
-  7: { core: 0xf1ecff, glow: 0x8b5cf6 },
-  8: { core: 0xfff6e0, glow: 0xfbbf24 },
-  9: { core: 0xeafff2, glow: 0x34d399 },
-  10: { core: 0xfff0e2, glow: 0xf97316 },
-  11: { core: 0xfff1e0, glow: 0xff8a3d },
-  12: { core: 0xeaf7ff, glow: 0x7dd3fc },
-  13: { core: 0xe6feff, glow: 0xa5f3fc },
-  14: { core: 0xfdeaff, glow: 0xf0abfc },
-  15: { core: 0xf4ecff, glow: 0xa86bff },
-};
+// Палитра тела игрока (ядро core / ореол glow) перенесена прямо в ScaleTheme:
+// см. поля SCALES[i].core и SCALES[i].glow (синхронно с wgsl-палитрой).
 
 /** Лимит фиолетовых маяков за элитными врагами */
 export const ELITE_BEACONS = 8;

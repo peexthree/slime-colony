@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><linearGradient id="p2_tv_b" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="52%" stop-color="#10b981"/><stop offset="100%" stop-color="#065f46"/></linearGradient><radialGradient id="p2_tv_c" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#34d399"/><stop offset="100%" stop-color="#047857"/></radialGradient></defs><!-- Dorsal & ventral cartilage fins -->
-           <path d="M44 36 L68 14 L84 36 Z" fill="#34d399" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
-           <path d="M44 92 L68 114 L84 92 Z" fill="#34d399" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
-           <!-- Main vertebra body aligned along +X -->
-           <path d="M18 46 C36 28 90 28 110 46 C118 54 118 74 110 82 C90 100 36 100 18 82 C10 74 10 54 18 46 Z" fill="url(#p2_tv_b)" stroke="#160e26" stroke-width="5.5"/>
-           <!-- Inner nerve node -->
-           <ellipse cx="64" cy="64" rx="28" ry="16" fill="url(#p2_tv_c)" stroke="#160e26" stroke-width="4"/>
-           <line x1="22" y1="64" x2="106" y2="64" stroke="#ecfdf5" stroke-width="3.5" stroke-linecap="round" opacity="0.65"/>
-           <ellipse cx="56" cy="46" rx="16" ry="5" fill="#fff" opacity="0.55"/></svg>

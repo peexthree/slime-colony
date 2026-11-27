@@ -1,4 +1,6 @@
-import { getLocale } from './index';
+import { getLocale, t } from './index';
+import type { I18nKey } from './index';
+import { SCALES } from '../engine/types';
 import type { DnaBranchOrNeutral, HybridId, NodeKind } from '../engine/types';
 
 export const EN_DNA_NAMES: Record<DnaBranchOrNeutral, string> = {
@@ -251,18 +253,48 @@ export const EN_UPGRADES: Record<string, { title: string; desc: string }> = {
   hy_psi_web: { title: EN_HYBRIDS.psi_web.name, desc: EN_HYBRIDS.psi_web.desc },
 };
 
-export function trDnaName(branch: DnaBranchOrNeutral, ruFallback: string): string {
-  return getLocale() === 'en' ? (EN_DNA_NAMES[branch] ?? ruFallback) : ruFallback;
+// ---------- Доступ к игровым текстам (ru.json - источник правды, en.json - переводы) ----------
+// В src/engine/types.ts остались только id/числа/цвета: имена геномов, гибридов и шкал
+// читаются из словарей i18n через функции ниже.
+
+/** Имя генома ДНК (включая 'neutral') из словаря i18n */
+export function dnaName(branch: DnaBranchOrNeutral): string {
+  return t(`dna_${branch}` as I18nKey);
 }
 
-export function trScale(id: number, ruName: string, ruSub: string): { name: string; sub: string } {
+/** Имя Великого Гибрида из словаря i18n */
+export function hybridName(id: HybridId): string {
+  return t(`hybrid_${id}_name` as I18nKey);
+}
+
+/** Описание Великого Гибрида из словаря i18n */
+export function hybridDesc(id: HybridId): string {
+  return t(`hybrid_${id}_desc` as I18nKey);
+}
+
+/** Имя Шкалы бытия по числовому id (1..15) из словаря i18n */
+export function scaleName(id: number): string {
+  return SCALES.some((s) => s.id === id) ? t(`scale_${id}_name` as I18nKey) : '';
+}
+
+/** Подзаголовок Шкалы бытия по числовому id (1..15) из словаря i18n */
+export function scaleSub(id: number): string {
+  return SCALES.some((s) => s.id === id) ? t(`scale_${id}_sub` as I18nKey) : '';
+}
+
+export function trDnaName(branch: DnaBranchOrNeutral, ruFallback?: string): string {
+  if (getLocale() === 'en') return EN_DNA_NAMES[branch] ?? ruFallback ?? dnaName(branch);
+  return ruFallback ?? dnaName(branch);
+}
+
+export function trScale(id: number, ruName?: string, ruSub?: string): { name: string; sub: string } {
   if (getLocale() === 'en' && EN_SCALES[id]) return EN_SCALES[id];
-  return { name: ruName, sub: ruSub };
+  return { name: ruName ?? scaleName(id), sub: ruSub ?? scaleSub(id) };
 }
 
-export function trHybrid(id: HybridId, ruName: string, ruDesc: string): { name: string; desc: string } {
+export function trHybrid(id: HybridId, ruName?: string, ruDesc?: string): { name: string; desc: string } {
   if (getLocale() === 'en' && EN_HYBRIDS[id]) return EN_HYBRIDS[id];
-  return { name: ruName, desc: ruDesc };
+  return { name: ruName ?? hybridName(id), desc: ruDesc ?? hybridDesc(id) };
 }
 
 export function trNode(kind: NodeKind, ruName: string, ruPos: string, ruNeg: string) {

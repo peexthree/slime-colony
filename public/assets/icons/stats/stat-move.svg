@@ -1,4 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><linearGradient id="stm_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="52%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#2563eb"/></linearGradient></defs><path d="M12 44 C18 22 34 12 56 14 C48 24 44 30 52 30 C40 40 36 42 44 44 C30 52 18 52 12 44 Z" fill="url(#stm_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
-           <path d="M22 36 Q34 24 48 20" stroke="#fff" stroke-width="2.8" stroke-linecap="round" opacity="0.75"/>
-           <line x1="6" y1="22" x2="18" y2="22" stroke="#67e8f9" stroke-width="3.2" stroke-linecap="round"/>
-           <line x1="8" y1="54" x2="24" y2="54" stroke="#67e8f9" stroke-width="3.2" stroke-linecap="round"/></svg>

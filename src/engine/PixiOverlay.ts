@@ -1,7 +1,7 @@
 // PixiJS v8 слой LUMIVORE: спрайтовые пулы с аддитивным свечением, камера-слежение,
 // визуальная эволюция организма (органы геномов и гибридов), живой декор биома и границы мира
 import { Application, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
-import { EliteMutation, EnemyType, HybridId, NodeKind, SCALE_FORM, SIM_HEIGHT, SIM_WIDTH } from './types';
+import { EliteMutation, EnemyType, HybridId, NodeKind, SCALES, SIM_HEIGHT, SIM_WIDTH } from './types';
 import { loadBiopunkTextures, loadBiopunkTexturesV2, loadBiopunkTexturesV3, loadBiopunkTexturesV4, BiopunkTexturesV4, alignTailSegment, updatePredatorPupil, EnemySpriteKey, EnemySpriteV2Key, ParticleSpriteKey, NodeSpriteKey, PlayerSpriteKey, HybridSpriteKey } from './svgAssets';
 
 interface PulseRing {
@@ -896,10 +896,11 @@ export class PixiOverlay {
       }
     }
 
-    // Игрок: ядро и аура текущей шкалы бытия (компактные пропорции)
+    // Игрок: ядро и аура текущей шкалы бытия (компактные пропорции).
+    // Палитра шкалы живёт прямо в ScaleTheme (core/glow); scaleId - это id 1..15
     const px = state.player.x;
     const py = state.player.y;
-    const form = state.morph ? SCALE_FORM[state.morph.scaleId] : null;
+    const form = state.morph ? SCALES[state.morph.scaleId - 1] : null;
     const formGlow = form?.glow ?? 0x66fcf1;
 
     // Фазовый рывок: призрачные афтер-имиджи за организмом

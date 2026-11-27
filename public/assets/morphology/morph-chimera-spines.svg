@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><linearGradient id="mcs_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef3c7"/><stop offset="52%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#b45309"/></linearGradient></defs><g fill="url(#mcs_a)" stroke="#160e26" stroke-width="6.5" stroke-linejoin="round">
-             <polygon points="128,16 112,68 144,68"/>
-             <polygon points="64,34 78,84 104,66"/>
-             <polygon points="192,34 178,84 152,66"/>
-             <polygon points="22,94 68,108 78,82"/>
-             <polygon points="234,94 188,108 178,82"/>
-             <polygon points="28,168 74,154 80,178"/>
-             <polygon points="228,168 182,154 176,178"/>
-           </g></svg>

@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none"><defs><radialGradient id="p2_eye_s" cx="52%" cy="46%" r="58%"><stop offset="0%" stop-color="#ffffff"/><stop offset="58%" stop-color="#fef9c3"/><stop offset="100%" stop-color="#fde68a"/></radialGradient><linearGradient id="p2_eye_l" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fb7185"/><stop offset="52%" stop-color="#e11d48"/><stop offset="100%" stop-color="#881337"/></linearGradient></defs><!-- Outer fleshy predator eyelid -->
-           <path d="M12 64 C24 24 72 16 116 64 C72 112 24 104 12 64 Z" fill="url(#p2_eye_l)" stroke="#160e26" stroke-width="6" stroke-linejoin="round"/>
-           <!-- Bright cartoon sclera -->
-           <path d="M24 64 C34 34 72 28 106 64 C72 100 34 94 24 64 Z" fill="url(#p2_eye_s)" stroke="#160e26" stroke-width="4.5" stroke-linejoin="round"/>
-           <!-- Subtle upper eyelid shadow -->
-           <path d="M28 58 C42 36 74 34 102 60 C74 44 46 46 28 58 Z" fill="#f59e0b" opacity="0.22"/>
-           <!-- Fierce brow crest facing +X -->
-           <path d="M22 36 Q64 16 112 46" stroke="#160e26" stroke-width="6" stroke-linecap="round"/></svg>

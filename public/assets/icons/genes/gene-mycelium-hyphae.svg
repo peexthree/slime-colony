@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><radialGradient id="gmh_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#a7f3d0"/><stop offset="58%" stop-color="#10b981"/><stop offset="100%" stop-color="#064e3b"/></radialGradient></defs><path d="M32 32 L14 14 M32 32 L50 14 M32 32 L12 46 M32 32 L52 48 M32 32 V56" stroke="#34d399" stroke-width="5" stroke-linecap="round"/>
-           <path d="M32 32 L14 14 M32 32 L50 14 M32 32 L12 46 M32 32 L52 48 M32 32 V56" stroke="#160e26" stroke-width="2" stroke-linecap="round"/>
-           <circle cx="32" cy="32" r="11" fill="url(#gmh_a)" stroke="#160e26" stroke-width="3.2"/>
-           <circle cx="14" cy="14" r="5" fill="#6ee7b7" stroke="#160e26" stroke-width="2.5"/>
-           <circle cx="50" cy="14" r="5" fill="#6ee7b7" stroke="#160e26" stroke-width="2.5"/>
-           <circle cx="12" cy="46" r="5" fill="#6ee7b7" stroke="#160e26" stroke-width="2.5"/>
-           <circle cx="52" cy="48" r="5" fill="#6ee7b7" stroke="#160e26" stroke-width="2.5"/></svg>

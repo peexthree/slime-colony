@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><radialGradient id="ab_glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f9a8d4"/><stop offset="58%" stop-color="#ec4899"/><stop offset="100%" stop-color="#831843"/></radialGradient><radialGradient id="ab_cell" cx="38%" cy="35%" r="65%"><stop offset="0%" stop-color="#fbcfe8"/><stop offset="58%" stop-color="#f472b6"/><stop offset="100%" stop-color="#be185d"/></radialGradient></defs><!-- Starburst bloom aura -->
-           <path d="M128 14 L148 64 L202 42 L182 94 L240 112 L192 146 L224 196 L166 188 L158 242 L124 200 L82 238 L86 184 L28 192 L62 144 L16 108 L74 94 L56 40 L108 64 Z" fill="url(#ab_glow)" opacity="0.55" stroke="#160e26" stroke-width="6" stroke-linejoin="round"/>
-           <!-- Mitosis dividing figure-8 cell -->
-           <path d="M88 86 C110 86 120 106 128 106 C136 106 146 86 168 86 C194 86 212 106 212 128 C212 152 194 170 168 170 C146 170 136 150 128 150 C120 150 110 170 88 170 C62 170 44 152 44 128 C44 106 62 86 88 86 Z" fill="url(#ab_cell)" stroke="#160e26" stroke-width="7.5"/>
-           <!-- Two glowing nuclei -->
-           <circle cx="88" cy="128" r="19" fill="#fef08a" stroke="#160e26" stroke-width="5"/>
-           <circle cx="168" cy="128" r="19" fill="#fef08a" stroke="#160e26" stroke-width="5"/>
-           <circle cx="83" cy="122" r="5.5" fill="#fff"/>
-           <circle cx="163" cy="122" r="5.5" fill="#fff"/></svg>

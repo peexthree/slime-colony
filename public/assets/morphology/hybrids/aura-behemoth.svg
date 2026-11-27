@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none"><defs><linearGradient id="abeh_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde68a"/><stop offset="52%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></linearGradient></defs><polygon points="128,16 218,68 218,188 128,240 38,188 38,68" fill="none" stroke="url(#abeh_a)" stroke-width="14" stroke-linejoin="round" opacity="0.85"/>
-           <polygon points="128,16 218,68 218,188 128,240 38,188 38,68" fill="none" stroke="#160e26" stroke-width="4" stroke-dasharray="14 14"/>
-           <circle cx="128" cy="20" r="14" fill="#fef08a" stroke="#160e26" stroke-width="5"/>
-           <circle cx="216" cy="186" r="14" fill="#84cc16" stroke="#160e26" stroke-width="5"/>
-           <circle cx="40" cy="186" r="14" fill="#84cc16" stroke="#160e26" stroke-width="5"/></svg>

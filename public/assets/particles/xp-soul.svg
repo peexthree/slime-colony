@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><radialGradient id="p2_xp_a" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="#ecfeff"/><stop offset="58%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#0284c7"/></radialGradient></defs><circle cx="32" cy="32" r="26" fill="#22d3ee" opacity="0.24"/>
-           <circle cx="32" cy="32" r="19" fill="url(#p2_xp_a)" stroke="#160e26" stroke-width="3.8"/>
-           <!-- Tiny DNA sparkle inside -->
-           <path d="M32 21 L35 29 L43 32 L35 35 L32 43 L29 35 L21 32 L29 29 Z" fill="#fef9c3" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/>
-           <ellipse cx="25" cy="22" rx="4.5" ry="2.6" fill="#fff" opacity="0.9" transform="rotate(-30 25 22)"/></svg>

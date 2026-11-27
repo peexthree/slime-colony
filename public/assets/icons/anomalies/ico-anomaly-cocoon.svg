@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><defs><radialGradient id="iac_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fde68a"/><stop offset="58%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#92400e"/></radialGradient><radialGradient id="iac_b" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#d9f99d"/><stop offset="100%" stop-color="#65a30d"/></radialGradient></defs><path d="M32 7 C46 7 53 21 51 39 C49 51 42 57 32 57 C22 57 15 51 13 39 C11 21 18 7 32 7 Z" fill="url(#iac_a)" stroke="#160e26" stroke-width="3.4"/>
-           <path d="M15 26 Q32 34 49 25" stroke="#78350f" stroke-width="2.8" opacity="0.55"/>
-           <path d="M15 41 Q32 49 49 40" stroke="#78350f" stroke-width="2.8" opacity="0.55"/>
-           <circle cx="28" cy="31" r="6" fill="url(#iac_b)" stroke="#160e26" stroke-width="2.4"/>
-           <circle cx="37" cy="37" r="5.5" fill="url(#iac_b)" stroke="#160e26" stroke-width="2.4"/>
-           <ellipse cx="26" cy="29" rx="2" ry="1.2" fill="#fff" opacity="0.85"/>
-           <ellipse cx="32" cy="9" rx="8" ry="3.5" fill="#fef3c7" stroke="#160e26" stroke-width="2.6"/></svg>

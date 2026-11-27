@@ -1,4 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="p2_dv_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fda4af"/><stop offset="52%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></linearGradient></defs><path d="M7 24 C6 13 13 5 25 6 C21 12 20 17 24 22 C18 26 11 27 7 24 Z" fill="url(#p2_dv_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
-           <circle cx="17" cy="14" r="3.6" fill="#fef08a" stroke="#160e26" stroke-width="1.8"/>
-           <ellipse cx="17.5" cy="14" rx="1.2" ry="2.6" fill="#160e26"/>
-           <polygon points="22,19 28,17 24,23" fill="#fff" stroke="#160e26" stroke-width="1.6" stroke-linejoin="round"/></svg>
