@@ -10,6 +10,7 @@ import { toSimX, toSimY, viewHalfH, viewHalfW } from './context';
 import type { Enemy } from './entities';
 import { hashCell, nearby, sporeNearbyBuf } from './entities';
 import { effDmg, playerRadius, refreshCodexBonuses } from './state';
+import { biomeEnemyFlow, biomeEnemySpeedMul, biomeKbDecayRate } from './biomeFx';
 import { applyDamageToPlayer, enemyCauseLabel } from './combat';
 import { finishRun } from './runFlow';
 import { startMetamorphosis } from './metamorphosis';
@@ -357,6 +358,8 @@ export function stepEnemies(ctx: Ctx, dt: number): void {
       }
       if (e.enragedPhase) eSpeed *= 1.4;
     }
+    // Биом-модификатор шкалы: тени рёбер (+25% в полосе) и фрактальный прилив (+30% в волне)
+    eSpeed *= biomeEnemySpeedMul(ctx, e.x);
 
     // Цель: заражённые союзники охотятся на врагов, а рейдеры идут отвоёвывать башню
     let tx = ctx.player.x;
@@ -426,9 +429,11 @@ export function stepEnemies(ctx: Ctx, dt: number): void {
       e.vy *= Math.max(0, 1 - dt * 8);
     }
 
-    // Затухание импульса отброса по ОБЕИМ осям (X и Y)
-    e.kbx *= Math.max(0, 1 - dt * 6);
-    e.kby *= Math.max(0, 1 - dt * 6);
+    // Затухание импульса отброса по ОБЕИМ осям (X и Y);
+    // скользкая инерция шкалы 12 гасит отброс в 1.6 раза медленнее
+    const kbDecayRate = biomeKbDecayRate(ctx, 6);
+    e.kbx *= Math.max(0, 1 - dt * kbDecayRate);
+    e.kby *= Math.max(0, 1 - dt * kbDecayRate);
 
     // Мягкое поле отталкивания био-мембраны по периметру чашки Петри (36px зона)
     const bMargin = 36;
@@ -447,8 +452,10 @@ export function stepEnemies(ctx: Ctx, dt: number): void {
       e.vy -= p * 340 * dt;
     }
 
-    e.x += (e.vx + e.kbx) * dt;
-    e.y += (e.vy + e.kby) * dt;
+    // Течение шкалы 3: пульсирующая конвекция сносит рой
+    const flow = biomeEnemyFlow(ctx, eSpeed);
+    e.x += (e.vx + e.kbx + flow.x) * dt;
+    e.y += (e.vy + e.kby + flow.y) * dt;
 
     // Физика упругого отскока от мембраны чашки Петри при сильном ударе/отбросе
     const pad = Math.max(8, e.radius);

@@ -407,3 +407,150 @@ export function worldSize(scaleIdx: number): { w: number; h: number } {
 
 /** Лимит фиолетовых маяков за элитными врагами */
 export const ELITE_BEACONS = 8;
+
+// ============================ БИОМ-МОДИФИКАТОРЫ ============================
+
+/**
+ * Интерактивные биом-модификаторы каждой 3-й шкалы: смена масштаба ощущается
+ * как смена правил, а не просто зумаут. Только силы и поля - без новых сущностей
+ * и коллизий. Все тайминги и множители собраны здесь, в BIOME_FX.
+ */
+export type BiomeFxKind = 'flow' | 'ribs' | 'wind' | 'slick' | 'tide';
+
+/** Шкала 3 КРОВЕНОСНЫЙ ТРАКТ: ТЕЧЕНИЕ - пульсирующая конвекция, сносит тело */
+export interface BiomeFlowFx {
+  kind: 'flow';
+  /** Частота пульса-сердцебиения конвекции, Гц */
+  pulseHz: number;
+  /** Период полного оборота направления (360 град), сек */
+  rotPeriod: number;
+  /** Сила на игрока как доля от его текущей скорости */
+  playerFrac: number;
+  /** Сила на врагов как доля от их текущей скорости */
+  enemyFrac: number;
+}
+
+/** Шкала 6 КОСТНЫЙ ЛАБИРИНТ: ТЕНИ РЁБЕР - дрейфующие вертикальные полосы */
+export interface BiomeRibsFx {
+  kind: 'ribs';
+  /** Число полос */
+  count: number;
+  /** Ширина полосы как доля ширины мира */
+  widthFrac: number;
+  /** Период дрейфа центров полос, сек */
+  driftPeriod: number;
+  /** Амплитуда дрейфа как доля ширины мира */
+  driftAmpFrac: number;
+  /** Множитель скорости врагов внутри полосы */
+  enemyMul: number;
+  /** Множитель скорости игрока внутри полосы */
+  playerMul: number;
+}
+
+/** Шкала 9 ГРИБНЫЕ ТАЙГИ: СПОРОВЫЙ ВЕТЕР - порывы сносят души и тело */
+export interface BiomeWindFx {
+  kind: 'wind';
+  /** Период следования порывов, сек */
+  gustPeriod: number;
+  /** Длительность порыва, сек */
+  gustDur: number;
+  /** Телеграф до порыва, сек */
+  telegraph: number;
+  /** Период оборота направления ветра (резче течения), сек */
+  rotPeriod: number;
+  /** Толчок игрока как доля от его скорости */
+  playerFrac: number;
+  /** Ускорение душ XP в порыве, px/s^2 */
+  orbAccel: number;
+}
+
+/** Шкала 12 ПОЛЯРНЫЙ ЩИТ: СКОЛЬЗКАЯ ИНЕРЦИЯ - разгон/торможение, вязкий отброс */
+export interface BiomeSlickFx {
+  kind: 'slick';
+  /** Темп сближения скорости с целевой (меньше - скользче), 1/с */
+  accel: number;
+  /** Множитель темпа разгона во время рывка */
+  dashAccelMul: number;
+  /** Во сколько раз медленнее гаснет отброс врагов */
+  kbDecayMul: number;
+}
+
+/** Шкала 15 ФРАКТАЛ БЕСКОНЕЧНОСТИ: ФРАКТАЛЬНЫЕ ПРИЛИВЫ - волна ускоряет всё */
+export interface BiomeTideFx {
+  kind: 'tide';
+  /** Период волн, сек */
+  period: number;
+  /** Длительность волны, сек */
+  dur: number;
+  /** Телеграф до волны, сек */
+  telegraph: number;
+  /** Множитель скорости всего живого в волне */
+  speedMul: number;
+}
+
+export type BiomeFxConfig = BiomeFlowFx | BiomeRibsFx | BiomeWindFx | BiomeSlickFx | BiomeTideFx;
+
+/**
+ * Таблица модификаторов по индексу шкалы 0..14 (вне таблицы модификатора нет):
+ * 2 - КРОВЕНОСНЫЙ ТРАКТ (ТЕЧЕНИЕ), 5 - КОСТНЫЙ ЛАБИРИНТ (ТЕНИ РЁБЕР),
+ * 8 - ГРИБНЫЕ ТАЙГИ (СПОРОВЫЙ ВЕТЕР), 11 - ПОЛЯРНЫЙ ЩИТ (СКОЛЬЗКАЯ ИНЕРЦИЯ),
+ * 14 - ФРАКТАЛ БЕСКОНЕЧНОСТИ (ФРАКТАЛЬНЫЕ ПРИЛИВЫ).
+ */
+export const BIOME_FX: Record<number, BiomeFxConfig> = {
+  2: { kind: 'flow', pulseHz: 1.2, rotPeriod: 90, playerFrac: 0.22, enemyFrac: 0.3 },
+  5: { kind: 'ribs', count: 5, widthFrac: 0.085, driftPeriod: 26, driftAmpFrac: 0.055, enemyMul: 1.25, playerMul: 0.92 },
+  8: { kind: 'wind', gustPeriod: 9, gustDur: 2.2, telegraph: 0.8, rotPeriod: 34, playerFrac: 0.3, orbAccel: 420 },
+  11: { kind: 'slick', accel: 3.6, dashAccelMul: 2.2, kbDecayMul: 1.6 },
+  14: { kind: 'tide', period: 8, dur: 1.5, telegraph: 1.0, speedMul: 1.3 },
+};
+
+/** Конфиг модификатора по id шкалы 1..15 (для рендера) или null */
+export function biomeFxCfgForScaleId(scaleId: number): BiomeFxConfig | null {
+  return BIOME_FX[scaleId - 1] ?? null;
+}
+
+/** Пульс течения: гладкий конверт 0..1 с частотой hz (сердцебиение) */
+export function flowPulseAt(t: number, hz: number): number {
+  return Math.pow(0.5 + 0.5 * Math.sin(2 * Math.PI * hz * t), 1.5);
+}
+
+/** Направление медленно вращающегося поля в момент t, радианы */
+export function rotAngleAt(t: number, period: number): number {
+  return (t / period) * Math.PI * 2;
+}
+
+/** Конверт порыва/волны 0..1 в цикле period: активен первые dur сек цикла */
+export function gustEnvelopeAt(t: number, period: number, dur: number): number {
+  const phase = ((t % period) + period) % period;
+  if (phase >= dur) return 0;
+  return Math.sin((phase / dur) * Math.PI);
+}
+
+/** Телеграф: последние telegraph сек цикла (прямо перед следующим порывом) */
+export function telegraphActiveAt(t: number, period: number, telegraph: number): boolean {
+  const phase = ((t % period) + period) % period;
+  return phase >= period - telegraph;
+}
+
+/**
+ * Полосы "теней рёбер" шкалы 6: x-диапазоны вертикальных зон в момент t.
+ * t - общий таймер симуляции и рендера (nowSec из главного цикла), поэтому
+ * отрисовка совпадает с проверками геймплея с точностью до кадра.
+ */
+export function ribBandsAt(t: number, worldW: number, cfg: BiomeRibsFx): { x0: number; x1: number }[] {
+  const bands: { x0: number; x1: number }[] = [];
+  const width = worldW * cfg.widthFrac;
+  const amp = worldW * cfg.driftAmpFrac;
+  for (let i = 0; i < cfg.count; i++) {
+    const center = worldW * ((i + 0.5) / cfg.count)
+      + amp * Math.sin((t / cfg.driftPeriod) * Math.PI * 2 + i * 1.7);
+    bands.push({ x0: center - width / 2, x1: center + width / 2 });
+  }
+  return bands;
+}
+
+/** Точка внутри одной из полос? */
+export function ribBandHit(bands: { x0: number; x1: number }[], x: number): boolean {
+  for (const b of bands) if (x >= b.x0 && x <= b.x1) return true;
+  return false;
+}

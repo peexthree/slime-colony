@@ -10,6 +10,8 @@ import {
 import { FOREIGN_BRANCH_PENALTY, equippedWeaponCount } from '../game/progression';
 import { effAtkSpd, dnaLvl, maxTail, RESONANCE_WINDOW } from '../game/state';
 import { NODE_NAMES, NODE_POS_EFFECTS, NODE_NEG_EFFECTS } from '../game/nodes';
+import { biomeFxChipInfo, biomeTideVignette, FX_ICO, FX_LABEL_KEY } from '../game/biomeFx';
+import type { BiomeFxKind } from '../engine/types';
 import type { RunState } from '../game/state';
 import type { Ctx } from '../game/context';
 
@@ -268,12 +270,15 @@ export function updateHud(ctx: Ctx): void {
   ctx.svc.sfx.setTailDrone(ctx.tailState === 'crit');
 
   // Органическая низкоуровневая виньетка при критическом здоровье (без стробоскопа)
+  // + мигание виньетки-телеграфа фрактальных приливов шкалы 15 (общий механизм hurt)
   const hpRatio = ctx.player.hp / ctx.maxHp;
-  if (hpRatio < 0.35 && ctx.settings.screenFlashes !== 'off') {
-    dom.hurtEl.classList.add('low-hp');
-  } else {
-    dom.hurtEl.classList.remove('low-hp');
-  }
+  const fxFlashes = ctx.settings.screenFlashes !== 'off';
+  const lowHp = hpRatio < 0.35 && fxFlashes;
+  const tideBlink = biomeTideVignette(ctx) && fxFlashes;
+  dom.hurtEl.classList.toggle('low-hp', lowHp || tideBlink);
+
+  // Чип активного биом-модификатора (рядом со статус-чипами)
+  updateBiomeFxChip(ctx);
 }
 
 /** Босс-бар активного Стража Цикла или Титана Масштаба */
@@ -317,5 +322,49 @@ function updateStatusChips(ctx: Ctx): void {
     if (stagnating) pills.push(`<span class="status-pill" style="color:#ff8599">${pillIco('ico-skull-hazard')}${t('status_stagnation')}</span>`);
     statusChipsEl.innerHTML = pills.join('');
   }
+}
+
+// ---------- Биом-модификатор: чип активности ----------
+
+/** Цвет чипа по виду модификатора (инлайн - без правок CSS) */
+const FX_CHIP_COLOR: Record<BiomeFxKind, string> = {
+  flow: 'var(--cyan)',
+  ribs: '#e2e8f0',
+  wind: 'var(--lime)',
+  slick: '#7dd3fc',
+  tide: '#c084fc',
+};
+
+/** Лениво созданный чип модификатора: живёт рядом со статус-чипами (dom.ts не трогаем) */
+let fxChipEl: HTMLElement | null = null;
+let fxChipKey = '';
+
+/** Чип активного биом-модификатора: имя правила + подсветка фазы активности/телеграфа */
+function updateBiomeFxChip(ctx: Ctx): void {
+  const info = biomeFxChipInfo(ctx);
+  const anchor = ctx.dom.statusChipsEl;
+  if (!info) {
+    if (fxChipEl) {
+      fxChipEl.textContent = '';
+      fxChipEl.style.opacity = '0';
+      fxChipKey = '';
+    }
+    return;
+  }
+  if (!fxChipEl) {
+    fxChipEl = document.createElement('span');
+    fxChipEl.className = 'status-pill';
+    fxChipEl.id = 'biome-fx-chip';
+    fxChipEl.setAttribute('aria-live', 'off');
+    anchor?.parentElement?.appendChild(fxChipEl);
+  }
+  // Текст меняем только при смене состояния: чип обновляется каждый шаг симуляции
+  const key = `${info.kind}:${info.active ? 1 : 0}:${info.warn ? 1 : 0}:${getLocale()}`;
+  if (key !== fxChipKey) {
+    fxChipKey = key;
+    fxChipEl.innerHTML = `<svg viewBox="0 0 32 32" aria-hidden="true"><use href="#${FX_ICO[info.kind]}"/></svg>${info.warn ? '! ' : ''}${t(FX_LABEL_KEY[info.kind])}`;
+  }
+  fxChipEl.style.color = info.warn ? 'var(--amber)' : info.active ? FX_CHIP_COLOR[info.kind] : 'rgba(154, 230, 110, 0.5)';
+  fxChipEl.style.opacity = info.active || info.warn ? '1' : '0.55';
 }
 

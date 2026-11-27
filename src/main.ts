@@ -9,8 +9,8 @@ import { Sfx } from './engine/audio';
 import { GamepadController } from './engine/gamepad';
 import { createJoystick } from './engine/joystick';
 import { t } from './i18n';
-import { SCALES } from './engine/types';
-import type { DnaBranch } from './engine/types';
+import { HYBRIDS, SCALES, worldSize } from './engine/types';
+import type { DnaBranch, HybridId } from './engine/types';
 import { initDom } from './ui/dom';
 import { loadSettings } from './game/save';
 import type { Services } from './game/context';
@@ -21,7 +21,7 @@ import { spawnNodesForScale } from './game/nodes';
 import { applyBiolabStart } from './game/runFlow';
 import { startMetamorphosis } from './game/metamorphosis';
 import { stepFrame } from './game/simulation';
-import { refreshMainGenome } from './ui/upgrades';
+import { applyHybrid, refreshMainGenome } from './ui/upgrades';
 import { applyQualitySettings, showModal } from './ui/modals';
 import { wireEvents } from './ui/events';
 import { applyI18n } from './ui/i18n';
@@ -109,6 +109,26 @@ async function bootstrap(): Promise<void> {
       killTitan: () => { const titan = ctx.enemies.find((e) => e.titan); if (titan) titan.hp = 0; },
       metamorph: () => startMetamorphosis(ctx),
       die: () => { ctx.player.hp = 0; },
+      // Прямой прыжок на шкалу бытия 0..14 (мимо пробуждения Титана):
+      // расширяет мир, пересоздаёт узлы, биом и HUD без bullet-time кино
+      setScale: (idx: number) => {
+        const target = Math.max(0, Math.min(SCALES.length - 1, Math.floor(idx)));
+        ctx.scaleIdx = target;
+        ctx.scaleMaxReached = Math.max(ctx.scaleMaxReached, SCALES[target].id);
+        ctx.biomass = 0;
+        ctx.titanPending = false;
+        ctx.curWorldW = worldSize(target).w;
+        ctx.curWorldH = worldSize(target).h;
+        spawnNodesForScale(ctx, target);
+        updateStageBiome(ctx, SCALES[target].id);
+        updateScaleHud(ctx);
+      },
+      // Выдача любого Великого Гибрида в обход окна апгрейдов
+      hybrid: (id: HybridId) => {
+        if (!HYBRIDS.some((h) => h.id === id)) return;
+        applyHybrid(ctx, id);
+        updateBranchChip(ctx);
+      },
       info: () => ({
         scale: SCALES[ctx.scaleIdx].id, biomass: ctx.biomass, goal: SCALES[ctx.scaleIdx].biomassGoal,
         camZoom: ctx.camZoom, dna: { ...ctx.dnaXp }, dnaLvl: {
@@ -119,6 +139,8 @@ async function bootstrap(): Promise<void> {
       }),
     };
     (window as unknown as Record<string, unknown>).__lumivore = debugApi;
+    // DEV-панель (F9 / `): динамический import, чтобы модуль не попадал в prod-бандл
+    void import('./ui/debugPanel').then((m) => m.mountDebugPanel(ctx));
   }
 
   // ---------- Fixed timestep: аккумулятор 1/60 с, максимум 5 подшагов за кадр ----------

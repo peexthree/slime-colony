@@ -14,6 +14,7 @@ import { buildHash } from './entities';
 import type { Enemy } from './entities';
 import { runRng, maybeCompleteDaily } from './daily';
 import { stepPlayer } from './player';
+import { updateBiomeFx } from './biomeFx';
 import { stepSpawns, stepNodeRaids, stepEnemies } from './enemies';
 import { stepAnomalies, stepTailWhip, stepRelics, DYING_DURATION } from './combat';
 import { stepWeapons, orbRadiusMul } from './weapons';
@@ -86,6 +87,8 @@ export function stepSimulation(ctx: Ctx, fixedDt: number, nowSec: number, arcs: 
   maybeTitanSated(ctx, dt);
   maybeWatcher(ctx, dt);
 
+  // Биом-модификатор шкалы: шаг таймеров сил (течение/полосы/ветер/инерция/прилив)
+  updateBiomeFx(ctx, dt, nowSec);
   // Игрок: ввод, движение, рывок, хвост, голод, кольцо, нестабильность
   stepPlayer(ctx, dt);
   // Биомасса шкалы созрела - пробуждается Титан масштаба

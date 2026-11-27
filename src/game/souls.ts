@@ -8,6 +8,7 @@ import type { Ctx } from './context';
 import type { XpOrb } from './entities';
 import { nearby } from './entities';
 import { dnaLvl, getResonanceMult, maxTail, RESONANCE_WINDOW } from './state';
+import { biomeOrbWindAccel } from './biomeFx';
 import { hybridAvail } from '../ui/upgrades';
 import { updateDnaHud, updateResonanceHud, updateScaleHud } from '../ui/hud';
 import { showToast } from '../ui/toast';
@@ -30,6 +31,8 @@ export function eliteMagnetPull(ctx: Ctx, o: XpOrb, dt: number): boolean {
 /** Сферы ДНК: магнит притягивает вблизи; вне радиуса сбора нужно подбираться самому */
 export function stepSouls(ctx: Ctx, dt: number): void {
   const effMagnet = ctx.magnetR * (ctx.magnetNodeOwned ? 1.6 : 1) * ctx.codexBonuses.magnetMul;
+  // Споровый ветер шкалы 9: порывы сносят души XP по ветру (0 вне порыва)
+  const windAcc = biomeOrbWindAccel(ctx);
   // Консолидация душ: если душ на поле больше 70, объединяем дальние, устраняя мусор
   if (ctx.orbs.length > 70) {
     let bestDist = 1e9;
@@ -90,6 +93,8 @@ export function stepSouls(ctx: Ctx, dt: number): void {
       o.vx *= Math.max(0, 1 - dt * 4);
       o.vy *= Math.max(0, 1 - dt * 4);
     }
+    o.vx += windAcc.x * dt;
+    o.vy += windAcc.y * dt;
     o.x += o.vx * dt;
     o.y += o.vy * dt;
     o.x = Math.max(10, Math.min(ctx.curWorldW - 10, o.x));

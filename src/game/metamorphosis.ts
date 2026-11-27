@@ -7,6 +7,7 @@ import { toSimX, toSimY } from './context';
 import { spawnNodesForScale } from './nodes';
 import { finishRun } from './runFlow';
 import { spawnEnemy } from './enemies';
+import { syncBiomeFxScale } from './biomeFx';
 import { updateScaleHud, updateStageBiome } from '../ui/hud';
 import { showToast } from '../ui/toast';
 
@@ -46,6 +47,8 @@ export function startMetamorphosis(ctx: Ctx): void {
   ctx.curWorldW = worldSize(ctx.scaleIdx).w;
   ctx.curWorldH = worldSize(ctx.scaleIdx).h;
   spawnNodesForScale(ctx, ctx.scaleIdx);
+  // Биом-модификатор новой шкалы: сброс таймеров сил и анонс правила биома
+  syncBiomeFxScale(ctx);
 
   // Эволюционный скачок хвоста
   ctx.tailLen = Math.max(TAIL.minLen, ctx.tailLen * WORLD.tailKeep);

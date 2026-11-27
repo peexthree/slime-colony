@@ -5,6 +5,7 @@ import { getLocale } from '../i18n';
 import type { Ctx } from './context';
 import { toSimX, toSimY } from './context';
 import { maxTail, moveCost, visibleTail } from './state';
+import { biomePlayerSpeedMul, biomePlayerVelocity } from './biomeFx';
 import { detectRingClosure, tailwarnFlash } from './combat';
 import { beginDeathSequence } from './runFlow';
 import { updateResonanceHud } from '../ui/hud';
@@ -83,11 +84,15 @@ export function stepPlayer(ctx: Ctx, dt: number): { mx: number; my: number } {
     * ctx.codexBonuses.moveSpeedMul
     * dashMul
     * (ctx.trailOwn ? STRAIN.ownSpeedMul : 1)
-    * (ctx.unstableT > 0 && ctx.unstableKind === 0 ? 0.55 : 1);
+    * (ctx.unstableT > 0 && ctx.unstableKind === 0 ? 0.55 : 1)
+    // Биом-модификатор шкалы: тени рёбер (-8% в полосе) и фрактальный прилив (+30% в волне)
+    * biomePlayerSpeedMul(ctx, ctx.player.x);
   const prevPx = ctx.player.x;
   const prevPy = ctx.player.y;
-  ctx.player.x = Math.max(16, Math.min(ctx.curWorldW - 16, ctx.player.x + (mx / mLen) * spdNow * dt));
-  ctx.player.y = Math.max(16, Math.min(ctx.curWorldH - 16, ctx.player.y + (my / mLen) * spdNow * dt));
+  // Итоговая скорость шага: скользкая инерция (шкала 12) + дрейфы течения/ветра
+  const drift = biomePlayerVelocity(ctx, dt, spdNow, mx / mLen, my / mLen);
+  ctx.player.x = Math.max(16, Math.min(ctx.curWorldW - 16, ctx.player.x + drift.vx * dt));
+  ctx.player.y = Math.max(16, Math.min(ctx.curWorldH - 16, ctx.player.y + drift.vy * dt));
   const movedDist = Math.hypot(ctx.player.x - prevPx, ctx.player.y - prevPy);
   ctx.cystMoveDist += movedDist;
   if (movedDist > 0.35) ctx.idleTime = 0;

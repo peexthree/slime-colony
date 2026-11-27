@@ -9,6 +9,7 @@ import type { Ctx } from '../game/context';
 import { toSimX, toSimY } from '../game/context';
 import { dnaLvl, mainBranchForWeapons, refreshCodexBonuses, refreshResonance } from '../game/state';
 import { updateBranchChip, syncStagePhase } from './hud';
+import { renderHybridHunt } from './hybridHunt';
 import { showToast } from './toast';
 
 /** Определение карточки улучшения: доступность и эффект замыкаются на ctx */
@@ -324,6 +325,9 @@ export function openUpgrades(ctx: Ctx): void {
   syncStagePhase(ctx);
   ctx.svc.sfx.setTailDrone(false);
   syncRerollBtn(ctx);
+  // Виджет охоты за гибридами: обновляется при каждом открытии окна
+  // (включая переоткрытие после выбора карты и реролл - оба идут через openUpgrades)
+  renderHybridHunt(ctx);
   upgradeModal.classList.add('show');
   (cardsEl.firstElementChild as HTMLElement | null)?.focus();
 }

@@ -2,7 +2,7 @@
 // синаптическая нейросеть колонии, споровые цисты, аура токсина и аномалии чашки Петри.
 import { Container, Graphics, Text, Texture } from 'pixi.js';
 import { NodeView, RenderState, RenderTextures, ScreenProvider, CamView, MorphView } from './views';
-import { NodeKind } from '../engine/types';
+import { NodeKind, biomeFxCfgForScaleId, ribBandsAt } from '../engine/types';
 import { SpritePoolRegistry } from './SpritePool';
 
 /** Короткие обозначения био-узлов (fallback при отсутствии SVG-текстур) */
@@ -226,6 +226,20 @@ export class WorldLayer {
   updateBiome(state: RenderState, time: number, s: number): void {
     if (state.morph && state.cam) {
       this.drawBiome(state.morph, time, s, state.cam, state.player.x, state.player.y);
+    }
+    // --- Точечная правка: биом-модификатор шкалы 6 "ТЕНИ РЁБЕР" ---
+    // Полупрозрачные дрейфующие полосы-телеграфы: та же чистая функция ribBandsAt
+    // и тот же таймер nowSec, что и у проверок геймплея в src/game/biomeFx.ts.
+    if (state.morph && state.cam && state.morph.scaleId === 6) {
+      const cfg = biomeFxCfgForScaleId(6);
+      if (cfg && cfg.kind === 'ribs') {
+        const bands = ribBandsAt(time, state.cam.worldW, cfg);
+        for (const b of bands) {
+          this.fxUnder.rect(b.x0, 0, b.x1 - b.x0, state.cam.worldH)
+            .fill({ color: 0xe2e8f0, alpha: 0.05 })
+            .stroke({ width: 1.4, color: 0xe2e8f0, alpha: 0.13 });
+        }
+      }
     }
   }
 

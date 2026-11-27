@@ -82,6 +82,13 @@ export function wireEvents(ctx: Ctx): void {
       void toggleFullscreenAction(ctx);
       return;
     }
+    // F9 / ` (backquote): показать/скрыть отладочную панель (только DEV-сборка).
+    // Панель монтируется в main.ts при import.meta.env.DEV и регистрирует
+    // window.__lumivoreDebugToggle; в prod-сборке хука нет и клавиши игнорируются.
+    // 'ё' - та же физическая backquote на русской раскладке.
+    if (e.key === 'F9' || e.key === '`' || e.key === 'ё') {
+      (window as unknown as { __lumivoreDebugToggle?: () => void }).__lumivoreDebugToggle?.();
+    }
     // Пробел не должен скроллить страницу во время игры
     if (e.key === ' ' && ctx.started && !ctx.gameOver) e.preventDefault();
   });

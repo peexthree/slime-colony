@@ -20,6 +20,7 @@ import { toSimX, toSimY } from './context';
 import { refreshResonance, visibleTail, playerRadius } from './state';
 import { spawnNodesForScale, recomputeNodeBonuses } from './nodes';
 import { spawnEnemy } from './enemies';
+import { syncBiomeFxScale } from './biomeFx';
 import { fmtTime, updateBranchChip, updateDnaHud, updateScaleHud, updateStageBiome, updateWeaponHud, updateResonanceHud, syncStagePhase } from '../ui/hud';
 import { grantAchievements, showModal, updateDailyHudPill } from '../ui/modals';
 import { openUpgrades, refreshMainGenome } from '../ui/upgrades';
@@ -99,6 +100,8 @@ export function resetRun(ctx: Ctx): void {
   if (dom.deathCauseEl) dom.deathCauseEl.hidden = true;
   updateDailyHudPill(ctx);
   ctx.scaleIdx = 0;
+  // Биом-модификаторы выключаются при рестарте (шкала 1 без модификатора)
+  syncBiomeFxScale(ctx);
   ctx.curWorldW = worldSize(0).w;
   ctx.curWorldH = worldSize(0).h;
   spawnNodesForScale(ctx, 0);
