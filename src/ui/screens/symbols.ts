@@ -1,0 +1,473 @@
+// SVG-спрайт символов (ico-*/frame-*): все иконки HUD и модалок.
+// Перенесено из index.html в TS-шаблон: вставляется в DOM синхронно через
+// injectScreens() (src/ui/screens/index.ts) ДО initDom(), поэтому все
+// getElementById из ui/dom.ts продолжают находить свои элементы.
+// Структура DOM, id- и data-i18n-атрибуты сохранены 1:1 с исходным index.html.
+
+export function svgSymbols(): string {
+  return `
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden;pointer-events:none" aria-hidden="true">
+  <!-- EVOTOON PACK 2 (41 ICON SYMBOLS + 6 HUD/UI SYMBOLS) -->
+  <symbol id="ico-vermis" viewBox="0 0 32 32"><defs><linearGradient id="p2_dv_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fda4af"/><stop offset="52%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></linearGradient></defs><path d="M7 24 C6 13 13 5 25 6 C21 12 20 17 24 22 C18 26 11 27 7 24 Z" fill="url(#p2_dv_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="17" cy="14" r="3.6" fill="#fef08a" stroke="#160e26" stroke-width="1.8"/>
+           <ellipse cx="17.5" cy="14" rx="1.2" ry="2.6" fill="#160e26"/>
+           <polygon points="22,19 28,17 24,23" fill="#fff" stroke="#160e26" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-chimera" viewBox="0 0 32 32"><defs><linearGradient id="p2_dc_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></linearGradient></defs><polygon points="16,3 27,10 25,24 16,29 7,24 5,10" fill="url(#p2_dc_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <polygon points="16,8 21,15 16,24 11,15" fill="#fff7ed" opacity="0.65" stroke="#160e26" stroke-width="1.8" stroke-linejoin="round"/>
+           <path d="M7 10 L3 5 M25 10 L29 5" stroke="#160e26" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="ico-mycelium" viewBox="0 0 32 32"><defs><radialGradient id="p2_dm_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#d9f99d"/><stop offset="58%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><rect x="12" y="18" width="8" height="10" rx="3" fill="#fef3c7" stroke="#160e26" stroke-width="2.2"/>
+           <path d="M4 19 C4 9 10 5 16 5 C22 5 28 9 28 19 Z" fill="url(#p2_dm_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="12" cy="12" r="2.4" fill="#fef08a" stroke="#160e26" stroke-width="1.4"/>
+           <circle cx="20" cy="13" r="2.6" fill="#fef08a" stroke="#160e26" stroke-width="1.4"/></symbol>
+  <symbol id="ico-symbiont" viewBox="0 0 32 32"><defs><linearGradient id="p2_ds_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="52%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs><polygon points="16,3 26,14 20,28 12,28 6,14" fill="url(#p2_ds_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <polygon points="16,3 20,14 16,28 12,14" fill="#fff" opacity="0.5" stroke="#160e26" stroke-width="1.6"/>
+           <circle cx="16" cy="14" r="2.2" fill="#fef08a"/></symbol>
+  <symbol id="ico-hybrid-plasma-leviathan" viewBox="0 0 48 48"><defs><linearGradient id="p2_h1_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient><linearGradient id="p2_h1_b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#6366f1"/></linearGradient></defs><circle cx="24" cy="24" r="20" fill="url(#p2_h1_b)" stroke="#160e26" stroke-width="3"/>
+           <path d="M10 26 C12 12 24 8 38 14 C32 20 34 28 38 34 C26 40 12 36 10 26 Z" fill="url(#p2_h1_a)" stroke="#160e26" stroke-width="2.8" stroke-linejoin="round"/>
+           <circle cx="22" cy="20" r="3.5" fill="#fef08a" stroke="#160e26" stroke-width="2"/>
+           <polygon points="31,20 39,24 31,28" fill="#fff" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-hybrid-ouroboros" viewBox="0 0 48 48"><defs><linearGradient id="p2_h2_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="52%" stop-color="#10b981"/><stop offset="100%" stop-color="#0ea5e9"/></linearGradient></defs><circle cx="24" cy="24" r="16" stroke="url(#p2_h2_a)" stroke-width="8"/>
+           <circle cx="24" cy="24" r="20" stroke="#160e26" stroke-width="2.6"/>
+           <circle cx="24" cy="24" r="12" stroke="#160e26" stroke-width="2.6"/>
+           <!-- Serpent head -->
+           <path d="M20 4 L34 9 L22 15 Z" fill="#fef08a" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="25" cy="8.5" r="1.6" fill="#160e26"/></symbol>
+  <symbol id="ico-hybrid-phase-serpent" viewBox="0 0 48 48"><defs><linearGradient id="p2_h3_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="52%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs><path d="M9 36 C12 22 24 28 24 18 C24 12 30 8 40 10 L34 20 C29 19 30 30 22 36 C16 40 12 40 9 36 Z" fill="url(#p2_h3_a)" stroke="#160e26" stroke-width="2.8" stroke-linejoin="round"/>
+           <circle cx="32" cy="13" r="2.2" fill="#fef08a" stroke="#160e26" stroke-width="1.4"/>
+           <path d="M8 14 H18 M30 38 H40" stroke="#67e8f9" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="ico-hybrid-spore-reactor" viewBox="0 0 48 48"><defs><radialGradient id="p2_h4_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#84cc16"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><circle cx="24" cy="24" r="19" fill="#14532d" stroke="#160e26" stroke-width="3"/>
+           <circle cx="24" cy="13" r="6.5" fill="url(#p2_h4_a)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="14" cy="30" r="6.5" fill="url(#p2_h4_a)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="34" cy="30" r="6.5" fill="url(#p2_h4_a)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="24" cy="24" r="5" fill="#fef9c3" stroke="#160e26" stroke-width="2.4"/></symbol>
+  <symbol id="ico-hybrid-ion-colossus" viewBox="0 0 48 48"><defs><linearGradient id="p2_h5_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde68a"/><stop offset="52%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#92400e"/></linearGradient><radialGradient id="p2_h5_c" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#ffffff"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#2563eb"/></radialGradient></defs><polygon points="24,4 42,14 40,34 24,44 8,34 6,14" fill="url(#p2_h5_a)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <circle cx="24" cy="24" r="10" fill="url(#p2_h5_c)" stroke="#160e26" stroke-width="2.6"/>
+           <polygon points="25,16 19,25 24,25 23,32 29,23 24,23" fill="#fef08a"/></symbol>
+  <symbol id="ico-hybrid-psi-web" viewBox="0 0 48 48"><defs><radialGradient id="p2_h6_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#f5d0fe"/><stop offset="58%" stop-color="#a855f7"/><stop offset="100%" stop-color="#4c1d95"/></radialGradient></defs><polygon points="24,6 40,15 40,33 24,42 8,33 8,15" fill="#2e1065" stroke="#c084fc" stroke-width="2.8" stroke-linejoin="round"/>
+           <path d="M24 6 V42 M8 15 L40 33 M40 15 L8 33" stroke="#e879f9" stroke-width="2.2"/>
+           <circle cx="24" cy="24" r="8" fill="url(#p2_h6_a)" stroke="#160e26" stroke-width="2.6"/>
+           <circle cx="24" cy="24" r="3" fill="#fef08a"/></symbol>
+  <symbol id="ico-weapon-spikes" viewBox="0 0 32 32"><defs><linearGradient id="p2_ws_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#fb923c"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><polygon points="6,11 28,6 14,17" fill="url(#p2_ws_a)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/>
+           <polygon points="4,21 29,16 14,26" fill="url(#p2_ws_a)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/>
+           <polygon points="10,27 26,25 16,30" fill="#fde047" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-weapon-orbs" viewBox="0 0 32 32"><defs><radialGradient id="p2_wo_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#2563eb"/></radialGradient></defs><circle cx="16" cy="16" r="10.5" stroke="#67e8f9" stroke-width="2.2" stroke-dasharray="4 3"/>
+           <circle cx="16" cy="5.5" r="4" fill="url(#p2_wo_a)" stroke="#160e26" stroke-width="2"/>
+           <circle cx="7" cy="21" r="4" fill="url(#p2_wo_a)" stroke="#160e26" stroke-width="2"/>
+           <circle cx="25" cy="21" r="4" fill="url(#p2_wo_a)" stroke="#160e26" stroke-width="2"/>
+           <circle cx="16" cy="16" r="3" fill="#fef08a" stroke="#160e26" stroke-width="1.8"/></symbol>
+  <symbol id="ico-weapon-nova" viewBox="0 0 32 32"><defs><radialGradient id="p2_wn_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#f472b6"/><stop offset="100%" stop-color="#9333ea"/></radialGradient></defs><path d="M16 2 L19 10 L28 7 L23 15 L30 20 L21 22 L22 30 L16 24 L10 30 L11 22 L2 20 L9 15 L4 7 L13 10 Z" fill="url(#p2_wn_a)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/>
+           <circle cx="16" cy="16" r="4.5" fill="#fff" stroke="#160e26" stroke-width="1.8"/></symbol>
+  <symbol id="ico-weapon-aura" viewBox="0 0 32 32"><defs><radialGradient id="p2_wa_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#d9f99d"/><stop offset="58%" stop-color="#4ade80"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_wa_a)" opacity="0.35" stroke="#84cc16" stroke-width="2.6" stroke-dasharray="4 3"/>
+           <circle cx="16" cy="16" r="7" fill="url(#p2_wa_a)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="14" cy="14" r="1.8" fill="#fef08a"/></symbol>
+  <symbol id="ico-skill-call" viewBox="0 0 32 32"><defs><radialGradient id="p2_sc_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#2563eb"/></radialGradient></defs><path d="M5 16 A11 11 0 0 1 16 5" stroke="#67e8f9" stroke-width="2.6" stroke-linecap="round"/>
+           <path d="M27 16 A11 11 0 0 1 16 27" stroke="#67e8f9" stroke-width="2.6" stroke-linecap="round"/>
+           <path d="M16 5 A11 11 0 0 1 27 16" stroke="#fef08a" stroke-width="2.6" stroke-linecap="round"/>
+           <path d="M16 27 A11 11 0 0 1 5 16" stroke="#fef08a" stroke-width="2.6" stroke-linecap="round"/>
+           <circle cx="16" cy="16" r="6" fill="url(#p2_sc_a)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="16" cy="16" r="2.2" fill="#fff"/></symbol>
+  <symbol id="ico-node-gen" viewBox="0 0 32 32"><defs><radialGradient id="p2_ng_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#b45309"/></radialGradient></defs><polygon points="16,3 28,10 28,22 16,29 4,22 4,10" fill="url(#p2_ng_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <polygon points="17,8 11,17 16,17 15,24 21,15 16,15" fill="#fff" stroke="#160e26" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-node-amp" viewBox="0 0 32 32"><defs><radialGradient id="p2_na_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fda4af"/><stop offset="58%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_na_a)" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M16 8 L23 16 H19 V24 H13 V16 H9 Z" fill="#fef08a" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-node-magnet" viewBox="0 0 32 32"><defs><linearGradient id="p2_nm_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><circle cx="16" cy="16" r="12" fill="#1e293b" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M10 10 V17 C10 21 12.5 23.5 16 23.5 C19.5 23.5 22 21 22 17 V10 H18.5 V17 C18.5 18.8 17.4 20 16 20 C14.6 20 13.5 18.8 13.5 17 V10 Z" fill="url(#p2_nm_a)" stroke="#160e26" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-node-mutagen" viewBox="0 0 32 32"><defs><radialGradient id="p2_nmu_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#e9d5ff"/><stop offset="58%" stop-color="#a855f7"/><stop offset="100%" stop-color="#581c87"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_nmu_a)" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M11 9 C21 12 21 16 11 19 C21 22 21 24 11 25" stroke="#fef08a" stroke-width="2.5" stroke-linecap="round"/>
+           <path d="M21 9 C11 12 11 16 21 19 C11 22 11 24 21 25" stroke="#67e8f9" stroke-width="2.5" stroke-linecap="round"/></symbol>
+  <symbol id="ico-node-incubator" viewBox="0 0 32 32"><defs><radialGradient id="p2_ni_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#bbf7d0"/><stop offset="58%" stop-color="#10b981"/><stop offset="100%" stop-color="#065f46"/></radialGradient></defs><path d="M16 4 C23 4 27 11 26 20 C25 25 21 28 16 28 C11 28 7 25 6 20 C5 11 9 4 16 4 Z" fill="url(#p2_ni_a)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="16" cy="17" r="5.5" fill="#fef08a" stroke="#160e26" stroke-width="2"/>
+           <circle cx="14.5" cy="15.5" r="1.5" fill="#fff"/></symbol>
+  <symbol id="ico-timer" viewBox="0 0 32 32"><defs><radialGradient id="p2_st1" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0284c7"/></radialGradient></defs><rect x="13" y="3" width="6" height="4" rx="1.5" fill="#fbbf24" stroke="#160e26" stroke-width="2"/>
+           <circle cx="16" cy="18" r="11" fill="url(#p2_st1)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="16" cy="18" r="7.5" fill="#f8fafc"/>
+           <path d="M16 13 V18 L20 20" stroke="#160e26" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-skull-hazard" viewBox="0 0 32 32"><defs><radialGradient id="p2_st2" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fff1f2"/><stop offset="58%" stop-color="#fecdd3"/><stop offset="100%" stop-color="#fda4af"/></radialGradient></defs><path d="M16 4 C23 4 27 9 27 15 C27 19 24 22 22 23 V27 H10 V23 C8 22 5 19 5 15 C5 9 9 4 16 4 Z" fill="url(#p2_st2)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="12" cy="15" r="2.8" fill="#160e26"/>
+           <circle cx="20" cy="15" r="2.8" fill="#160e26"/>
+           <path d="M14 23 V27 M18 23 V27" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-tail-length" viewBox="0 0 32 32"><defs><linearGradient id="p2_st3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><circle cx="7" cy="23" r="3.5" fill="#a7f3d0" stroke="#160e26" stroke-width="2"/>
+           <circle cx="13" cy="19" r="4.2" fill="#6ee7b7" stroke="#160e26" stroke-width="2"/>
+           <circle cx="20" cy="14" r="5" fill="url(#p2_st3)" stroke="#160e26" stroke-width="2.2"/>
+           <polygon points="24,10 30,6 27,13" fill="#fef08a" stroke="#160e26" stroke-width="1.8" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-node-dominance" viewBox="0 0 32 32"><defs><linearGradient id="p2_st4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs><line x1="16" y1="8" x2="8" y2="23" stroke="#38bdf8" stroke-width="2.6"/>
+           <line x1="16" y1="8" x2="24" y2="23" stroke="#38bdf8" stroke-width="2.6"/>
+           <line x1="8" y1="23" x2="24" y2="23" stroke="#38bdf8" stroke-width="2.6"/>
+           <circle cx="16" cy="8" r="4.5" fill="url(#p2_st4)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="8" cy="23" r="4" fill="#34d399" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="24" cy="23" r="4" fill="#34d399" stroke="#160e26" stroke-width="2.2"/></symbol>
+  <symbol id="ico-macro-scale" viewBox="0 0 32 32"><defs><linearGradient id="p2_st5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="52%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#6366f1"/></linearGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_st5)" opacity="0.25" stroke="#38bdf8" stroke-width="2.4"/>
+           <circle cx="16" cy="16" r="6" fill="url(#p2_st5)" stroke="#160e26" stroke-width="2.2"/>
+           <path d="M21 11 L27 5 M22 5 H27 V10" stroke="#fef08a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-damage-nova" viewBox="0 0 32 32"><defs><linearGradient id="p2_st6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><polygon points="16,2 19,11 29,8 22,16 29,24 19,21 16,30 13,21 3,24 10,16 3,8 13,11" fill="url(#p2_st6)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-record-badge" viewBox="0 0 32 32"><defs><linearGradient id="p2_st7" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="52%" stop-color="#facc15"/><stop offset="100%" stop-color="#d97706"/></linearGradient></defs><polygon points="10,20 7,30 16,26 25,30 22,20" fill="#f43f5e" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/>
+           <circle cx="16" cy="13" r="9.5" fill="url(#p2_st7)" stroke="#160e26" stroke-width="2.4"/>
+           <polygon points="16,7 18,11 22,11.5 19,14.5 20,18.5 16,16.5 12,18.5 13,14.5 10,11.5 14,11" fill="#fff" stroke="#160e26" stroke-width="1.4" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-wave-tide" viewBox="0 0 32 32"><defs><linearGradient id="p2_ev1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="52%" stop-color="#0284c7"/><stop offset="100%" stop-color="#1e3a8a"/></linearGradient></defs><path d="M3 22 C7 10 15 6 25 9 C19 12 20 17 29 19 C25 26 11 29 3 22 Z" fill="url(#p2_ev1)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <path d="M9 18 Q14 13 20 14" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity="0.8"/></symbol>
+  <symbol id="ico-ambush" viewBox="0 0 32 32"><defs><radialGradient id="p2_ev2" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fda4af"/><stop offset="58%" stop-color="#e11d48"/><stop offset="100%" stop-color="#4c0519"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#p2_ev2)" stroke="#160e26" stroke-width="2.4"/>
+           <polygon points="8,13 15,16 10,19" fill="#fef08a" stroke="#160e26" stroke-width="1.6" stroke-linejoin="round"/>
+           <polygon points="24,13 17,16 22,19" fill="#fef08a" stroke="#160e26" stroke-width="1.6" stroke-linejoin="round"/>
+           <path d="M16 2 V7 M16 25 V30 M2 16 H7 M25 16 H30" stroke="#fef08a" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="ico-fury" viewBox="0 0 32 32"><defs><linearGradient id="p2_ev3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><path d="M16 3 C22 10 26 14 26 20 C26 26 21.5 29 16 29 C10.5 29 6 26 6 20 C6 15 9 12 11 10 C11 13 13 14 14 12 C14 8 15 5 16 3 Z" fill="url(#p2_ev3)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <path d="M16 15 C19 19 20 24 16 26 C12 24 13 19 16 15 Z" fill="#fef9c3"/></symbol>
+  <symbol id="ico-feast" viewBox="0 0 32 32"><defs><radialGradient id="p2_ev4a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="58%" stop-color="#facc15"/><stop offset="100%" stop-color="#d97706"/></radialGradient><radialGradient id="p2_ev4b" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#bbf7d0"/><stop offset="58%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><circle cx="11" cy="20" r="6.5" fill="url(#p2_ev4b)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="22" cy="19" r="5.5" fill="url(#p2_ev4a)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="16" cy="10" r="6.5" fill="url(#p2_ev4a)" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="14" cy="8" r="1.8" fill="#fff"/>
+           <circle cx="9.5" cy="18" r="1.6" fill="#fff"/></symbol>
+  <symbol id="ico-biolab" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#bbf7d0"/><stop offset="52%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></linearGradient></defs><path d="M12 5 H20 V11 L26 23 C27 26 25 28 22 28 H10 C7 28 5 26 6 23 L12 11 Z" fill="url(#p2_ct1)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <rect x="10" y="3" width="12" height="3.5" rx="1.5" fill="#38bdf8" stroke="#160e26" stroke-width="2"/>
+           <circle cx="14" cy="22" r="2.2" fill="#fef08a"/>
+           <circle cx="19" cy="19" r="1.6" fill="#fff"/></symbol>
+  <symbol id="ico-camera-dna" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#cbd5e1"/><stop offset="52%" stop-color="#64748b"/><stop offset="100%" stop-color="#334155"/></linearGradient></defs><path d="M5 10 H10 L12 6 H20 L22 10 H27 C28.5 10 29 11 29 12.5 V25 C29 26.5 28 27.5 26.5 27.5 H5.5 C4 27.5 3 26.5 3 25 V12.5 C3 11 3.5 10 5 10 Z" fill="url(#p2_ct2)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="16" cy="18.5" r="5.5" fill="#38bdf8" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="14.5" cy="17" r="1.8" fill="#fff"/>
+           <circle cx="24" cy="13.5" r="1.5" fill="#fef08a"/></symbol>
+  <symbol id="ico-pause" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs><rect x="6" y="5" width="7.5" height="22" rx="3.2" fill="url(#p2_ct3)" stroke="#160e26" stroke-width="2.4"/>
+           <rect x="18.5" y="5" width="7.5" height="22" rx="3.2" fill="url(#p2_ct3)" stroke="#160e26" stroke-width="2.4"/></symbol>
+  <symbol id="ico-play" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#86efac"/><stop offset="52%" stop-color="#10b981"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs><path d="M8 5 L27 16 L8 27 Z" fill="url(#p2_ct4)" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/>
+           <path d="M11 10 L21 16" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity="0.7"/></symbol>
+  <symbol id="ico-sound-on" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><path d="M4 12 H10 L18 6 V26 L10 20 H4 Z" fill="url(#p2_ct5)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <path d="M22 12 A5.5 5.5 0 0 1 22 20" stroke="#fef08a" stroke-width="2.6" stroke-linecap="round"/>
+           <path d="M25.5 8.5 A10 10 0 0 1 25.5 23.5" stroke="#4ade80" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="ico-sound-mute" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#475569"/></linearGradient></defs><path d="M4 12 H10 L18 6 V26 L10 20 H4 Z" fill="url(#p2_ct6)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <path d="M22 12 L29 19 M29 12 L22 19" stroke="#f43f5e" stroke-width="3" stroke-linecap="round"/></symbol>
+  <symbol id="ico-fullscreen" viewBox="0 0 32 32"><defs><linearGradient id="p2_ct7" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient></defs><g stroke="url(#p2_ct7)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+             <path d="M5 12 V5 H12"/>
+             <path d="M20 5 H27 V12"/>
+             <path d="M27 20 V27 H20"/>
+             <path d="M12 27 H5 V20"/>
+           </g>
+           <rect x="11" y="11" width="10" height="10" rx="2.5" fill="#fef08a" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-book-codex" viewBox="0 0 32 32"><defs><linearGradient id="p2_in1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#c084fc"/><stop offset="52%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#4c1d95"/></linearGradient></defs><path d="M4 7 C9 5 13 6 16 8 C19 6 23 5 28 7 V25 C23 23 19 24 16 26 C13 24 9 23 4 25 Z" fill="url(#p2_in1)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <line x1="16" y1="8" x2="16" y2="26" stroke="#160e26" stroke-width="2.2"/>
+           <path d="M8 12 H13 M8 16 H13 M19 12 H24 M19 16 H24" stroke="#fef08a" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="ico-help-question" viewBox="0 0 32 32"><defs><radialGradient id="p2_in2" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#bae6fd"/><stop offset="58%" stop-color="#0ea5e9"/><stop offset="100%" stop-color="#1d4ed8"/></radialGradient></defs><circle cx="16" cy="16" r="12.5" fill="url(#p2_in2)" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M12 12 C12 9 14 8 16 8 C18.5 8 20 9.5 20 11.5 C20 13.5 18 14.5 16.5 15.5 C15.8 16 15.5 16.8 15.5 18" stroke="#fef08a" stroke-width="3" stroke-linecap="round"/>
+           <circle cx="15.8" cy="23" r="2" fill="#fef08a"/></symbol>
+  <symbol id="ico-gear-settings" viewBox="0 0 32 32"><defs><linearGradient id="p2_in3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e2e8f0"/><stop offset="52%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#475569"/></linearGradient></defs><path d="M14 3 H18 L19 7 C20.5 7.4 21.8 8 23 9 L26.5 7.2 L29 10.7 L26.2 13.5 C26.6 15 26.6 17 26.2 18.5 L29 21.3 L26.5 24.8 L23 23 C21.8 24 20.5 24.6 19 25 L18 29 H14 L13 25 C11.5 24.6 10.2 24 9 23 L5.5 24.8 L3 21.3 L5.8 18.5 C5.4 17 5.4 15 5.8 13.5 L3 10.7 L5.5 7.2 L9 9 C10.2 8 11.5 7.4 13 7 Z" fill="url(#p2_in3)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/>
+           <circle cx="16" cy="16" r="4.8" fill="#38bdf8" stroke="#160e26" stroke-width="2.2"/></symbol>
+  <symbol id="ico-corner-frame" viewBox="0 0 48 48"><defs><linearGradient id="p2_cf_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#0ea5e9"/></linearGradient></defs><path d="M6 42 V14 C6 9 9 6 14 6 H42 L34 14 H16 C14.5 14 14 14.5 14 16 V34 Z" fill="url(#p2_cf_a)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <circle cx="14" cy="14" r="4" fill="#fef08a" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-scale-bracket" viewBox="0 0 24 48"><defs><linearGradient id="p2_sb_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#38bdf8"/></linearGradient></defs><path d="M20 4 H10 C6 4 4 7 4 12 V36 C4 41 6 44 10 44 H20 L16 38 H11 V10 H16 Z" fill="url(#p2_sb_a)" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/>
+           <circle cx="7.5" cy="24" r="3" fill="#fef08a" stroke="#160e26" stroke-width="1.8"/></symbol>
+  <symbol id="ico-hp-vial-frame" viewBox="0 0 320 56"><defs><linearGradient id="p2_hp_m" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#475569"/><stop offset="52%" stop-color="#1e293b"/><stop offset="100%" stop-color="#0f172a"/></linearGradient><linearGradient id="p2_hp_c" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fda4af"/><stop offset="52%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></linearGradient></defs><!-- Left heart bio-cap -->
+           <rect x="6" y="10" width="32" height="36" rx="12" fill="url(#p2_hp_m)" stroke="#160e26" stroke-width="4.5"/>
+           <circle cx="22" cy="28" r="9" fill="url(#p2_hp_c)" stroke="#160e26" stroke-width="3"/>
+           <!-- Glass vial outer frame (hollow interior for bar fill) -->
+           <rect x="34" y="10" width="268" height="36" rx="18" fill="none" stroke="url(#p2_hp_m)" stroke-width="9"/>
+           <rect x="34" y="10" width="268" height="36" rx="18" fill="none" stroke="#160e26" stroke-width="3.5"/>
+           <!-- Measurement ticks & glass gloss -->
+           <path d="M90 12 V20 M144 12 V20 M198 12 V20 M252 12 V20" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+           <path d="M52 17 H282" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.35"/>
+           <!-- Right steel end-cap -->
+           <path d="M298 12 H310 C314 12 316 18 316 28 C316 38 314 44 310 44 H298 Z" fill="url(#p2_hp_m)" stroke="#160e26" stroke-width="4" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-xp-conduit" viewBox="0 0 320 44"><defs><linearGradient id="p2_xp_f" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#334155"/><stop offset="52%" stop-color="#1e293b"/><stop offset="100%" stop-color="#0f172a"/></linearGradient><linearGradient id="p2_xp_g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs><!-- Left glowing DNA connector -->
+           <polygon points="8,22 22,8 36,8 36,36 22,36" fill="url(#p2_xp_f)" stroke="#160e26" stroke-width="4" stroke-linejoin="round"/>
+           <circle cx="24" cy="22" r="5.5" fill="url(#p2_xp_g)" stroke="#160e26" stroke-width="2.5"/>
+           <!-- Conduit frame (hollow center) -->
+           <rect x="34" y="9" width="264" height="26" rx="13" fill="none" stroke="url(#p2_xp_f)" stroke-width="8"/>
+           <rect x="34" y="9" width="264" height="26" rx="13" fill="none" stroke="#160e26" stroke-width="3"/>
+           <!-- Conduit clamps -->
+           <rect x="112" y="5" width="10" height="34" rx="4" fill="url(#p2_xp_f)" stroke="#160e26" stroke-width="3"/>
+           <rect x="210" y="5" width="10" height="34" rx="4" fill="url(#p2_xp_f)" stroke="#160e26" stroke-width="3"/>
+           <!-- Right end valve -->
+           <circle cx="304" cy="22" r="10" fill="url(#p2_xp_g)" stroke="#160e26" stroke-width="3.5"/>
+           <circle cx="301" cy="19" r="2.8" fill="#fff"/></symbol>
+  <symbol id="ico-petri-radar" viewBox="0 0 160 160"><defs><radialGradient id="p2_rad_b" cx="42%" cy="38%" r="65%"><stop offset="0%" stop-color="#0f2942"/><stop offset="58%" stop-color="#091526"/><stop offset="100%" stop-color="#040a14"/></radialGradient><linearGradient id="p2_rad_r" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#64748b"/><stop offset="52%" stop-color="#334155"/><stop offset="100%" stop-color="#0f172a"/></linearGradient></defs><circle cx="80" cy="80" r="74" fill="url(#p2_rad_r)" stroke="#160e26" stroke-width="5"/>
+           <circle cx="80" cy="80" r="64" fill="url(#p2_rad_b)" stroke="#160e26" stroke-width="4"/>
+           <!-- Radar rings & crosshair -->
+           <circle cx="80" cy="80" r="44" stroke="#22d3ee" stroke-width="1.8" stroke-dasharray="6 6" opacity="0.45"/>
+           <circle cx="80" cy="80" r="22" stroke="#22d3ee" stroke-width="1.5" opacity="0.45"/>
+           <line x1="16" y1="80" x2="144" y2="80" stroke="#38bdf8" stroke-width="1.5" opacity="0.35"/>
+           <line x1="80" y1="16" x2="80" y2="144" stroke="#38bdf8" stroke-width="1.5" opacity="0.35"/>
+           <!-- Rim rivets -->
+           <circle cx="80" cy="11" r="3.5" fill="#34d399" stroke="#160e26" stroke-width="2"/>
+           <circle cx="80" cy="149" r="3.5" fill="#34d399" stroke="#160e26" stroke-width="2"/>
+           <circle cx="11" cy="80" r="3.5" fill="#34d399" stroke="#160e26" stroke-width="2"/>
+           <circle cx="149" cy="80" r="3.5" fill="#34d399" stroke="#160e26" stroke-width="2"/>
+           <!-- Glass sheen -->
+           <path d="M36 42 A54 54 0 0 1 114 34" stroke="#fff" stroke-width="4.5" stroke-linecap="round" opacity="0.35"/></symbol>
+  <symbol id="ico-petri-radar-sweep" viewBox="0 0 160 160"><defs><linearGradient id="p2_swp_a" x1="80%" y1="20%" x2="20%" y2="80%"><stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient></defs><path d="M80 80 L80 18 A62 62 0 0 1 134 49 Z" fill="url(#p2_swp_a)" opacity="0.42"/>
+           <line x1="80" y1="80" x2="80" y2="18" stroke="#a7f3d0" stroke-width="3.5" stroke-linecap="round"/>
+           <circle cx="80" cy="80" r="5" fill="#6ee7b7" stroke="#160e26" stroke-width="2.5"/></symbol>
+
+  <!-- EVOTOON PACK V4 UI SYMBOLS -->
+  <symbol id="ico-weapon-mandibles" viewBox="0 0 64 64"><defs><linearGradient id="wm_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#fb923c"/><stop offset="100%" stop-color="#dc2626"/></linearGradient><linearGradient id="wm_b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fca5a5"/><stop offset="52%" stop-color="#ef4444"/><stop offset="100%" stop-color="#7f1d1d"/></linearGradient><radialGradient id="wm_g" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fbbf24"/><stop offset="58%" stop-color="#ea580c"/><stop offset="100%" stop-color="#450a0a"/></radialGradient></defs><circle cx="32" cy="34" r="24" fill="url(#wm_g)" opacity="0.22"/>
+           <!-- Left serrated mandible -->
+           <path d="M24 54 C10 46 6 24 19 9 C21 17 24 22 28 24 L24 29 L29 33 L24 38 L29 44 C26 48 25 51 24 54 Z" fill="url(#wm_a)" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <path d="M13 36 C11 26 14 17 19 12" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity="0.75"/>
+           <!-- Right serrated mandible -->
+           <path d="M40 54 C54 46 58 24 45 9 C43 17 40 22 36 24 L40 29 L35 33 L40 38 L35 44 C38 48 39 51 40 54 Z" fill="url(#wm_a)" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <path d="M51 36 C53 26 50 17 45 12" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity="0.75"/>
+           <!-- Jaw joint base -->
+           <path d="M20 50 Q32 42 44 50 Q42 58 32 58 Q22 58 20 50 Z" fill="url(#wm_b)" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <!-- Snap spark -->
+           <path d="M32 14 L34 20 L40 22 L34 24 L32 30 L30 24 L24 22 L30 20 Z" fill="#fef08a" stroke="#160e26" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-weapon-cysts" viewBox="0 0 64 64"><defs><radialGradient id="wc_body" cx="38%" cy="32%" r="68%"><stop offset="0%" stop-color="#bef264"/><stop offset="58%" stop-color="#65a30d"/><stop offset="100%" stop-color="#14532d"/></radialGradient><radialGradient id="wc_pod" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#a3e635"/><stop offset="100%" stop-color="#3f6212"/></radialGradient></defs><!-- Floating spores -->
+           <circle cx="14" cy="18" r="4.5" fill="#d9f99d" stroke="#160e26" stroke-width="2.5"/>
+           <circle cx="51" cy="15" r="3.5" fill="#bef264" stroke="#160e26" stroke-width="2.5"/>
+           <circle cx="53" cy="36" r="4" fill="#a3e635" stroke="#160e26" stroke-width="2.5"/>
+           <!-- Main bumpy cyst sac -->
+           <path d="M32 13 C44 13 50 22 50 35 C50 48 43 56 32 56 C21 56 14 48 14 35 C14 22 20 13 32 13 Z" fill="url(#wc_body)" stroke="#160e26" stroke-width="3.4"/>
+           <!-- Cel shadow crescent -->
+           <path d="M46 26 C49 38 44 52 32 54 C25 54 20 51 17 46 C26 50 41 46 46 26 Z" fill="#052e16" opacity="0.32"/>
+           <!-- Bulging spore blisters -->
+           <circle cx="26" cy="30" r="7.5" fill="url(#wc_pod)" stroke="#160e26" stroke-width="2.8"/>
+           <circle cx="40" cy="36" r="6.5" fill="url(#wc_pod)" stroke="#160e26" stroke-width="2.8"/>
+           <circle cx="29" cy="44" r="5" fill="url(#wc_pod)" stroke="#160e26" stroke-width="2.6"/>
+           <!-- Cartoon highlights -->
+           <ellipse cx="23.5" cy="27.5" rx="2.6" ry="1.6" fill="#fff" opacity="0.85" transform="rotate(-30 23.5 27.5)"/>
+           <ellipse cx="38" cy="33.5" rx="2.2" ry="1.4" fill="#fff" opacity="0.8" transform="rotate(-30 38 33.5)"/>
+           <!-- Top vent -->
+           <ellipse cx="32" cy="14" rx="7" ry="3.5" fill="#ecfccb" stroke="#160e26" stroke-width="2.8"/></symbol>
+  <symbol id="ico-skill-dash" viewBox="0 0 64 64"><defs><linearGradient id="sd_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="52%" stop-color="#22d3ee"/><stop offset="100%" stop-color="#2563eb"/></linearGradient><linearGradient id="sd_b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#818cf8"/></linearGradient></defs><!-- Phase afterimage ghosts -->
+           <path d="M8 22 H24 L18 32 L24 42 H8 L14 32 Z" fill="url(#sd_b)" opacity="0.45" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <path d="M18 18 H34 L28 32 L34 46 H18 L24 32 Z" fill="url(#sd_b)" opacity="0.72" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/>
+           <!-- Main aerodynamic arrow/cell dart -->
+           <path d="M26 14 L58 32 L26 50 L33 32 Z" fill="url(#sd_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <!-- Speed lines & glossy core -->
+           <path d="M34 22 L50 32 L34 32 Z" fill="#ffffff" opacity="0.65"/>
+           <line x1="6" y1="14" x2="18" y2="14" stroke="#67e8f9" stroke-width="3" stroke-linecap="round"/>
+           <line x1="6" y1="50" x2="20" y2="50" stroke="#67e8f9" stroke-width="3" stroke-linecap="round"/></symbol>
+  <symbol id="ico-skill-ring" viewBox="0 0 64 64"><defs><radialGradient id="sr_ring" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fde047"/><stop offset="58%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#881337"/></radialGradient><radialGradient id="sr_core" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fff1f2"/><stop offset="58%" stop-color="#fb7185"/><stop offset="100%" stop-color="#9f1239"/></radialGradient></defs><!-- Spiky shockwave ring -->
+           <path d="M32 6 L37 15 L47 10 L46 20 L57 22 L50 30 L58 39 L48 42 L51 53 L41 49 L36 59 L30 50 L20 56 L21 46 L10 47 L16 38 L7 31 L16 26 L11 16 L22 18 L24 8 Z" fill="url(#sr_ring)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <!-- Inner cutout ring -->
+           <circle cx="32" cy="33" r="13" fill="#160e26"/>
+           <circle cx="32" cy="33" r="9.5" fill="url(#sr_core)" stroke="#160e26" stroke-width="2.4"/>
+           <!-- Cute menacing skull/bio dot -->
+           <circle cx="29" cy="32" r="2" fill="#160e26"/>
+           <circle cx="35" cy="32" r="2" fill="#160e26"/>
+           <path d="M29 37 H35" stroke="#160e26" stroke-width="2.2" stroke-linecap="round"/>
+           <ellipse cx="29" cy="27" rx="3.2" ry="1.5" fill="#fff" opacity="0.75"/></symbol>
+  <symbol id="ico-anomaly-cocoon" viewBox="0 0 64 64"><defs><radialGradient id="iac_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fde68a"/><stop offset="58%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#92400e"/></radialGradient><radialGradient id="iac_b" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#d9f99d"/><stop offset="100%" stop-color="#65a30d"/></radialGradient></defs><path d="M32 7 C46 7 53 21 51 39 C49 51 42 57 32 57 C22 57 15 51 13 39 C11 21 18 7 32 7 Z" fill="url(#iac_a)" stroke="#160e26" stroke-width="3.4"/>
+           <path d="M15 26 Q32 34 49 25" stroke="#78350f" stroke-width="2.8" opacity="0.55"/>
+           <path d="M15 41 Q32 49 49 40" stroke="#78350f" stroke-width="2.8" opacity="0.55"/>
+           <circle cx="28" cy="31" r="6" fill="url(#iac_b)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="37" cy="37" r="5.5" fill="url(#iac_b)" stroke="#160e26" stroke-width="2.4"/>
+           <ellipse cx="26" cy="29" rx="2" ry="1.2" fill="#fff" opacity="0.85"/>
+           <ellipse cx="32" cy="9" rx="8" ry="3.5" fill="#fef3c7" stroke="#160e26" stroke-width="2.6"/></symbol>
+  <symbol id="ico-anomaly-acid" viewBox="0 0 64 64"><defs><linearGradient id="iaa_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ecfccb"/><stop offset="52%" stop-color="#84cc16"/><stop offset="100%" stop-color="#15803d"/></linearGradient></defs><path d="M32 7 C42 21 53 32 53 43 C53 53 44 58 32 58 C20 58 11 53 11 43 C11 32 22 21 32 7 Z" fill="url(#iaa_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <circle cx="26" cy="44" r="5" fill="#fef08a" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="39" cy="40" r="4" fill="#d9f99d" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="34" cy="50" r="2.5" fill="#ecfccb" stroke="#160e26" stroke-width="2"/>
+           <path d="M23 31 Q26 24 30 18" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.8"/></symbol>
+  <symbol id="ico-anomaly-bloom" viewBox="0 0 64 64"><defs><radialGradient id="iab_c" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fbcfe8"/><stop offset="58%" stop-color="#ec4899"/><stop offset="100%" stop-color="#9d174d"/></radialGradient></defs><path d="M32 6 L36 16 L47 12 L43 22 L56 26 L46 33 L54 44 L43 43 L42 56 L32 48 L22 56 L21 43 L10 44 L18 33 L8 26 L21 22 L17 12 L28 16 Z" fill="#f472b6" opacity="0.4" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/>
+           <path d="M21 21 C27 21 30 26 32 26 C34 26 37 21 43 21 C50 21 55 26 55 32 C55 39 50 44 43 44 C37 44 34 39 32 39 C30 39 27 44 21 44 C14 44 9 39 9 32 C9 26 14 21 21 21 Z" fill="url(#iab_c)" stroke="#160e26" stroke-width="3.2"/>
+           <circle cx="21" cy="32" r="5" fill="#fef08a" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="43" cy="32" r="5" fill="#fef08a" stroke="#160e26" stroke-width="2.2"/></symbol>
+  <symbol id="ico-relic-galvanic" viewBox="0 0 64 64"><defs><radialGradient id="rg_cell" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#e0f2fe"/><stop offset="58%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#1d4ed8"/></radialGradient><linearGradient id="rg_bolt" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#facc15"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs><circle cx="32" cy="32" r="24" fill="url(#rg_cell)" stroke="#160e26" stroke-width="3.4"/>
+           <circle cx="32" cy="32" r="17" fill="none" stroke="#bae6fd" stroke-width="2.5" stroke-dasharray="6 5"/>
+           <polygon points="35,10 19,34 31,34 27,54 45,28 33,28" fill="url(#rg_bolt)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <circle cx="15" cy="20" r="3" fill="#fef08a" stroke="#160e26" stroke-width="2"/>
+           <circle cx="49" cy="44" r="3" fill="#fef08a" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-relic-abyssal" viewBox="0 0 64 64"><defs><radialGradient id="ra_bulb" cx="45%" cy="40%" r="60%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="58%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#1e1b4b"/></radialGradient><linearGradient id="ra_stem" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#818cf8"/><stop offset="100%" stop-color="#312e81"/></linearGradient></defs><path d="M16 54 C14 34 20 12 36 12 C44 12 46 18 44 24" fill="none" stroke="url(#ra_stem)" stroke-width="6" stroke-linecap="round"/>
+           <path d="M16 54 C14 34 20 12 36 12 C44 12 46 18 44 24" fill="none" stroke="#160e26" stroke-width="2.5" stroke-linecap="round"/>
+           <!-- Glowing abyssal lure bulb -->
+           <circle cx="40" cy="34" r="16" fill="url(#ra_bulb)" stroke="#160e26" stroke-width="3.4"/>
+           <circle cx="40" cy="34" r="7.5" fill="#ecfeff"/>
+           <ellipse cx="35" cy="27" rx="4" ry="2.2" fill="#fff" opacity="0.9" transform="rotate(-25 35 27)"/>
+           <!-- Bioluminescent dots -->
+           <circle cx="20" cy="24" r="2.8" fill="#67e8f9"/>
+           <circle cx="53" cy="18" r="2.5" fill="#a5f3fc"/>
+           <circle cx="24" cy="48" r="2.5" fill="#22d3ee"/></symbol>
+  <symbol id="ico-relic-carapace" viewBox="0 0 32 32"><defs><linearGradient id="rc_s" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="52%" stop-color="#10b981"/><stop offset="100%" stop-color="#065f46"/></linearGradient></defs><path d="M16 3 L27 7 V16 C27 23 22 27.5 16 29.5 C10 27.5 5 23 5 16 V7 Z" fill="url(#rc_s)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <path d="M16 6.5 L23.5 9.5 V15.5 C23.5 20.5 20 24 16 25.8" stroke="#a7f3d0" stroke-width="2" stroke-linecap="round" fill="none"/>
+           <path d="M10 15 H22 M16 10 V23" stroke="#160e26" stroke-width="2" stroke-linecap="round" opacity="0.45"/>
+           <ellipse cx="12" cy="11" rx="2.8" ry="1.4" fill="#fff" opacity="0.8" transform="rotate(-25 12 11)"/></symbol>
+  <symbol id="ico-curse-predator" viewBox="0 0 64 64"><defs><radialGradient id="cp_bg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fda4af"/><stop offset="58%" stop-color="#e11d48"/><stop offset="100%" stop-color="#4c0519"/></radialGradient></defs><path d="M8 32 Q32 10 56 32 Q32 54 8 32 Z" fill="url(#cp_bg)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <circle cx="32" cy="32" r="11" fill="#fef08a" stroke="#160e26" stroke-width="3"/>
+           <ellipse cx="32" cy="32" rx="3.2" ry="8.5" fill="#160e26"/>
+           <circle cx="28" cy="27" r="2.8" fill="#fff"/>
+           <!-- Jagged cursed fangs below -->
+           <polygon points="18,44 22,55 27,46" fill="#fff" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/>
+           <polygon points="46,44 42,55 37,46" fill="#fff" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-curse-chitin" viewBox="0 0 64 64"><defs><linearGradient id="cc_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e9d5ff"/><stop offset="52%" stop-color="#9333ea"/><stop offset="100%" stop-color="#3b0764"/></linearGradient></defs><!-- Left cracked shell half -->
+           <path d="M29 10 L12 18 V34 C12 46 20 53 29 56 L26 42 L31 32 L25 22 Z" fill="url(#cc_a)" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <!-- Right cracked shell half shifted slightly -->
+           <path d="M36 10 L53 18 V34 C53 46 45 53 36 56 L39 42 L33 32 L39 22 Z" fill="url(#cc_a)" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <!-- Glowing crack lightning -->
+           <path d="M32 10 L29 22 L35 32 L29 42 L33 56" stroke="#fb7185" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+           <polygon points="52,11 58,8 56,16" fill="#f43f5e" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-curse-hunger" viewBox="0 0 64 64"><defs><radialGradient id="ch_m" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#f472b6"/><stop offset="58%" stop-color="#be123c"/><stop offset="100%" stop-color="#3b0764"/></radialGradient></defs><circle cx="32" cy="32" r="24" fill="url(#ch_m)" stroke="#160e26" stroke-width="3.4"/>
+           <circle cx="32" cy="32" r="15" fill="#1e0621" stroke="#160e26" stroke-width="2.8"/>
+           <!-- Ring of cartoon teeth -->
+           <g fill="#fff" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round">
+             <polygon points="24,18 28,27 32,17"/>
+             <polygon points="32,17 36,27 40,18"/>
+             <polygon points="24,46 28,37 32,47"/>
+             <polygon points="32,47 36,37 40,46"/>
+             <polygon points="17,28 26,32 17,36"/>
+             <polygon points="47,28 38,32 47,36"/>
+           </g>
+           <circle cx="32" cy="32" r="4" fill="#a855f7"/></symbol>
+  <symbol id="ico-stat-dmg" viewBox="0 0 64 64"><defs><linearGradient id="std_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><path d="M12 46 C18 28 30 14 48 8 C39 20 34 32 32 50 Z" fill="url(#std_a)" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <path d="M24 54 C32 38 42 26 56 20 C48 32 45 43 44 56 Z" fill="url(#std_a)" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <path d="M10 26 C15 17 22 11 32 8 C26 16 23 23 22 33 Z" fill="url(#std_a)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <circle cx="48" cy="14" r="3" fill="#fff"/></symbol>
+  <symbol id="ico-stat-aspd" viewBox="0 0 64 64"><defs><linearGradient id="sta_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="52%" stop-color="#facc15"/><stop offset="100%" stop-color="#ea580c"/></linearGradient></defs><path d="M10 34 A22 22 0 1 1 54 34" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round" stroke-dasharray="8 6"/>
+           <polygon points="34,8 16,35 30,35 24,56 48,27 33,27" fill="url(#sta_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <path d="M31 16 L23 31" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/></symbol>
+  <symbol id="ico-stat-move" viewBox="0 0 64 64"><defs><linearGradient id="stm_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="52%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#2563eb"/></linearGradient></defs><path d="M12 44 C18 22 34 12 56 14 C48 24 44 30 52 30 C40 40 36 42 44 44 C30 52 18 52 12 44 Z" fill="url(#stm_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <path d="M22 36 Q34 24 48 20" stroke="#fff" stroke-width="2.8" stroke-linecap="round" opacity="0.75"/>
+           <line x1="6" y1="22" x2="18" y2="22" stroke="#67e8f9" stroke-width="3.2" stroke-linecap="round"/>
+           <line x1="8" y1="54" x2="24" y2="54" stroke="#67e8f9" stroke-width="3.2" stroke-linecap="round"/></symbol>
+  <symbol id="ico-stat-hp" viewBox="0 0 64 64"><defs><radialGradient id="sth_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fda4af"/><stop offset="58%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></radialGradient></defs><path d="M32 54 C14 42 8 30 8 21 C8 13 14 8 21 8 C26 8 30 11 32 15 C34 11 38 8 43 8 C50 8 56 13 56 21 C56 30 50 42 32 54 Z" fill="url(#sth_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <ellipse cx="20" cy="19" rx="5.5" ry="3.2" fill="#fff" opacity="0.8" transform="rotate(-35 20 19)"/>
+           <path d="M28 29 H36 M32 25 V33" stroke="#fff1f2" stroke-width="3.2" stroke-linecap="round"/></symbol>
+  <symbol id="ico-stat-magnet" viewBox="0 0 64 64"><defs><linearGradient id="stmag_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fb7185"/><stop offset="52%" stop-color="#e11d48"/><stop offset="100%" stop-color="#881337"/></linearGradient><linearGradient id="stmag_b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e2e8f0"/><stop offset="100%" stop-color="#94a3b8"/></linearGradient></defs><path d="M14 14 V34 C14 46 22 54 32 54 C42 54 50 46 50 34 V14 H39 V34 C39 39 36 43 32 43 C28 43 25 39 25 34 V14 Z" fill="url(#stmag_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <rect x="14" y="12" width="11" height="10" rx="2" fill="url(#stmag_b)" stroke="#160e26" stroke-width="3"/>
+           <rect x="39" y="12" width="11" height="10" rx="2" fill="url(#stmag_b)" stroke="#160e26" stroke-width="3"/>
+           <path d="M26 7 Q32 3 38 7" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+           <circle cx="32" cy="15" r="3.5" fill="#4ade80" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-stat-regen" viewBox="0 0 64 64"><defs><radialGradient id="str_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#bbf7d0"/><stop offset="58%" stop-color="#22c55e"/><stop offset="100%" stop-color="#15803d"/></radialGradient></defs><circle cx="32" cy="34" r="21" fill="url(#str_a)" stroke="#160e26" stroke-width="3.4"/>
+           <path d="M27 24 H37 V30 H43 V40 H37 V46 H27 V40 H21 V30 H27 Z" fill="#f0fdf4" stroke="#160e26" stroke-width="2.8" stroke-linejoin="round"/>
+           <path d="M32 13 C32 7 42 5 46 10 C43 15 37 16 32 13 Z" fill="#86efac" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/>
+           <circle cx="15" cy="18" r="3" fill="#86efac" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-gene-predator-apex" viewBox="0 0 64 64"><defs><linearGradient id="gpa_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#fb923c"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><path d="M18 10 L48 10 C44 26 42 42 30 56 C24 44 20 26 18 10 Z" fill="url(#gpa_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <path d="M25 16 C27 28 28 38 31 46" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+           <path d="M14 14 L22 6 L32 12 L42 6 L50 14" stroke="#facc15" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-gene-predator-frenzy" viewBox="0 0 64 64"><defs><radialGradient id="gpf_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#f97316"/><stop offset="100%" stop-color="#b91c1c"/></radialGradient></defs><path d="M32 6 C42 18 52 24 52 38 C52 50 43 58 32 58 C21 58 12 50 12 38 C12 28 18 22 22 18 C22 24 26 26 28 22 C28 14 30 10 32 6 Z" fill="url(#gpf_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <path d="M32 28 C38 34 40 46 32 50 C24 46 26 34 32 28 Z" fill="#fef08a" stroke="#160e26" stroke-width="2.4"/></symbol>
+  <symbol id="ico-gene-predator-devour" viewBox="0 0 64 64"><defs><radialGradient id="gpd_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fb7185"/><stop offset="58%" stop-color="#be123c"/><stop offset="100%" stop-color="#4c0519"/></radialGradient></defs><circle cx="32" cy="32" r="23" fill="url(#gpd_a)" stroke="#160e26" stroke-width="3.4"/>
+           <path d="M16 26 Q32 42 48 26" fill="none" stroke="#fff1f2" stroke-width="3.2" stroke-linecap="round"/>
+           <polygon points="21,28 24,38 28,31" fill="#fff" stroke="#160e26" stroke-width="2"/>
+           <polygon points="43,28 40,38 36,31" fill="#fff" stroke="#160e26" stroke-width="2"/>
+           <circle cx="32" cy="18" r="4" fill="#4ade80" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-gene-chimera-spines" viewBox="0 0 64 64"><defs><linearGradient id="gcs_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef3c7"/><stop offset="52%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#b45309"/></linearGradient></defs><path d="M12 46 Q32 34 52 46 L48 56 H16 Z" fill="#78350f" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <polygon points="32,6 24,42 40,42" fill="url(#gcs_a)" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <polygon points="12,16 14,44 26,40" fill="url(#gcs_a)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <polygon points="52,16 50,44 38,40" fill="url(#gcs_a)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-gene-chimera-carapace" viewBox="0 0 64 64"><defs><linearGradient id="gcc_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde68a"/><stop offset="52%" stop-color="#d97706"/><stop offset="100%" stop-color="#78350f"/></linearGradient></defs><polygon points="32,6 54,18 54,44 32,58 10,44 10,18" fill="url(#gcc_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <polygon points="32,16 44,23 44,39 32,46 20,39 20,23" fill="#fef3c7" opacity="0.5" stroke="#160e26" stroke-width="2.4"/>
+           <line x1="32" y1="6" x2="32" y2="58" stroke="#160e26" stroke-width="2.4" opacity="0.45"/></symbol>
+  <symbol id="ico-gene-chimera-horn" viewBox="0 0 64 64"><defs><linearGradient id="gch_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef9c3"/><stop offset="52%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#92400e"/></linearGradient></defs><path d="M12 52 C14 34 28 14 54 10 C48 26 44 40 34 54 Z" fill="url(#gch_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <path d="M18 42 Q26 44 32 48" stroke="#160e26" stroke-width="2.8" stroke-linecap="round"/>
+           <path d="M24 31 Q32 33 38 37" stroke="#160e26" stroke-width="2.8" stroke-linecap="round"/>
+           <path d="M36 18 L48 14" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/></symbol>
+  <symbol id="ico-gene-mycelium-spores" viewBox="0 0 64 64"><defs><radialGradient id="gms_cap" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#bef264"/><stop offset="58%" stop-color="#22c55e"/><stop offset="100%" stop-color="#14532d"/></radialGradient></defs><path d="M24 36 V54 H40 V36 Z" fill="#fef3c7" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <path d="M8 38 C8 18 20 12 32 12 C44 12 56 18 56 38 Z" fill="url(#gms_cap)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <circle cx="24" cy="24" r="4.5" fill="#fef08a" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="40" cy="26" r="5" fill="#fef08a" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="14" cy="14" r="3" fill="#a3e635" stroke="#160e26" stroke-width="2"/>
+           <circle cx="50" cy="12" r="3.5" fill="#a3e635" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-gene-mycelium-toxin" viewBox="0 0 64 64"><defs><linearGradient id="gmt_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#d9f99d"/><stop offset="52%" stop-color="#65a30d"/><stop offset="100%" stop-color="#14532d"/></linearGradient></defs><path d="M24 10 H40 V22 L52 46 C54 52 50 56 44 56 H20 C14 56 10 52 12 46 L24 22 Z" fill="url(#gmt_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <rect x="21" y="7" width="22" height="6" rx="3" fill="#a855f7" stroke="#160e26" stroke-width="2.8"/>
+           <circle cx="26" cy="44" r="4.5" fill="#fef08a" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="38" cy="40" r="3.5" fill="#ecfccb" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-gene-mycelium-hyphae" viewBox="0 0 64 64"><defs><radialGradient id="gmh_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#a7f3d0"/><stop offset="58%" stop-color="#10b981"/><stop offset="100%" stop-color="#064e3b"/></radialGradient></defs><path d="M32 32 L14 14 M32 32 L50 14 M32 32 L12 46 M32 32 L52 48 M32 32 V56" stroke="#34d399" stroke-width="5" stroke-linecap="round"/>
+           <path d="M32 32 L14 14 M32 32 L50 14 M32 32 L12 46 M32 32 L52 48 M32 32 V56" stroke="#160e26" stroke-width="2" stroke-linecap="round"/>
+           <circle cx="32" cy="32" r="11" fill="url(#gmh_a)" stroke="#160e26" stroke-width="3.2"/>
+           <circle cx="14" cy="14" r="5" fill="#6ee7b7" stroke="#160e26" stroke-width="2.5"/>
+           <circle cx="50" cy="14" r="5" fill="#6ee7b7" stroke="#160e26" stroke-width="2.5"/>
+           <circle cx="12" cy="46" r="5" fill="#6ee7b7" stroke="#160e26" stroke-width="2.5"/>
+           <circle cx="52" cy="48" r="5" fill="#6ee7b7" stroke="#160e26" stroke-width="2.5"/></symbol>
+  <symbol id="ico-gene-symbiont-prism" viewBox="0 0 64 64"><defs><linearGradient id="gsp_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffffff"/><stop offset="52%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs><polygon points="32,6 52,26 42,56 22,56 12,26" fill="url(#gsp_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <polygon points="32,6 42,26 32,56 22,26" fill="#e0f2fe" opacity="0.55" stroke="#160e26" stroke-width="2.2"/>
+           <circle cx="32" cy="26" r="4" fill="#fff"/></symbol>
+  <symbol id="ico-gene-symbiont-swarm" viewBox="0 0 64 64"><defs><radialGradient id="gss_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#c4b5fd"/><stop offset="58%" stop-color="#6366f1"/><stop offset="100%" stop-color="#312e81"/></radialGradient></defs><circle cx="32" cy="32" r="21" stroke="#67e8f9" stroke-width="2.8" stroke-dasharray="6 6"/>
+           <circle cx="32" cy="12" r="8" fill="url(#gss_a)" stroke="#160e26" stroke-width="3"/>
+           <circle cx="15" cy="43" r="8" fill="url(#gss_a)" stroke="#160e26" stroke-width="3"/>
+           <circle cx="49" cy="43" r="8" fill="url(#gss_a)" stroke="#160e26" stroke-width="3"/>
+           <circle cx="32" cy="32" r="6" fill="#38bdf8" stroke="#160e26" stroke-width="2.6"/></symbol>
+  <symbol id="ico-gene-symbiont-wings" viewBox="0 0 64 64"><defs><linearGradient id="gsw_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="52%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#818cf8"/></linearGradient></defs><path d="M30 34 C22 14 8 10 6 22 C8 30 16 32 10 38 C16 46 26 44 30 38 Z" fill="url(#gsw_a)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <path d="M34 34 C42 14 56 10 58 22 C56 30 48 32 54 38 C48 46 38 44 34 38 Z" fill="url(#gsw_a)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <ellipse cx="32" cy="34" rx="5.5" ry="12" fill="#fef08a" stroke="#160e26" stroke-width="3"/></symbol>
+  <symbol id="ico-perm-dmg" viewBox="0 0 64 64"><defs><linearGradient id="pd_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fda4af"/><stop offset="52%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#9f1239"/></linearGradient><linearGradient id="pd_b" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#f97316"/></linearGradient></defs><path d="M18 10 C46 18 46 30 18 38 C46 46 46 54 18 56" stroke="url(#pd_a)" stroke-width="6.5" stroke-linecap="round"/>
+           <path d="M46 10 C18 18 18 30 46 38 C18 46 18 54 46 56" stroke="url(#pd_b)" stroke-width="6.5" stroke-linecap="round"/>
+           <line x1="22" y1="16" x2="42" y2="16" stroke="#160e26" stroke-width="3" stroke-linecap="round"/>
+           <line x1="22" y1="32" x2="42" y2="32" stroke="#160e26" stroke-width="3" stroke-linecap="round"/>
+           <line x1="22" y1="48" x2="42" y2="48" stroke="#160e26" stroke-width="3" stroke-linecap="round"/>
+           <polygon points="54,28 45,32 54,36" fill="#fef08a" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <polygon points="10,28 19,32 10,36" fill="#fef08a" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-perm-armor" viewBox="0 0 64 64"><defs><radialGradient id="pa_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#99f6e4"/><stop offset="58%" stop-color="#14b8a6"/><stop offset="100%" stop-color="#115e59"/></radialGradient></defs><path d="M32 7 L54 17 V34 C54 47 44 55 32 59 C20 55 10 47 10 34 V17 Z" fill="url(#pa_a)" stroke="#160e26" stroke-width="3.4" stroke-linejoin="round"/>
+           <polygon points="32,16 42,22 42,34 32,40 22,34 22,22" fill="#ccfbf1" opacity="0.65" stroke="#160e26" stroke-width="2.6"/>
+           <circle cx="32" cy="28" r="4.5" fill="#0f766e" stroke="#160e26" stroke-width="2"/>
+           <path d="M18 22 L22 24 M46 22 L42 24 M32 40 V50" stroke="#160e26" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="ico-wave-void" viewBox="0 0 64 64"><defs><radialGradient id="wv_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#c4b5fd"/><stop offset="58%" stop-color="#6d28d9"/><stop offset="100%" stop-color="#1e1b4b"/></radialGradient></defs><circle cx="32" cy="32" r="23" fill="#1e1b4b" stroke="#160e26" stroke-width="3.4"/>
+           <path d="M36 14 C23 16 16 29 22 42 C27 50 38 52 46 47 C36 47 28 39 29 28 C29 21 32 17 36 14 Z" fill="url(#wv_a)" stroke="#160e26" stroke-width="2.8" stroke-linejoin="round"/>
+           <circle cx="44" cy="22" r="3" fill="#e9d5ff"/>
+           <circle cx="48" cy="32" r="2" fill="#a78bfa"/></symbol>
+  <symbol id="ico-wave-migration" viewBox="0 0 64 64"><defs><linearGradient id="wmi_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="52%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#ea580c"/></linearGradient></defs><path d="M40 22 L58 32 L40 42 L45 32 Z" fill="url(#wmi_a)" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <path d="M22 12 L38 20 L22 28 L26 20 Z" fill="#fb923c" stroke="#160e26" stroke-width="2.8" stroke-linejoin="round"/>
+           <path d="M22 36 L38 44 L22 52 L26 44 Z" fill="#fb923c" stroke="#160e26" stroke-width="2.8" stroke-linejoin="round"/>
+           <path d="M6 25 L20 32 L6 39 L10 32 Z" fill="#fdba74" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-wave-breach" viewBox="0 0 64 64"><defs><radialGradient id="wb_a" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fef08a"/><stop offset="58%" stop-color="#f43f5e"/><stop offset="100%" stop-color="#881337"/></radialGradient></defs><path d="M32 6 L39 20 L55 15 L46 29 L59 38 L44 43 L48 58 L33 49 L20 58 L22 43 L7 38 L19 29 L11 15 L26 20 Z" fill="url(#wb_a)" stroke="#160e26" stroke-width="3.2" stroke-linejoin="round"/>
+           <circle cx="32" cy="33" r="10" fill="#160e26"/>
+           <circle cx="28" cy="31" r="2.5" fill="#fef08a"/>
+           <circle cx="36" cy="31" r="2.5" fill="#fef08a"/></symbol>
+  <symbol id="frame-tail-bar" viewBox="0 0 320 56"><defs><linearGradient id="ftb_m" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#334155"/><stop offset="52%" stop-color="#1e293b"/><stop offset="100%" stop-color="#0f172a"/></linearGradient><linearGradient id="ftb_g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs>
+           <!-- Tail fin left ornament -->
+           <path d="M28 28 L6 10 L14 28 L6 46 Z" fill="url(#ftb_g)" stroke="#160e26" stroke-width="4" stroke-linejoin="round"/>
+           <!-- Main segmented bio-capsule -->
+           <rect x="26" y="10" width="278" height="36" rx="18" fill="url(#ftb_m)" stroke="#160e26" stroke-width="4.5"/>
+           <!-- Inner recessed track -->
+           <rect x="36" y="17" width="258" height="22" rx="11" fill="#090d16" stroke="#334155" stroke-width="2"/>
+           <!-- Decorative segment ribs -->
+           <path d="M96 10 V17 M156 10 V17 M216 10 V17 M96 39 V46 M156 39 V46 M216 39 V46" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+           <!-- Right glowing bio-node -->
+           <circle cx="304" cy="28" r="9" fill="url(#ftb_g)" stroke="#160e26" stroke-width="3.5"/>
+           <circle cx="301" cy="25" r="2.5" fill="#fff"/></symbol>
+  <symbol id="frame-boss-hud" viewBox="0 0 460 72"><defs><linearGradient id="fbh_m" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#581c87"/><stop offset="52%" stop-color="#3b0764"/><stop offset="100%" stop-color="#1e0536"/></linearGradient><linearGradient id="fbh_g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="52%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs>
+           <!-- Left and right bony horns -->
+           <path d="M44 20 L8 8 L22 36 L8 64 L44 52 Z" fill="url(#fbh_g)" stroke="#160e26" stroke-width="4.5" stroke-linejoin="round"/>
+           <path d="M416 20 L452 8 L438 36 L452 64 L416 52 Z" fill="url(#fbh_g)" stroke="#160e26" stroke-width="4.5" stroke-linejoin="round"/>
+           <!-- Armored main bar housing -->
+           <path d="M40 16 H420 L432 36 L420 56 H40 L28 36 Z" fill="url(#fbh_m)" stroke="#160e26" stroke-width="5" stroke-linejoin="round"/>
+           <!-- Recessed HP bar slot -->
+           <rect x="52" y="25" width="356" height="22" rx="11" fill="#090612" stroke="#9333ea" stroke-width="2.5"/>
+           <!-- Top crown crest -->
+           <path d="M206 16 L216 4 L230 13 L244 4 L254 16 Z" fill="url(#fbh_g)" stroke="#160e26" stroke-width="3.8" stroke-linejoin="round"/>
+           <circle cx="230" cy="14" r="4" fill="#fef08a" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-chip-shield" viewBox="0 0 32 32"><defs><linearGradient id="cs_s" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><path d="M16 3 L26 7 V15 C26 22 21 27 16 29 C11 27 6 22 6 15 V7 Z" fill="url(#cs_s)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <path d="M11 11 L15 9" stroke="#fff" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="ico-chip-haste" viewBox="0 0 32 32"><defs><linearGradient id="cs_h" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs><polygon points="18,3 7,17 15,17 13,29 25,14 17,14" fill="url(#cs_h)" stroke="#160e26" stroke-width="2.3" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-chip-poison" viewBox="0 0 32 32"><defs><radialGradient id="cs_p" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#d9f99d"/><stop offset="100%" stop-color="#65a30d"/></radialGradient></defs><path d="M16 4 C22 12 26 17 26 21 C26 26 21.5 29 16 29 C10.5 29 6 26 6 21 C6 17 10 12 16 4 Z" fill="url(#cs_p)" stroke="#160e26" stroke-width="2.4"/>
+           <circle cx="13" cy="21" r="2.2" fill="#fef08a"/></symbol>
+  <symbol id="ico-chip-frenzy" viewBox="0 0 32 32"><defs><linearGradient id="cs_f" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde047"/><stop offset="100%" stop-color="#ef4444"/></linearGradient></defs><path d="M16 3 C22 10 26 14 26 20 C26 26 21.5 29 16 29 C10.5 29 6 26 6 20 C6 15 9 12 11 10 C11 13 13 14 14 12 C14 8 15 5 16 3 Z" fill="url(#cs_f)" stroke="#160e26" stroke-width="2.3" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-chip-regen" viewBox="0 0 32 32"><defs><radialGradient id="cs_r" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#86efac"/><stop offset="100%" stop-color="#16a34a"/></radialGradient></defs><circle cx="16" cy="16" r="12" fill="url(#cs_r)" stroke="#160e26" stroke-width="2.4"/>
+           <path d="M13 10 H19 V13 H22 V19 H19 V22 H13 V19 H10 V13 H13 Z" fill="#fff" stroke="#160e26" stroke-width="1.8"/></symbol>
+  <symbol id="ico-chip-armor" viewBox="0 0 32 32"><defs><linearGradient id="cs_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e2e8f0"/><stop offset="100%" stop-color="#64748b"/></linearGradient></defs><polygon points="16,3 27,9 27,23 16,29 5,23 5,9" fill="url(#cs_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/>
+           <circle cx="16" cy="16" r="4" fill="#fbbf24" stroke="#160e26" stroke-width="2"/></symbol>
+  <symbol id="ico-ach-first-blood" viewBox="0 0 64 64"><defs><radialGradient id="af1_bg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fde047"/><stop offset="58%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#92400e"/></radialGradient></defs><circle cx="32" cy="32" r="24" fill="url(#af1_bg)" stroke="#160e26" stroke-width="3.4"/>
+           <path d="M19 42 C24 28 34 18 47 16 C40 26 37 36 35 46 Z" fill="#f43f5e" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <circle cx="24" cy="24" r="4" fill="#fff" opacity="0.6"/></symbol>
+  <symbol id="ico-ach-evolution" viewBox="0 0 64 64"><defs><radialGradient id="af2_bg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#a7f3d0"/><stop offset="58%" stop-color="#10b981"/><stop offset="100%" stop-color="#065f46"/></radialGradient></defs><circle cx="32" cy="32" r="24" fill="url(#af2_bg)" stroke="#160e26" stroke-width="3.4"/>
+           <path d="M22 16 C42 22 42 30 22 36 C42 42 42 48 22 50" stroke="#fef08a" stroke-width="4.5" stroke-linecap="round"/>
+           <path d="M42 16 C22 22 22 30 42 36 C22 42 22 48 42 50" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/></symbol>
+  <symbol id="ico-ach-boss-slayer" viewBox="0 0 64 64"><defs><radialGradient id="af3_bg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#f0abfc"/><stop offset="58%" stop-color="#9333ea"/><stop offset="100%" stop-color="#3b0764"/></radialGradient></defs><circle cx="32" cy="32" r="24" fill="url(#af3_bg)" stroke="#160e26" stroke-width="3.4"/>
+           <path d="M16 42 L20 20 L32 30 L44 20 L48 42 Z" fill="#fde047" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <line x1="16" y1="46" x2="48" y2="46" stroke="#fde047" stroke-width="4" stroke-linecap="round"/></symbol>
+  <symbol id="ico-ach-swarm-survivor" viewBox="0 0 64 64"><defs><radialGradient id="af4_bg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fed7aa"/><stop offset="58%" stop-color="#ea580c"/><stop offset="100%" stop-color="#7c2d12"/></radialGradient></defs><circle cx="32" cy="32" r="24" fill="url(#af4_bg)" stroke="#160e26" stroke-width="3.4"/>
+           <polygon points="32,14 48,26 42,46 22,46 16,26" fill="#fef08a" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <circle cx="32" cy="32" r="6" fill="#ea580c" stroke="#160e26" stroke-width="2.4"/></symbol>
+  <symbol id="ico-ach-hybrid" viewBox="0 0 64 64"><defs><linearGradient id="af5_bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#38bdf8"/><stop offset="52%" stop-color="#a855f7"/><stop offset="100%" stop-color="#ec4899"/></linearGradient></defs><circle cx="32" cy="32" r="24" fill="url(#af5_bg)" stroke="#160e26" stroke-width="3.4"/>
+           <polygon points="32,11 38,25 53,27 42,37 45,52 32,44 19,52 22,37 11,27 26,25" fill="#fef08a" stroke="#160e26" stroke-width="2.8" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-ach-collector" viewBox="0 0 64 64"><defs><radialGradient id="af6_bg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#bae6fd"/><stop offset="58%" stop-color="#0284c7"/><stop offset="100%" stop-color="#1e3a8a"/></radialGradient></defs><circle cx="32" cy="32" r="24" fill="url(#af6_bg)" stroke="#160e26" stroke-width="3.4"/>
+           <polygon points="32,14 48,30 32,50 16,30" fill="#67e8f9" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/>
+           <polygon points="32,14 40,30 32,50 24,30" fill="#e0f2fe" opacity="0.65"/></symbol>
+  <symbol id="ico-ach-untouchable" viewBox="0 0 64 64"><defs><radialGradient id="af7_bg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#bbf7d0"/><stop offset="58%" stop-color="#22c55e"/><stop offset="100%" stop-color="#14532d"/></radialGradient></defs><circle cx="32" cy="32" r="24" fill="url(#af7_bg)" stroke="#160e26" stroke-width="3.4"/>
+           <path d="M32 15 L45 20 V31 C45 40 39 46 32 49 C25 46 19 40 19 31 V20 Z" fill="#fef08a" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-ach-speedrunner" viewBox="0 0 64 64"><defs><radialGradient id="af8_bg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#a5f3fc"/><stop offset="58%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#164e63"/></radialGradient></defs><circle cx="32" cy="32" r="24" fill="url(#af8_bg)" stroke="#160e26" stroke-width="3.4"/>
+           <path d="M22 18 L48 32 L22 46 L28 32 Z" fill="#fef08a" stroke="#160e26" stroke-width="3" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-ach-apex-tail" viewBox="0 0 64 64"><defs><radialGradient id="af9_bg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fde68a"/><stop offset="58%" stop-color="#eab308"/><stop offset="100%" stop-color="#713f12"/></radialGradient></defs><circle cx="32" cy="32" r="24" fill="url(#af9_bg)" stroke="#160e26" stroke-width="3.4"/>
+           <circle cx="20" cy="40" r="6" fill="#4ade80" stroke="#160e26" stroke-width="2.6"/>
+           <circle cx="30" cy="34" r="7.5" fill="#22c55e" stroke="#160e26" stroke-width="2.6"/>
+           <circle cx="42" cy="24" r="9" fill="#10b981" stroke="#160e26" stroke-width="2.8"/></symbol>
+  <symbol id="ico-ach-cursed" viewBox="0 0 64 64"><defs><radialGradient id="af10_bg" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fda4af"/><stop offset="58%" stop-color="#e11d48"/><stop offset="100%" stop-color="#4c0519"/></radialGradient></defs><circle cx="32" cy="32" r="24" fill="url(#af10_bg)" stroke="#160e26" stroke-width="3.4"/>
+           <circle cx="32" cy="29" r="12" fill="#fff1f2" stroke="#160e26" stroke-width="3"/>
+           <rect x="26" y="38" width="12" height="7" rx="2" fill="#fff1f2" stroke="#160e26" stroke-width="2.6"/>
+           <circle cx="28" cy="28" r="3" fill="#160e26"/><circle cx="36" cy="28" r="3" fill="#160e26"/></symbol>
+  <symbol id="ico-ui-export" viewBox="0 0 32 32"><defs><linearGradient id="ue_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#10b981"/></linearGradient></defs><path d="M6 19 V25 C6 26.5 7.5 28 9 28 H23 C24.5 28 26 26.5 26 25 V19" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+           <path d="M16 4 L24 12 H19 V21 H13 V12 H8 Z" fill="url(#ue_a)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-ui-import" viewBox="0 0 32 32"><defs><linearGradient id="ui_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#0284c7"/></linearGradient></defs><path d="M6 19 V25 C6 26.5 7.5 28 9 28 H23 C24.5 28 26 26.5 26 25 V19" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
+           <path d="M16 22 L8 14 H13 V5 H19 V14 H24 Z" fill="url(#ui_a)" stroke="#160e26" stroke-width="2.2" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-ui-arrow-prev" viewBox="0 0 32 32"><defs><linearGradient id="uap_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs><path d="M22 5 L8 16 L22 27 L19 16 Z" fill="url(#uap_a)" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-ui-arrow-next" viewBox="0 0 32 32"><defs><linearGradient id="uan_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#f59e0b"/></linearGradient></defs><path d="M10 5 L24 16 L10 27 L13 16 Z" fill="url(#uan_a)" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-ui-close" viewBox="0 0 32 32"><defs><linearGradient id="uc_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fda4af"/><stop offset="100%" stop-color="#e11d48"/></linearGradient></defs><path d="M7 10 L10 7 L16 13 L22 7 L25 10 L19 16 L25 22 L22 25 L16 19 L10 25 L7 22 L13 16 Z" fill="url(#uc_a)" stroke="#160e26" stroke-width="2.4" stroke-linejoin="round"/></symbol>
+  <symbol id="ico-ui-radar-arrow" viewBox="0 0 32 32"><defs><linearGradient id="ura_a" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#fef08a"/><stop offset="52%" stop-color="#f97316"/><stop offset="100%" stop-color="#dc2626"/></linearGradient></defs><path d="M16 3 L28 26 L16 21 L4 26 Z" fill="url(#ura_a)" stroke="#160e26" stroke-width="2.6" stroke-linejoin="round"/>
+           <circle cx="16" cy="15" r="2.5" fill="#fff"/></symbol>
+</svg>
+`;
+}

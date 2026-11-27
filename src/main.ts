@@ -26,9 +26,12 @@ import { applyQualitySettings, showModal } from './ui/modals';
 import { wireEvents } from './ui/events';
 import { applyI18n } from './ui/i18n';
 import { showToast } from './ui/toast';
+import './styles';
+import { injectScreens } from './ui/screens';
 import { updateBranchChip, updateDnaHud, updateScaleHud, updateStageBiome, updateWeaponHud } from './ui/hud';
 
 async function bootstrap(): Promise<void> {
+  injectScreens(document.body); // статические экраны и SVG-спрайт - до initDom()
   const dom = initDom();
 
   // ---------- Сервисы: радар, physarum-симуляция, Pixi-оверлей, звук, ввод ----------

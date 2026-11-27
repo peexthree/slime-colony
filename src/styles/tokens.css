@@ -1,0 +1,251 @@
+/* tokens.css - Дизайн-токены LUMIVORE: CSS-переменные, порядок @layer и
+   базовый фундамент сцены (box-sizing, фон, канвасы, декор, hurt/toast).
+   Слой base включает keyframes hurtpulse. Разбивка старого biopunk-hud.css 1:1,
+   порядок импорта в src/styles/index.ts = порядок каскада исходного файла. */
+
+@layer tokens, base, hud, modals, overrides;
+
+@layer tokens {
+  :root {
+    --bio-cyan: #66fcf1;
+    --bio-cyan-soft: #9df5ff;
+    --bio-lime: #39ff14;
+    --bio-emerald: #00ff9d;
+    --bio-magenta: #ff2a85;
+    --bio-amber: #ffb800;
+    --bio-orange: #ff6b2b;
+    --bio-violet: #b55cff;
+    --bio-crimson: #ff3b4e;
+
+    --cyan: var(--bio-cyan);
+    --cyan-dim: #0e6e6b;
+    --violet: #c084fc;
+    --red: #ff3b5c;
+    --ink: #020304;
+
+    --panel: rgba(6, 13, 21, 0.94);
+    --panel-strong: rgba(7, 15, 24, 0.97);
+    --line: rgba(102, 252, 241, 0.24);
+    --line-subtle: rgba(148, 163, 184, 0.24);
+
+    /* Высококонтрастные текстовые токены (>= 4.5:1 на тёмной подложке) */
+    --text: #eaf4f8;
+    --text-secondary: #c3d4e3;
+    --text-dim: #9ab0c4;
+
+    --in-oklab: ;
+    color-scheme: dark;
+  }
+
+  @supports (background: linear-gradient(in oklab, white, black)) {
+    :root {
+      --in-oklab: in oklab;
+    }
+  }
+}
+
+@layer base {
+  :where(html, body, #stage, #stage div, #stage span, #stage p, #stage h1, #stage h2, #stage h3, #stage button, #stage input, #stage label, #stage canvas, #stage svg) {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: radial-gradient(ellipse at 50% 40%, #050a10 0%, #020304 72%);
+    color: var(--text);
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* Кастомные биопанк-скроллбары */
+  #stage :where(.scroll-region, #biolab-list, #codex-grid, .help-content, .settings-grid, .death-body, .main-menu-card, #cards, .ach-grid, .daily-brief-grid) {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(102, 252, 241, 0.45) rgba(6, 14, 22, 0.65);
+    overscroll-behavior: contain;
+  }
+
+  #stage :where(.scroll-region, #biolab-list, #codex-grid, .help-content, .settings-grid, .death-body, .main-menu-card, #cards, .ach-grid, .daily-brief-grid)::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+  }
+
+  #stage :where(.scroll-region, #biolab-list, #codex-grid, .help-content, .settings-grid, .death-body, .main-menu-card, #cards, .ach-grid, .daily-brief-grid)::-webkit-scrollbar-track {
+    background: rgba(6, 14, 22, 0.7);
+    border-radius: 99px;
+  }
+
+  #stage :where(.scroll-region, #biolab-list, #codex-grid, .help-content, .settings-grid, .death-body, .main-menu-card, #cards, .ach-grid, .daily-brief-grid)::-webkit-scrollbar-thumb {
+    background: rgba(102, 252, 241, 0.38);
+    border: 1px solid rgba(102, 252, 241, 0.35);
+    border-radius: 99px;
+  }
+
+  #stage :where(.scroll-region, #biolab-list, #codex-grid, .help-content, .settings-grid, .death-body, .main-menu-card, #cards, .ach-grid, .daily-brief-grid)::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 252, 241, 0.65);
+  }
+
+  :where(button, input, [tabindex]):focus-visible {
+    outline: 2px solid var(--bio-cyan);
+    outline-offset: 2px;
+  }
+
+  /* Утилиты иконок */
+  .bio-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    color: var(--bio-cyan);
+    filter: drop-shadow(0 0 6px currentColor);
+    flex-shrink: 0;
+  }
+
+  .bio-emerald { color: var(--bio-emerald) !important; }
+  .bio-orange  { color: var(--bio-orange) !important; }
+  .bio-crimson { color: var(--bio-crimson) !important; }
+  .bio-lime    { color: var(--bio-lime) !important; }
+  .bio-magenta { color: var(--bio-magenta) !important; }
+  .bio-amber   { color: var(--bio-amber) !important; }
+  .bio-violet  { color: var(--bio-violet) !important; }
+  .bio-cyan    { color: var(--bio-cyan) !important; }
+
+  /* Игровая сцена: на десктопе вписывается по ширине И высоте, на узких/портретных — на весь экран */
+  #stage {
+    position: relative;
+    width: min(98vw, calc(98dvh * 16 / 9), 1440px);
+    max-height: 98dvh;
+    aspect-ratio: 16 / 9;
+    container-type: size;
+    container-name: stage;
+    border: 1px solid rgba(102, 252, 241, 0.24);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(102, 252, 241, 0.08), inset 0 0 80px rgba(0, 0, 0, 0.6);
+    background: #030507;
+  }
+
+  #stage > canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  #gpu-canvas {
+    z-index: 1;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  #bloom-canvas {
+    z-index: 2;
+    object-fit: cover;
+    object-position: center;
+    mix-blend-mode: screen;
+    opacity: 0.16;
+    filter: blur(6px);
+    transform: scale(1.005);
+    pointer-events: none;
+  }
+
+  #pixi-canvas {
+    z-index: 3;
+    pointer-events: auto;
+    cursor: crosshair;
+  }
+
+  /* Декоративные уголки сцены и карточек */
+  .corner-deco {
+    position: absolute;
+    z-index: 4;
+    width: 24px;
+    height: 24px;
+    pointer-events: none;
+    color: var(--cyan);
+    opacity: 0.72;
+    filter: drop-shadow(0 0 5px rgba(102, 252, 241, 0.4));
+  }
+  .corner-deco svg { width: 100%; height: 100%; display: block; }
+  .corner-deco.tl { top: 6px; left: 6px; }
+  .corner-deco.tr { top: 6px; right: 6px; transform: scaleX(-1); }
+  .corner-deco.bl { bottom: 6px; left: 6px; transform: scaleY(-1); }
+  .corner-deco.br { bottom: 6px; right: 6px; transform: scale(-1); }
+
+  #scanlines {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    background: repeating-linear-gradient(0deg, transparent 2px, rgba(0, 0, 0, 0.04) 4px);
+    pointer-events: none;
+  }
+
+  #vignette {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    background: radial-gradient(ellipse, transparent 58%, rgba(0, 0, 0, 0.52) 100%);
+    pointer-events: none;
+  }
+
+  #hurt {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    box-shadow: inset 0 0 100px rgba(220, 20, 50, 0.45), inset 0 0 40px rgba(255, 30, 60, 0.2);
+    opacity: 0;
+    transition: opacity 0.25s ease-out;
+    pointer-events: none;
+  }
+  #hurt.hit { opacity: 0.35; transition: opacity 0.06s ease-out; }
+  #hurt.low-hp { opacity: 0.55; animation: hurtpulse 2.2s ease-in-out infinite; }
+  @keyframes hurtpulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.65; } }
+
+  #tailwarn {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    box-shadow: inset 0 0 80px rgba(255, 140, 30, 0.28);
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+    pointer-events: none;
+  }
+  #tailwarn.active { opacity: 0.28; }
+
+  #toast {
+    position: absolute;
+    z-index: 25;
+    top: 66px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px);
+    max-width: min(90%, 540px);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+    background: rgba(6, 18, 28, 0.94);
+    border: 1px solid rgba(102, 252, 241, 0.5);
+    color: #d7fcf9;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.toast--info { background: rgba(6, 18, 28, 0.94); border-color: rgba(102, 252, 241, 0.52); color: #d7fcf9; }
+  #toast.toast--success { background: rgba(5, 28, 16, 0.94); border-color: rgba(134, 239, 172, 0.6); color: #bbf7d0; }
+  #toast.toast--warn { background: rgba(34, 22, 4, 0.94); border-color: rgba(250, 204, 21, 0.6); color: #fef08a; }
+  #toast.toast--danger { background: rgba(35, 6, 10, 0.94); border-color: rgba(255, 59, 92, 0.6); color: #ffb3c0; }
+}

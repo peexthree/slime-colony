@@ -1,0 +1,669 @@
+/* hud.css - Слой hud: боевой HUD (ампулы HP/хвоста, шкала бытия, босс-бар,
+   ДНК-матрица, резонанс, оружие, кондуит XP, радар, чипы и баннеры).
+   Разбивка старого biopunk-hud.css 1:1, содержимое @layer hud не менялось. */
+@layer hud {
+  /* Скрываем боевой HUD пока открыто стартовое меню до начала забега */
+  #stage[data-phase="menu"] :where(.hud-top, #scale-hud, #boss-hud, #hud-left-col, #resonance-hud, #hud-bottom-left, #petri-radar-hud) {
+    opacity: 0;
+    pointer-events: none !important;
+    visibility: hidden;
+  }
+
+  /* HUD всегда остаётся чётким и непрозрачным во время игры, паузы и выбора мутаций */
+  #stage:not([data-phase="menu"]) :where(.hud-top, #scale-hud, #boss-hud, #hud-left-col, #resonance-hud, #hud-bottom-left, #petri-radar-hud) {
+    z-index: 8;
+  }
+
+  .hud-top {
+    position: absolute;
+    z-index: 8;
+    top: 12px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  .panel {
+    background: var(--panel);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 13px;
+    font-size: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    letter-spacing: 0.04em;
+  }
+
+  .panel .label { color: var(--text-dim); font-size: 10.5px; font-weight: 600; }
+  .cyan { color: var(--cyan); font-weight: 700; }
+  .violet { color: var(--violet); font-weight: 700; }
+
+  #hp-wrap { display: flex; flex-direction: column; gap: 4px; min-width: 196px; }
+  #hp-row, #tail-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+
+  /* Ампула здоровья (viewBox 320x56) — корректная геометрия без конфликта inline стилей */
+  .bio-hp-vial {
+    position: relative;
+    width: 196px;
+    height: 30px;
+    color: #ff3b4e;
+    flex-shrink: 0;
+  }
+  .bio-hp-vial .vial-track {
+    position: absolute;
+    left: 12%;
+    right: 7%;
+    top: 25%;
+    bottom: 25%;
+    border-radius: 99px;
+    background: rgba(255, 59, 78, 0.16);
+    overflow: hidden;
+  }
+  .bio-hp-vial .vial-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg var(--in-oklab), #99102a, #ff3b4e 68%, #ff99a8);
+    box-shadow: 0 0 14px rgba(255, 59, 78, 0.85);
+    transition: width 0.14s ease-out;
+  }
+  .bio-hp-vial .vial-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    filter: drop-shadow(0 0 6px rgba(255, 59, 78, 0.5));
+  }
+
+  #tail-bar {
+    position: relative;
+    width: 196px;
+    height: 34px;
+    flex-shrink: 0;
+  }
+  .bio-tail-vial .vial-track {
+    position: absolute;
+    left: 11.25%;
+    right: 8.125%;
+    top: 30.35%;
+    bottom: 30.35%;
+    border-radius: 99px;
+    background: rgba(16, 185, 129, 0.16);
+    overflow: hidden;
+  }
+  .bio-tail-vial .vial-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.45));
+  }
+  #tail-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg var(--in-oklab), #0e6e6b, #66fcf1);
+    box-shadow: 0 0 8px rgba(102, 252, 241, 0.5);
+    border-radius: 99px;
+    transition: width 0.15s linear;
+  }
+  #hp-wrap[data-state="low"] #tail-fill {
+    background: linear-gradient(90deg var(--in-oklab), #8a6d1a, #ffd166);
+    box-shadow: 0 0 8px rgba(255, 209, 102, 0.55);
+  }
+  #hp-wrap[data-state="crit"] #tail-fill {
+    background: linear-gradient(90deg var(--in-oklab), #8f1226, #ff5c5c);
+    box-shadow: 0 0 8px rgba(255, 92, 92, 0.6);
+  }
+  #hp-wrap[data-state="crit"] #tail-bar { animation: tailpulse 0.7s ease-in-out infinite; }
+  @keyframes tailpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  #hp-wrap.hunger #tail-num { color: #ff5c5c; animation: tailblink 0.8s steps(2, jump-none) infinite; }
+  @keyframes tailblink { 50% { opacity: 0.25; } }
+
+  /* Верхний центр: Шкала бытия + Босс-бар */
+  #scale-hud {
+    position: absolute;
+    z-index: 5;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    pointer-events: none;
+    width: min(330px, 34vw);
+  }
+  #scale-chip {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #b4f8ff;
+    text-shadow: 0 0 12px rgba(102, 252, 241, 0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .scale-bar-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 4px;
+  }
+  .scale-bracket {
+    width: 8px;
+    height: 14px;
+    flex-shrink: 0;
+    color: #9df5ff;
+    filter: drop-shadow(0 0 4px rgba(157, 245, 255, 0.5));
+  }
+  .scale-bracket.right { transform: scaleX(-1); }
+  #bio-bar {
+    flex: 1;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.09);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid rgba(157, 245, 255, 0.25);
+  }
+  #bio-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg var(--in-oklab), #1b7d82, #9df5ff);
+    box-shadow: 0 0 8px rgba(157, 245, 255, 0.6);
+    transition: width 0.25s linear;
+  }
+  #bio-fill.titan-ready {
+    background: linear-gradient(90deg var(--in-oklab), #9a7416, #ffd166);
+    animation: biopulse 0.8s ease-in-out infinite;
+  }
+  @keyframes biopulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+  /* Босс-бар Стража цикла / Титана */
+  #boss-hud {
+    position: absolute;
+    z-index: 5;
+    top: 46px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(360px, 42vw);
+    display: none;
+    flex-direction: column;
+    gap: 3px;
+    padding: 5px 10px;
+    background: rgba(16, 4, 12, 0.88);
+    border: 1px solid rgba(255, 42, 133, 0.55);
+    border-radius: 8px;
+    pointer-events: none;
+    box-shadow: 0 0 18px rgba(255, 42, 133, 0.24);
+  }
+  #boss-hud.show { display: flex; }
+  #boss-hud.titan {
+    border-color: rgba(255, 215, 0, 0.65);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.24);
+  }
+  .boss-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #ff85b3;
+  }
+  .boss-title-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #boss-hud.titan .boss-head { color: #ffd700; }
+  #boss-hp-text { color: var(--text); font-weight: 700; }
+  .bio-boss-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 460 / 72;
+  }
+  .bio-boss-frame .boss-track {
+    position: absolute;
+    left: 11.3%;
+    right: 11.3%;
+    top: 34.7%;
+    bottom: 34.7%;
+    width: auto;
+    height: auto;
+    background: rgba(147, 51, 234, 0.18);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .bio-boss-frame .boss-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.55));
+  }
+  #boss-hud.titan .boss-frame {
+    filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.65));
+  }
+  .boss-track {
+    position: relative;
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .boss-track::after {
+    content: '';
+    position: absolute;
+    left: 40%;
+    top: 0;
+    bottom: 0;
+    width: 1.5px;
+    background: rgba(255, 255, 255, 0.55);
+    pointer-events: none;
+  }
+  #boss-hp-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg var(--in-oklab), #be123c, #ff2a85);
+    transition: width 0.1s linear;
+  }
+  #boss-hud.titan #boss-hp-fill {
+    background: linear-gradient(90deg var(--in-oklab), #d97706, #ffd700);
+  }
+
+  /* Верхний правый блок: цикл, время, убийства, узлы, геном, ?, пауза */
+  .hud-top-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 44vw;
+  }
+  #nodes-chip { font-size: 11px; letter-spacing: 0.06em; color: var(--text-dim); display: inline-flex; align-items: center; gap: 2px; }
+  #branch-chip {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 5px;
+    border: 1px solid var(--line);
+    color: var(--text-secondary);
+    letter-spacing: 0.08em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  #branch-chip[data-branch="vermis"] { color: var(--cyan); border-color: rgba(102, 252, 241, 0.55); }
+  #branch-chip[data-branch="chimera"] { color: #ff7b93; border-color: rgba(255, 123, 147, 0.55); }
+  #branch-chip[data-branch="mycelium"] { color: #a3ff6b; border-color: rgba(163, 255, 107, 0.55); }
+  #branch-chip[data-branch="symbiont"] { color: #ffd166; border-color: rgba(255, 209, 102, 0.55); }
+  #branch-chip[data-branch="hybrid"] { color: #ffffff; border-color: rgba(255, 255, 255, 0.65); }
+
+  .hud-btn-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    pointer-events: auto;
+  }
+  .hud-icon-btn {
+    pointer-events: auto;
+    min-width: 28px;
+    min-height: 28px;
+    padding: 0 7px;
+    border-radius: 7px;
+    background: rgba(14, 24, 36, 0.85);
+    border: 1px solid rgba(102, 252, 241, 0.32);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.15s, color 0.15s, background 0.15s, scale 0.12s;
+  }
+  .hud-icon-btn:hover,
+  .hud-icon-btn.active,
+  .hud-icon-btn[aria-pressed="true"] { color: var(--cyan); border-color: var(--cyan); background: rgba(102, 252, 241, 0.14); }
+  .hud-icon-btn[hidden] { display: none; }
+  .hud-icon-btn:active { scale: 0.94; }
+  .hud-icon-btn svg { width: 14px; height: 14px; }
+
+  /* Левая колонка: ДНК-матрица + тактические статус-чипы (ниже топ-панели без наложений) */
+  #hud-left-col {
+    position: absolute;
+    z-index: 8;
+    left: 14px;
+    top: 148px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
+  }
+
+  #dna-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--panel);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 11px;
+    min-width: 174px;
+  }
+  .dna-row { display: flex; align-items: center; gap: 7px; font-size: 10px; }
+  .dna-row .dna-ico { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .dna-row .dna-ico svg { width: 14px; height: 14px; display: block; color: inherit; }
+  .dna-row .dna-name { width: 64px; letter-spacing: 0.06em; color: var(--text-secondary); font-weight: 600; }
+  .dna-row .dna-bar { flex: 1; height: 4px; border-radius: 3px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+  .dna-row .dna-fill { height: 100%; width: 0%; border-radius: 3px; transition: width 0.2s linear; }
+  .dna-row .dna-lvl { width: 24px; text-align: right; color: var(--text-secondary); font-weight: 700; }
+  .dna-row[data-max="1"] .dna-name { color: #ffffff; }
+  .dna-row[data-max="1"] .dna-lvl { color: #ffd166; }
+  #dna-vermis .dna-ico { color: #66fcf1; filter: drop-shadow(0 0 5px rgba(102, 252, 241, 0.7)); }
+  #dna-chimera .dna-ico { color: #ff7b93; filter: drop-shadow(0 0 5px rgba(255, 123, 147, 0.7)); }
+  #dna-mycelium .dna-ico { color: #a3ff6b; filter: drop-shadow(0 0 5px rgba(163, 255, 107, 0.7)); }
+  #dna-symbiont .dna-ico { color: #ffd166; filter: drop-shadow(0 0 5px rgba(255, 209, 102, 0.7)); }
+  #dna-vermis .dna-fill { background: #66fcf1; box-shadow: 0 0 6px rgba(102, 252, 241, 0.6); }
+  #dna-chimera .dna-fill { background: #ff7b93; box-shadow: 0 0 6px rgba(255, 123, 147, 0.6); }
+  #dna-mycelium .dna-fill { background: #a3ff6b; box-shadow: 0 0 6px rgba(163, 255, 107, 0.6); }
+  #dna-symbiont .dna-fill { background: #ffd166; box-shadow: 0 0 6px rgba(255, 209, 102, 0.6); }
+
+  #status-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 210px;
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 2px 7px;
+    border-radius: 99px;
+    background: rgba(6, 16, 24, 0.88);
+    border: 1px solid currentColor;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  }
+  .status-pill svg {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+  }
+
+  /* Комбо-множитель Симбиотического Резонанса */
+  .resonance-hud {
+    position: absolute;
+    top: 64px;
+    right: 14px;
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--panel);
+    border: 1px solid rgba(102, 252, 241, 0.34);
+    border-radius: 9px;
+    padding: 6px 12px;
+    min-width: 162px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .resonance-hud.show { opacity: 1; transform: translateY(0); }
+  .resonance-hud.tier-mid { border-color: rgba(250, 204, 21, 0.6); box-shadow: 0 0 18px rgba(250, 204, 21, 0.2); }
+  .resonance-hud.tier-high { border-color: rgba(255, 59, 92, 0.78); box-shadow: 0 0 22px rgba(255, 59, 92, 0.3), 0 0 12px rgba(102, 252, 241, 0.2); }
+  .resonance-top { display: flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 0.08em; }
+  .res-glow { font-size: 12px; color: #00ff9d; }
+  .res-mult { font-weight: 800; font-size: 13px; color: #66fcf1; text-shadow: 0 0 8px rgba(102, 252, 241, 0.6); }
+  .resonance-hud.tier-mid .res-mult { color: #facc15; text-shadow: 0 0 10px rgba(250, 204, 21, 0.65); }
+  .resonance-hud.tier-high .res-mult { color: #ff7b93; text-shadow: 0 0 12px rgba(255, 59, 92, 0.75); }
+  .res-label { color: var(--text-secondary); font-size: 9.5px; font-weight: 700; flex: 1; }
+  .res-streak { color: #ffffff; font-weight: 700; font-size: 10.5px; background: rgba(255, 255, 255, 0.12); padding: 1px 6px; border-radius: 4px; }
+  .res-bar-track { width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; }
+  .res-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #00ff9d, #66fcf1); border-radius: 3px; transition: width 0.06s linear; }
+  .resonance-hud.tier-mid .res-bar-fill { background: linear-gradient(90deg, #f59e0b, #facc15); }
+  .resonance-hud.tier-high .res-bar-fill { background: linear-gradient(90deg, #ff3b5c, #c084fc, #66fcf1); }
+
+  /* Левый нижний стек: #weapon-hud над #level-group — математически исключает коллизию */
+  #hud-bottom-left {
+    position: absolute;
+    z-index: 5;
+    left: 14px;
+    bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  #weapon-hud {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    pointer-events: auto;
+  }
+
+  .wh {
+    position: relative;
+    min-width: 42px;
+    padding: 3px 4px;
+    border-radius: 8px;
+    background: rgba(6, 13, 21, 0.94);
+    border: 1px solid rgba(102, 252, 241, 0.34);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .wh-ring {
+    position: relative;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: conic-gradient(var(--cyan) 0deg, rgba(255, 255, 255, 0.1) 0deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .wh-ring::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: rgba(2, 6, 8, 0.92);
+  }
+  .wh-ico {
+    position: absolute;
+    z-index: 1;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cyan);
+  }
+  .wh-ico svg { width: 14px; height: 14px; display: block; color: inherit; }
+  .wh-lvl { font-size: 9.5px; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.04em; line-height: 1.1; }
+  .wh.locked {
+    border-style: dashed;
+    border-color: rgba(148, 163, 184, 0.32);
+    background: rgba(8, 15, 24, 0.9);
+  }
+  .wh.locked .wh-ico svg { filter: grayscale(0.75) opacity(0.5); }
+  .wh.locked .wh-ico { color: #7f95ab; }
+  .wh.locked .wh-lvl { color: #9db0c4; }
+
+  .daily-hud-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 4px 9px;
+    border-radius: 7px;
+    background: rgba(24, 18, 5, 0.94);
+    border: 1px solid rgba(250, 204, 21, 0.55);
+    color: #fde047;
+    max-width: 220px;
+  }
+  .daily-hud-pill.done {
+    background: rgba(5, 26, 16, 0.94);
+    border-color: rgba(134, 239, 172, 0.65);
+    color: #86efac;
+  }
+  .daily-hud-pill[hidden] { display: none; }
+  .wh.ready { border-color: rgba(102, 252, 241, 0.62); }
+  .wh.ready .wh-ico svg { filter: drop-shadow(0 0 6px rgba(102, 252, 241, 0.95)); }
+  .wh.skill { border-color: rgba(181, 92, 255, 0.45); }
+  .wh.skill.ready { border-color: rgba(0, 255, 157, 0.75); }
+  .wh.skill.ready .wh-lvl { color: var(--bio-emerald); }
+
+  #level-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  #level {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--cyan);
+    border: 1px solid rgba(102, 252, 241, 0.48);
+    border-radius: 6px;
+    padding: 4px 10px;
+    background: rgba(4, 10, 16, 0.86);
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+
+  /* Кондуит эволюции (viewBox 320x44) */
+  .bio-xp-conduit {
+    position: relative;
+    width: 190px;
+    height: 26px;
+    color: #66fcf1;
+    flex-shrink: 0;
+  }
+  .bio-xp-conduit .conduit-track {
+    position: absolute;
+    left: 11.8%;
+    right: 8.5%;
+    top: 26%;
+    bottom: 26%;
+    border-radius: 99px;
+    background: rgba(102, 252, 241, 0.14);
+    overflow: hidden;
+  }
+  .bio-xp-conduit .conduit-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg var(--in-oklab), #0ea5a4, #66fcf1 72%, #ffffff);
+    box-shadow: 0 0 12px rgba(102, 252, 241, 0.85);
+    transition: width 0.2s ease-out;
+  }
+  .bio-xp-conduit .conduit-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    filter: drop-shadow(0 0 5px rgba(102, 252, 241, 0.55));
+  }
+
+  /* Мини-радар «Чашка Петри» */
+  .petri-radar {
+    position: absolute;
+    right: 16px;
+    bottom: 14px;
+    z-index: 5;
+    pointer-events: none;
+    width: 124px;
+    height: 124px;
+    color: #00ff9d;
+  }
+  .petri-radar #radar-canvas {
+    position: absolute;
+    inset: 10%;
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+  }
+  .petri-radar .radar-frame,
+  .petri-radar .radar-sweep {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .petri-radar .radar-frame { filter: drop-shadow(0 0 6px rgba(0, 255, 157, 0.45)); }
+  .petri-radar #radar-badge {
+    position: absolute;
+    top: -19px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #00ff9d;
+    background: rgba(2, 6, 10, 0.9);
+    border: 1px solid rgba(0, 255, 157, 0.38);
+    padding: 2px 7px;
+    border-radius: 5px;
+    white-space: nowrap;
+    text-shadow: 0 0 6px rgba(0, 255, 157, 0.6);
+  }
+  .radar-badge-ico { width: 12px; height: 12px; flex-shrink: 0; }
+
+  .chip-ico { width: 14px; height: 14px; display: inline-block; vertical-align: -2px; margin-right: 3px; }
+  .chip-node-ico {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    vertical-align: -2px;
+    margin: 0 1px;
+    color: var(--cyan);
+    filter: drop-shadow(0 0 4px rgba(102, 252, 241, 0.6));
+  }
+  .inline-card-ico {
+    width: 15px;
+    height: 15px;
+    display: inline-block;
+    vertical-align: -2px;
+    color: inherit;
+    filter: drop-shadow(0 0 5px currentColor);
+  }
+
+  .wave-event-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    border-left: 3px solid currentColor;
+    background: linear-gradient(90deg, rgba(13, 21, 34, 0.94), rgba(13, 21, 34, 0.4));
+    text-shadow: 0 0 10px currentColor;
+  }
+  .wave-event-banner svg { width: 20px; height: 20px; filter: drop-shadow(0 0 7px currentColor); }
+}
