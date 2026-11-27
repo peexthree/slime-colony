@@ -22,15 +22,15 @@ import { getLocale, setLocale, t, I18nKey } from './i18n';
 import { trBiolab, trChallengeTitle, trCodex, trDnaName, trHybrid, trNode, trScale, trUpgrade } from './i18n/gameData';
 import { inPoly, polyArea, segIsect } from './game/ringOfDeath';
 import { SpatialHashGrid } from './game/spatialHash';
-import { canUnlockWeapon, canUpgradeWeapon, equippedWeaponCount, xpRequiredForLevel } from './game/progression';
+import { canUnlockWeapon, canUpgradeWeapon, equippedWeaponCount, FOREIGN_BRANCH_PENALTY, xpRequiredForLevel } from './game/progression';
 import { stepBioNodes } from './game/bioNodes';
 import { ENEMY_SPRITES, ENEMY_SPRITES_V2, ENEMY_SPRITES_V4 } from './engine/svgAssets';
 import {
   AURA, Beacon, BioNode, BOSS_EVERY, BOSS_FIRST_AT, CALL, CYSTS, DASH, DNA_COLORS, DNA_LEVELS,
   DNA_NAMES, ELITE, ENEMIES, ENEMY_CAP, EnemyType, GROWTH, HybridId, HYBRIDS, IFRAME, MANDIBLES,
-  MAX_EQUIPPED_WEAPONS, METAMORPH, NOVA, NodeKind, ORBS, PLAYER, PROJ_LIFE, PROJ_RADIUS, PROJ_SPEED, RING,
+  MAX_EQUIPPED_WEAPONS, METAMORPH, NOVA, NODE_SHIELD_SEC, NodeKind, ORBS, PLAYER, PROJ_LIFE, PROJ_RADIUS, PROJ_SPEED, RING,
   SCALES, SIM_HEIGHT, SIM_WIDTH, SPAWN_TABLE, SPIKES, STAT_MAX_STACKS, STRAIN, TAIL,
-  WeaponId, WEAPON_MAX_LVL, WEAPON_UNLOCK_LEVEL, WORLD, worldSize,
+  WeaponId, WEAPON_BRANCH, WEAPON_MAX_LVL, WEAPON_UNLOCK_LEVEL, WORLD, worldSize,
 } from './engine/types';
 import type { DnaBranchOrNeutral, EliteMutation } from './engine/types';
 
@@ -275,6 +275,11 @@ async function bootstrap() {
   let regen = 0.18; // базовая регенерация, улучшения добавляют сверху
   let dmgMul = 1;
   let atkSpdMul = 1;
+  // Резонанс генома: 2+ оружия одной ветки дают пассивку сборки
+  let resDmgMul = 1;
+  let resTailMul = 1;
+  let resAtkMul = 1;
+  let resRegen = 0;
   const statStacks: Record<string, number> = {};
 
 const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, mandibles: 0, cysts: 0 };
@@ -440,15 +445,18 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           playerInside: false,
           enemyCount: 0,
           warnCooldown: 0,
+          shieldT: 0,
         });
       });
     } else {
       const prevW = worldSize(sIdx - 1).w;
       const prevH = worldSize(sIdx - 1).h;
+      // 3 новых узла за локацию: всего ~47 башен к финалу (лимит MAX_NODES 64 с запасом)
       const newKinds: NodeKind[] = ['mutagen', 'amp', 'gen', 'incubator'];
-      newKinds.forEach((kind, idx) => {
+      for (let idx = 0; idx < 3; idx++) {
+        const kind = newKinds[(sIdx + idx) % newKinds.length];
         const id = bioNodes.length;
-        const angle = (idx / newKinds.length) * Math.PI * 2 + Math.random() * 0.4;
+        const angle = (idx / 3) * Math.PI * 2 + Math.random() * 0.4;
         const radX = (prevW / 2) + (curWorldW - prevW) * (0.35 + Math.random() * 0.35);
         const radY = (prevH / 2) + (curWorldH - prevH) * (0.35 + Math.random() * 0.35);
         const nx = Math.max(50, Math.min(curWorldW - 50, curWorldW / 2 + Math.cos(angle) * radX));
@@ -466,8 +474,9 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
           playerInside: false,
           enemyCount: 0,
           warnCooldown: 0,
+          shieldT: 0,
         });
-      });
+      }
     }
   }
   spawnNodesForScale(0);
@@ -507,7 +516,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   const pathHistory: { x: number; y: number }[] = [];
   let tailTick = 0;
   const maxTail = () => Math.round((TAIL.baseMax + level * TAIL.maxPerLvl + tailCapBonus) * codexBonuses.tailCapMul);
-  const tailDps = () => (TAIL.dpsBase + tailLen * TAIL.dpsPerSeg) * tailDpsMul * dailyTailDpsMul;
+  const tailDps = () => (TAIL.dpsBase + tailLen * TAIL.dpsPerSeg) * tailDpsMul * resTailMul * dailyTailDpsMul;
   // Компактный размер: организм не раздувается на весь экран, сохраняет ловкость и изящество
   const playerRadius = () => {
     const base = PLAYER.radius;
@@ -517,10 +526,34 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   };
   const moveCost = () => TAIL.moveCost * (0.8 + tailLen * 0.02); // большой хвост дороже тащить
   const visibleTail = () => pathHistory.slice(-Math.max(1, Math.floor(tailLen)));
-  // Эффективный урон: множители бонусов, узлов и «Нестабильного генома»
+  // Эффективный урон: множители бонусов, узлов, резонанса и «Нестабильного генома»
   const effDmg = () =>
-    dmgMul * weaponPenalty * (ampOwned ? 1.12 : 1) * dailyDmgMul * (genes.has('unstable') ? (unstableT > 0 ? 0.55 : 1.8) : 1);
-  const effAtkSpd = () => atkSpdMul * (unstableT > 0 && unstableKind === 2 ? 0.6 : 1);
+    dmgMul * resDmgMul * weaponPenalty * (ampOwned ? 1.12 : 1) * dailyDmgMul * (genes.has('unstable') ? (unstableT > 0 ? 0.55 : 1.8) : 1);
+  const effAtkSpd = () => atkSpdMul * resAtkMul * (unstableT > 0 && unstableKind === 2 ? 0.6 : 1);
+
+  /** Резонанс генома: 2+ оружия одной ветки -> пассивка сборки.
+   *  Награда за цельность: итог прокачки - одно существо с фирменным арсеналом. */
+  function refreshResonance(): void {
+    resDmgMul = 1; resTailMul = 1; resAtkMul = 1; resRegen = 0;
+    const cnt: Record<DnaBranch, number> = { vermis: 0, chimera: 0, mycelium: 0, symbiont: 0 };
+    for (const w of Object.keys(wlvl) as WeaponId[]) {
+      if (wlvl[w] > 0) cnt[WEAPON_BRANCH[w]]++;
+    }
+    for (const b of ['vermis', 'chimera', 'mycelium', 'symbiont'] as DnaBranch[]) {
+      if (cnt[b] < 2) continue;
+      if (b === 'vermis') resTailMul = 1.15;
+      else if (b === 'chimera') resDmgMul = 1.10;
+      else if (b === 'mycelium') resRegen = 1;
+      else resAtkMul = 1.10;
+    }
+  }
+
+  /** Доминирующий геном для оружия: гибрид считается финалом - все ветки открыты */
+  const mainBranchForWeapons = (): DnaBranch | null => {
+    if (mainGenome === 'neutral') return null;
+    if (HYBRIDS.some((h) => h.id === mainGenome)) return null;
+    return mainGenome as DnaBranch;
+  };
   /** Неуязвимость после урона: ген «Фазовый сдвиг» удваивает окно */
   const iframeNow = () => IFRAME * (genes.has('phantom') ? 2 : 1) + (curseChitin ? 1.5 : 0);
 
@@ -637,28 +670,30 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     toastTimer = window.setTimeout(() => toastEl.classList.remove('show'), 1900);
   }
 
+  /** Рамка сцены: биом-палитра каждой из 15 локаций (синхронно с SCALE_FORM) */
+  const STAGE_BIOMES: { bg: string; rgb: string }[] = [
+    { bg: '#03141c', rgb: '102, 252, 241' },   // 1 капля
+    { bg: '#0c1c05', rgb: '154, 230, 110' },   // 2 агара
+    { bg: '#051c12', rgb: '87, 230, 169' },    // 3 тракт
+    { bg: '#04161c', rgb: '56, 189, 248' },    // 4 лимфа
+    { bg: '#040f24', rgb: '77, 141, 255' },    // 5 океан
+    { bg: '#14161a', rgb: '226, 232, 240' },   // 6 кость
+    { bg: '#0d0620', rgb: '139, 92, 246' },    // 7 синапсы
+    { bg: '#1a1303', rgb: '251, 191, 36' },    // 8 выдох
+    { bg: '#031a10', rgb: '52, 211, 153' },    // 9 тайги
+    { bg: '#1c0d04', rgb: '249, 115, 22' },    // 10 ржавые дюны
+    { bg: '#1c0b03', rgb: '255, 138, 61' },    // 11 разлом
+    { bg: '#061722', rgb: '125, 211, 252' },   // 12 полярный щит
+    { bg: '#052026', rgb: '165, 243, 252' },   // 13 небесный планктон
+    { bg: '#1b0620', rgb: '240, 171, 252' },   // 14 ионосфера
+    { bg: '#130424', rgb: '168, 85, 247' },    // 15 фрактал
+  ];
+
   function updateStageBiome(scId: number): void {
-    if (scId === 1) {
-      stage.style.background = '#03141c';
-      stage.style.borderColor = 'rgba(102, 252, 241, 0.35)';
-      stage.style.boxShadow = '0 0 60px rgba(102, 252, 241, 0.12), inset 0 0 80px rgba(0, 0, 0, 0.6)';
-    } else if (scId === 2) {
-      stage.style.background = '#1c050b';
-      stage.style.borderColor = 'rgba(255, 59, 92, 0.35)';
-      stage.style.boxShadow = '0 0 60px rgba(255, 59, 92, 0.12), inset 0 0 80px rgba(0, 0, 0, 0.6)';
-    } else if (scId === 3) {
-      stage.style.background = '#040f24';
-      stage.style.borderColor = 'rgba(59, 130, 246, 0.35)';
-      stage.style.boxShadow = '0 0 60px rgba(59, 130, 246, 0.12), inset 0 0 80px rgba(0, 0, 0, 0.6)';
-    } else if (scId === 4) {
-      stage.style.background = '#1c0b03';
-      stage.style.borderColor = 'rgba(249, 115, 22, 0.35)';
-      stage.style.boxShadow = '0 0 60px rgba(249, 115, 22, 0.12), inset 0 0 80px rgba(0, 0, 0, 0.6)';
-    } else {
-      stage.style.background = '#130424';
-      stage.style.borderColor = 'rgba(168, 85, 247, 0.35)';
-      stage.style.boxShadow = '0 0 60px rgba(168, 85, 247, 0.12), inset 0 0 80px rgba(0, 0, 0, 0.6)';
-    }
+    const theme = STAGE_BIOMES[Math.max(0, Math.min(SCALES.length - 1, scId - 1))];
+    stage.style.background = theme.bg;
+    stage.style.borderColor = `rgba(${theme.rgb}, 0.35)`;
+    stage.style.boxShadow = `0 0 60px rgba(${theme.rgb}, 0.12), inset 0 0 80px rgba(0, 0, 0, 0.6)`;
   }
 
   interface SettingsData {
@@ -849,7 +884,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     const icoTone = n.owner === 1 ? 'bio-cyan' : n.owner === -1 ? 'bio-crimson' : 'bio-violet';
     const icoHtml = `<svg class="bio-icon ${icoTone}" viewBox="0 0 32 32" aria-hidden="true"><use href="#ico-node-${n.kind}"/></svg>`;
     if (n.owner === 1) {
-      showToast(`${icoHtml} ${en ? 'TOWER CAPTURED' : 'БАШНЯ ЗАХВАЧЕНА'}: ${tn.name} (${tn.pos})`, 'success');
+      showToast(
+        `${icoHtml} ${en ? 'TOWER CAPTURED' : 'БАШНЯ ЗАХВАЧЕНА'}: ${tn.name} (${tn.pos})` +
+        ` · ${t('toast_node_shield', { sec: NODE_SHIELD_SEC })}`,
+        'success',
+      );
       if (n.kind === 'mutagen') nextPickDelta = 1;
     } else if (n.owner === -1) {
       showToast(`${icoHtml} ${en ? 'TOWER LOST' : 'БАШНЯ ПОТЕРЯНА'}: ${tn.name} (${tn.neg})`, 'danger');
@@ -882,10 +921,11 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
   /** Эксклюзивный ген генома открыт: 3 ДНК-уровня ветки */
   const geneAvail = (branch: DnaBranch, gene: string): boolean =>
     dnaLvl(branch) >= 3 && !genes.has(gene);
-  /** Гибрид доступен: оба родительских генома на 3 ДНК-уровне, ещё не взят */
+  /** Гибрид - итоговая форма забега: строго одна за прогон */
   const hybridAvail = (id: HybridId): boolean => {
     const def = HYBRIDS.find((h) => h.id === id);
     if (!def) return false;
+    if (hybridsTaken.size > 0) return false;
     return dnaLvl(def.a) >= 3 && dnaLvl(def.b) >= 3 && !hybridsTaken.has(id);
   };
   /** Взятие гибрида: флавор-бонус + механика включается через hybridsTaken */
@@ -908,21 +948,22 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     if (id === 'spore_reactor') { if (wlvl.aura > 0) wlvl.aura = Math.min(WEAPON_MAX_LVL, wlvl.aura + 1); else dmgMul += 0.15; }
     if (id === 'ion_colossus') { if (wlvl.orbs > 0) wlvl.orbs = Math.min(WEAPON_MAX_LVL, wlvl.orbs + 1); else wlvl.orbs = 1; }
     if (id === 'psi_web') magnetR *= 1.3;
+    refreshResonance();
     refreshMainGenome();
   }
 
   const UPGRADES: UpgradeDef[] = [
-    { id: 'spikes0', title: 'Шипы', desc: 'Автоматические иглы: поражают ближайших врагов', avail: () => canUnlockWeapon('spikes', wlvl, level), apply: () => (wlvl.spikes = 1) },
+    { id: 'spikes0', title: 'Шипы', desc: 'Автоматические иглы: поражают ближайших врагов', avail: () => canUnlockWeapon('spikes', wlvl, level, mainBranchForWeapons()), apply: () => { wlvl.spikes = 1; refreshResonance(); } },
     { id: 'spikes+', title: 'Шипы', desc: 'Больше урона, шипов и выше скорострельность', avail: () => canUpgradeWeapon('spikes', wlvl.spikes, level), apply: () => wlvl.spikes++ },
-    { id: 'orbits0', title: 'Электроорбиты', desc: 'Сферы вращаются вокруг вас и жгут врагов рядом', avail: () => canUnlockWeapon('orbs', wlvl, level), apply: () => (wlvl.orbs = 1) },
+    { id: 'orbits0', title: 'Электроорбиты', desc: 'Сферы вращаются вокруг вас и жгут врагов рядом', avail: () => canUnlockWeapon('orbs', wlvl, level, mainBranchForWeapons()), apply: () => { wlvl.orbs = 1; refreshResonance(); } },
     { id: 'orbits+', title: 'Электроорбиты', desc: '+1 сфера и повышение урона', avail: () => canUpgradeWeapon('orbs', wlvl.orbs, level), apply: () => wlvl.orbs++ },
-    { id: 'nova0', title: 'Нова-импульс', desc: 'Взрывное кольцо: урон и отброс толпы', avail: () => canUnlockWeapon('nova', wlvl, level), apply: () => (wlvl.nova = 1) },
+    { id: 'nova0', title: 'Нова-импульс', desc: 'Взрывное кольцо: урон и отброс толпы', avail: () => canUnlockWeapon('nova', wlvl, level, mainBranchForWeapons()), apply: () => { wlvl.nova = 1; refreshResonance(); } },
     { id: 'nova+', title: 'Нова-импульс', desc: 'Больше радиус и урон, быстрее перезарядка', avail: () => canUpgradeWeapon('nova', wlvl.nova, level), apply: () => wlvl.nova++ },
-    { id: 'aura0', title: 'Токсичная аура', desc: 'Едкое поле отравляет всех врагов вокруг', avail: () => canUnlockWeapon('aura', wlvl, level), apply: () => (wlvl.aura = 1) },
+    { id: 'aura0', title: 'Токсичная аура', desc: 'Едкое поле отравляет всех врагов вокруг', avail: () => canUnlockWeapon('aura', wlvl, level, mainBranchForWeapons()), apply: () => { wlvl.aura = 1; refreshResonance(); } },
     { id: 'aura+', title: 'Токсичная аура', desc: 'Больше радиус и урон в секунду', avail: () => canUpgradeWeapon('aura', wlvl.aura, level), apply: () => wlvl.aura++ },
-    { id: 'mandibles0', title: 'Хищные жвала', desc: 'Фронтальный конус урона: разрывает врагов перед вами', avail: () => canUnlockWeapon('mandibles', wlvl, level), apply: () => (wlvl.mandibles = 1) },
+    { id: 'mandibles0', title: 'Хищные жвала', desc: 'Фронтальный конус урона: разрывает врагов перед вами', avail: () => canUnlockWeapon('mandibles', wlvl, level, mainBranchForWeapons()), apply: () => { wlvl.mandibles = 1; refreshResonance(); } },
     { id: 'mandibles+', title: 'Хищные жвала', desc: 'Больше радиус, угол рассечения и урон', avail: () => canUpgradeWeapon('mandibles', wlvl.mandibles, level), apply: () => wlvl.mandibles++ },
-    { id: 'cysts0', title: 'Споровые цисты', desc: 'Органические мины: сбрасываются только в движении', avail: () => canUnlockWeapon('cysts', wlvl, level), apply: () => (wlvl.cysts = 1) },
+    { id: 'cysts0', title: 'Споровые цисты', desc: 'Мощные органические мины поздней стадии: сбрасываются только в движении', avail: () => canUnlockWeapon('cysts', wlvl, level, mainBranchForWeapons()) && dnaLvl('mycelium') >= 2, apply: () => { wlvl.cysts = 1; refreshResonance(); } },
     { id: 'cysts+', title: 'Споровые цисты', desc: 'Больше цист, выше радиус и урон детонации', avail: () => canUpgradeWeapon('cysts', wlvl.cysts, level), apply: () => wlvl.cysts++ },
     // --- Критические мутации (патологии): сверхсила с расплатой ---
     {
@@ -1207,6 +1248,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     const u = UPGRADES.find((x) => x.id === card.dataset.id);
     if (!u) return;
     u.apply();
+    refreshResonance();
     sfx.upgradeSelect();
     // Разовый выброс спор в честь эволюции / выбора мутации
     sim.spawnPlayerSpores(toSimX(player.x), toSimY(player.y), 2200);
@@ -1287,10 +1329,12 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
 
   function updateWeaponHud(): void {
     const slotsFull = equippedWeaponCount(wlvl) >= MAX_EQUIPPED_WEAPONS;
+    const mainBranch = mainBranchForWeapons();
     const lockedLabel = (id: WeaponId): string | undefined => {
       if (wlvl[id] > 0) return undefined;
       if (slotsFull) return t('wh_slot_cap');
-      const req = WEAPON_UNLOCK_LEVEL[id];
+      const foreign = mainBranch !== null && WEAPON_BRANCH[id] !== mainBranch;
+      const req = WEAPON_UNLOCK_LEVEL[id] + (foreign ? FOREIGN_BRANCH_PENALTY : 0);
       return req > 1 ? t('wh_unlock_lvl', { lvl: req }) : t('wh_locked');
     };
     const spIdx = Math.min(WEAPON_MAX_LVL - 1, Math.max(0, wlvl.spikes - 1));
@@ -2107,6 +2151,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       biolabNovaCdMul = 1.15;
       novaCd = NOVA.cd[0] * biolabNovaCdMul;
     }
+    refreshResonance();
     if (isActive('start_tail_xl', bl)) tailLen = TAIL.startLen + 6;
     if (isActive('perm_regen', bl)) regen += 0.25;
     if (isActive('perm_magnet', bl)) magnetR *= 1.2;
@@ -2340,6 +2385,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
     wlvl.aura = 0;
     wlvl.mandibles = 0;
     wlvl.cysts = 0;
+    resDmgMul = 1; resTailMul = 1; resAtkMul = 1; resRegen = 0;
     spikesCd = 0;
     mandiblesCd = 0;
     cystsCd = 0;
@@ -2533,12 +2579,12 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       y = Math.max(12, Math.min(curWorldH - 12, camY + Math.sin(angle) * spawnDist));
     }
     const scale = SCALES[scaleIdx];
-    const hpScale = (1 + (gameTime / 60) * 0.45) * scale.enemyHpMul;
+    const hpScale = (1 + (gameTime / 60) * 0.30) * scale.enemyHpMul;
     let maxHp = Math.round(def.hp * hpScale);
     // Размер врагов масштабируется со шкалой бытия: на макро-уровнях они равны и превосходят игрока
     let radius = Math.round(def.radius * scale.enemySizeMul);
     // Урон врагов масштабируется со шкалой и временем выживания
-    const dmgScale = (1 + (gameTime / 60) * 0.20) * scale.enemyDmgMul;
+    const dmgScale = (1 + (gameTime / 60) * 0.15) * scale.enemyDmgMul;
     let dmg = Math.round(def.dmg * dmgScale);
 
     let elite: EliteMutation | null = null;
@@ -3272,7 +3318,7 @@ const wlvl: Record<WeaponId, number> = { spikes: 1, orbs: 0, nova: 0, aura: 0, m
       else idleTime += dt;
 
       player.iframe = Math.max(0, player.iframe - dt);
-      player.hp = Math.min(maxHp, player.hp + (regen + nodeRegenBonus + codexBonuses.regenAdd) * dt);
+      player.hp = Math.min(maxHp, player.hp + (regen + resRegen + nodeRegenBonus + codexBonuses.regenAdd) * dt);
 
       // Экономика хвоста: движение сжигает энергию, неподвижность истощает форму.
       // Усилитель (-40% таяния), Нейросеть (2+ узла) и Вспышка митоза замедляют таяние и питают хвост.

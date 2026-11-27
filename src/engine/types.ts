@@ -35,7 +35,12 @@ export interface BioNode {
   playerInside?: boolean;
   enemyCount?: number;
   warnCooldown?: number;
+  /** Секунды био-щита после захвата: узел нельзя слить, пока щит активен */
+  shieldT?: number;
 }
+
+/** Био-щит только что захваченной башни: время на уход и защиту других узлов */
+export const NODE_SHIELD_SEC = 18;
 
 /** Феромон-зов (пробел): токсин-маяк пугает рой и отбрасывает врагов */
 export const CALL = {
@@ -138,15 +143,27 @@ export const SPAWN_TABLE: { since: number; type: EnemyType; chance: number }[] =
   { since: 230, type: 'mirror',   chance: 0.04 },
 ];
 
-/** Минимальный уровень игрока для открытия каждого оружия и максимум слотов */
-export const MAX_EQUIPPED_WEAPONS = 4;
+/** Минимальный уровень игрока для открытия каждого оружия и максимум слотов.
+ *  Лимит слотов сознательно тесный: итог прокачки - одно целостное существо
+ *  (или его Гибрид), а не «куча пушек». Родное оружие генома дешёвое,
+ *  чужое - дороже на 4 уровня (см. progression.canUnlockWeapon). */
+export const MAX_EQUIPPED_WEAPONS = 3;
+/** Родной геном каждого оружия: ветка сборки диктует арсенал */
+export const WEAPON_BRANCH: Record<WeaponId, DnaBranch> = {
+  spikes: 'vermis',
+  mandibles: 'vermis',
+  nova: 'chimera',
+  aura: 'mycelium',
+  cysts: 'mycelium',
+  orbs: 'symbiont',
+};
 export const WEAPON_UNLOCK_LEVEL: Record<WeaponId, number> = {
   spikes: 1,
   mandibles: 3,
   orbs: 5,
   aura: 7,
   nova: 9,
-  cysts: 11,
+  cysts: 13, // мины - капстоун поздней стадии: мощно, но открывается в конце
 };
 
 /** Шипы: авто-выстрел в ближайшую цель. Таблицы по уровням 1..4 */
@@ -187,16 +204,18 @@ export const MANDIBLES = {
   arc:    Math.PI * 0.62, // ~112 градусов сектор удара
 } as const;
 
-/** Споровые цисты: коконы-мины, сбрасываются только при движении (открываются с 11 ур.) */
+/** Споровые цисты: коконы-мины, сбрасываются только при движении.
+ *  Капстоун мицелия поздней стадии: открывается с 13 ур. при ДНК мицелия 2+,
+ *  поэтому мощность в разы выше ранних оружий. */
 export const CYSTS = {
-  cd:       [3.8, 3.3, 2.8, 2.3],
-  dmg:      [18, 25, 34, 44],
-  radius:   [34, 40, 46, 52],
-  maxCysts: [3, 4, 5, 7],
-  perDrop:  [1, 1, 1, 2],
+  cd:       [3.4, 3.0, 2.6, 2.2],
+  dmg:      [30, 42, 56, 74],
+  radius:   [42, 50, 58, 68],
+  maxCysts: [4, 5, 6, 8],
+  perDrop:  [1, 1, 2, 2],
   moveDist: 85,
   armTime:  0.55,
-  blastMul: 1.3,
+  blastMul: 1.45,
 } as const;
 
 /** Фазовый рывок (Dash) */
@@ -288,13 +307,28 @@ export interface ScaleTheme {
   biomassGoal: number;   // биомасса для созревания Титана
 }
 
-/** 5 масштабов бытия: от капли до фрактала. Зумаут — кульминация шкалы */
+/**
+ * 15 локаций - Лестница Эволюции. Лор: зонд «ЕвроКорп-3» упал на планету Ξ-9,
+ * и в его реакторе очнулась капля забытой биомассы. Она прорастает сквозь агару,
+ * тело носителя, выходит на поверхность планеты, поднимается в её небо
+ * и переступает предел биологии. Каждая локация - зумаут и новый биом.
+ */
 export const SCALES: ScaleTheme[] = [
-  { id: 1, name: 'ПЕРВИЧНАЯ КАПЛЯ', sub: 'Микромир: капля биомассы в реакторе зонда «ЕвроКорп-3»', zoom: 1.0, enemyHpMul: 1.0, enemyDmgMul: 1.0, enemySizeMul: 1.0, enemySpeedMul: 1.0, biomassGoal: 130 },
-  { id: 2, name: 'КРОВЕНОСНЫЙ ТРАКТ', sub: 'Ткань носителя: пульсирующие стенки сосуда', zoom: 0.85, enemyHpMul: 2.1, enemyDmgMul: 1.65, enemySizeMul: 1.45, enemySpeedMul: 1.14, biomassGoal: 270 },
-  { id: 3, name: 'ВНУТРЕННИЙ ОКЕАН', sub: 'Орган: чёрная желчь и биолюминесцентная взвесь', zoom: 0.72, enemyHpMul: 4.0, enemyDmgMul: 2.5, enemySizeMul: 2.0, enemySpeedMul: 1.28, biomassGoal: 440 },
-  { id: 4, name: 'КОНТИНЕНТАЛЬНЫЙ РАЗЛОМ', sub: 'Планета Ξ-9: магматическая кора полушария', zoom: 0.60, enemyHpMul: 6.8, enemyDmgMul: 3.6, enemySizeMul: 2.7, enemySpeedMul: 1.42, biomassGoal: 660 },
-  { id: 5, name: 'ФРАКТАЛ БЕСКОНЕЧНОСТИ', sub: 'Метаматематика: выход за пределы биологии', zoom: 0.50, enemyHpMul: 11.5, enemyDmgMul: 5.0, enemySizeMul: 3.5, enemySpeedMul: 1.58, biomassGoal: 920 },
+  { id: 1, name: 'ПЕРВИЧНАЯ КАПЛЯ', sub: 'Реактор зонда «ЕвроКорп-3»: капля биомассы очнулась в колбе', zoom: 1.0, enemyHpMul: 1.0, enemyDmgMul: 1.0, enemySizeMul: 1.0, enemySpeedMul: 1.0, biomassGoal: 130 },
+  { id: 2, name: 'АГАРА-МАТРИЦА', sub: 'Чаша Петри: поля питательной агры, первые охотничьи угодья', zoom: 0.92, enemyHpMul: 1.4, enemyDmgMul: 1.15, enemySizeMul: 1.12, enemySpeedMul: 1.04, biomassGoal: 240 },
+  { id: 3, name: 'КРОВЕНОСНЫЙ ТРАКТ', sub: 'Ткань носителя: пульсирующие стенки сосуда', zoom: 0.84, enemyHpMul: 2.0, enemyDmgMul: 1.33, enemySizeMul: 1.25, enemySpeedMul: 1.08, biomassGoal: 350 },
+  { id: 4, name: 'ЛИМФАТИЧЕСКИЙ ПРИЛИВ', sub: 'Лимфа носителя: белёсые реки несут чужаков к фильтрам', zoom: 0.77, enemyHpMul: 2.8, enemyDmgMul: 1.53, enemySizeMul: 1.4, enemySpeedMul: 1.13, biomassGoal: 470 },
+  { id: 5, name: 'ВНУТРЕННИЙ ОКЕАН', sub: 'Орган: чёрная желчь и биолюминесцентная взвесь', zoom: 0.71, enemyHpMul: 3.9, enemyDmgMul: 1.76, enemySizeMul: 1.56, enemySpeedMul: 1.18, biomassGoal: 600 },
+  { id: 6, name: 'КОСТНЫЙ ЛАБИРИНТ', sub: 'Скелет носителя: остовы рёбер и хрящевые арки', zoom: 0.66, enemyHpMul: 5.3, enemyDmgMul: 2.02, enemySizeMul: 1.74, enemySpeedMul: 1.23, biomassGoal: 740 },
+  { id: 7, name: 'СИНАПТИЧЕСКАЯ ПУСТОШЬ', sub: 'Нервная система: мысли носителя вспыхивают грозой', zoom: 0.62, enemyHpMul: 7.1, enemyDmgMul: 2.32, enemySizeMul: 1.95, enemySpeedMul: 1.28, biomassGoal: 890 },
+  { id: 8, name: 'ВЫДОХ НОСИТЕЛЯ', sub: 'Наружу: с выдохом организм покидает тело и видит звёзды Ξ-9', zoom: 0.58, enemyHpMul: 9.4, enemyDmgMul: 2.67, enemySizeMul: 2.18, enemySpeedMul: 1.33, biomassGoal: 1050 },
+  { id: 9, name: 'ГРИБНЫЕ ТАЙГИ', sub: 'Поверхность Ξ-9: леса спор высотой в километры, и они поют', zoom: 0.55, enemyHpMul: 12.2, enemyDmgMul: 3.07, enemySizeMul: 2.44, enemySpeedMul: 1.39, biomassGoal: 1220 },
+  { id: 10, name: 'РЖАВЫЕ ДЮНЫ', sub: 'Окисленные пустоши: железо мёртвых кораблей колонизаторов', zoom: 0.52, enemyHpMul: 15.6, enemyDmgMul: 3.53, enemySizeMul: 2.73, enemySpeedMul: 1.45, biomassGoal: 1400 },
+  { id: 11, name: 'КОНТИНЕНТАЛЬНЫЙ РАЗЛОМ', sub: 'Кора полушария: магма обнажила память планеты', zoom: 0.50, enemyHpMul: 19.7, enemyDmgMul: 4.06, enemySizeMul: 3.06, enemySpeedMul: 1.51, biomassGoal: 1590 },
+  { id: 12, name: 'ПОЛЯРНЫЙ ЩИТ', sub: 'Ледяная мантия: мерзлота хранит цивилизации прошлого', zoom: 0.48, enemyHpMul: 24.6, enemyDmgMul: 4.67, enemySizeMul: 3.42, enemySpeedMul: 1.57, biomassGoal: 1790 },
+  { id: 13, name: 'НЕБЕСНЫЙ ПЛАНКТОН', sub: 'Верхняя атмосфера: парящие споры плетут живые облака', zoom: 0.47, enemyHpMul: 30.4, enemyDmgMul: 5.37, enemySizeMul: 3.6, enemySpeedMul: 1.64, biomassGoal: 2000 },
+  { id: 14, name: 'ИОНОСФЕРА', sub: 'Разрыв неба: авроральные бури переписывают ДНК всего живого', zoom: 0.46, enemyHpMul: 37.3, enemyDmgMul: 6.17, enemySizeMul: 3.75, enemySpeedMul: 1.7, biomassGoal: 2220 },
+  { id: 15, name: 'ФРАКТАЛ БЕСКОНЕЧНОСТИ', sub: 'Метаматематика: выход за пределы биологии', zoom: 0.45, enemyHpMul: 45.5, enemyDmgMul: 7.1, enemySizeMul: 3.9, enemySpeedMul: 1.77, biomassGoal: 2450 },
 ];
 
 export const METAMORPH = {
@@ -312,12 +346,12 @@ export const METAMORPH = {
 export const WORLD = {
   baseW: 1120,
   baseH: 630,
-  step: 1.55,        // множитель размера мира за метаморфоз
+  step: 1.24,        // множитель размера мира за метаморфоз (15 шкал - шаг мягче)
   tailKeep: 0.45,    // доля хвоста, стягиваемая в ядро при метаморфозе
-  tailDpsBonus: 0.35, // прибавка урона хлыста за пережитый метаморфоз
+  tailDpsBonus: 0.22, // прибавка урона хлыста за пережитый метаморфоз
 } as const;
 
-/** Размер мира в мировых единицах для индекса шкалы 0..4 */
+/** Размер мира в мировых единицах для индекса шкалы 0..14 */
 export function worldSize(scaleIdx: number): { w: number; h: number } {
   const m = Math.pow(WORLD.step, Math.max(0, scaleIdx));
   return { w: Math.round(WORLD.baseW * m), h: Math.round(WORLD.baseH * m) };
@@ -328,10 +362,20 @@ export function worldSize(scaleIdx: number): { w: number; h: number } {
 /** Тело игрока: цвет ядра и ореола по шкале бытия (синхронно с wgsl-палитрой) */
 export const SCALE_FORM: Record<number, { core: number; glow: number }> = {
   1: { core: 0xeafffb, glow: 0x66fcf1 },
-  2: { core: 0xeafff4, glow: 0x57e6a9 },
-  3: { core: 0xe8f2ff, glow: 0x4d8dff },
-  4: { core: 0xfff1e0, glow: 0xff8a3d },
-  5: { core: 0xf4ecff, glow: 0xa86bff },
+  2: { core: 0xf2ffe4, glow: 0x9ae66e },
+  3: { core: 0xeafff4, glow: 0x57e6a9 },
+  4: { core: 0xe9fbff, glow: 0x38bdf8 },
+  5: { core: 0xe8f2ff, glow: 0x4d8dff },
+  6: { core: 0xf5f7fa, glow: 0xe2e8f0 },
+  7: { core: 0xf1ecff, glow: 0x8b5cf6 },
+  8: { core: 0xfff6e0, glow: 0xfbbf24 },
+  9: { core: 0xeafff2, glow: 0x34d399 },
+  10: { core: 0xfff0e2, glow: 0xf97316 },
+  11: { core: 0xfff1e0, glow: 0xff8a3d },
+  12: { core: 0xeaf7ff, glow: 0x7dd3fc },
+  13: { core: 0xe6feff, glow: 0xa5f3fc },
+  14: { core: 0xfdeaff, glow: 0xf0abfc },
+  15: { core: 0xf4ecff, glow: 0xa86bff },
 };
 
 /** Лимит фиолетовых маяков за элитными врагами */

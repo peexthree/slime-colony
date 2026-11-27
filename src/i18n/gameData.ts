@@ -37,11 +37,21 @@ export const EN_HYBRIDS: Record<HybridId, { name: string; desc: string }> = {
 };
 
 export const EN_SCALES: Record<number, { name: string; sub: string }> = {
-  1: { name: 'PRIMARY DROPLET', sub: 'Microcosm: biomass droplet inside EuroCorp-3 probe reactor' },
-  2: { name: 'VASCULAR TRACT', sub: 'Host tissue: pulsing vessel walls' },
-  3: { name: 'INNER OCEAN', sub: 'Organ depths: black bile and bioluminescent suspension' },
-  4: { name: 'CONTINENTAL RIFT', sub: 'Planet Ξ-9: magmatic crust of the hemisphere' },
-  5: { name: 'INFINITY FRACTAL', sub: 'Metamathematics: transcending biology itself' },
+  1: { name: 'PRIMARY DROPLET', sub: 'EuroCorp-3 probe reactor: a biomass droplet stirs in the vial' },
+  2: { name: 'AGAR MATRIX', sub: 'Petri dish: fields of nutrient agar, the first hunting grounds' },
+  3: { name: 'VASCULAR TRACT', sub: 'Host tissue: pulsing vessel walls' },
+  4: { name: 'LYMPH TIDE', sub: 'Host lymph: whitish rivers carrying intruders to the filters' },
+  5: { name: 'INNER OCEAN', sub: 'Organ depths: black bile and bioluminescent suspension' },
+  6: { name: 'BONE LABYRINTH', sub: 'Host skeleton: rib frames and cartilage arches echo every heartbeat' },
+  7: { name: 'SYNAPTIC WASTES', sub: 'Nervous system: the host\'s thoughts flare like a storm' },
+  8: { name: 'HOST EXHALE', sub: 'Outside at last: riding the exhale, the organism leaves the body and sees the stars of Ξ-9' },
+  9: { name: 'FUNGAL TAIGA', sub: 'Ξ-9 surface: forests of spores kilometers tall, and they sing' },
+  10: { name: 'RUST DUNES', sub: 'Oxidized wastes: the iron of dead colonizer ships' },
+  11: { name: 'CONTINENTAL RIFT', sub: 'Hemisphere crust: magma has exposed the planet\'s memory' },
+  12: { name: 'POLAR SHIELD', sub: 'Ice mantle: permafrost keeps the civilizations of the past' },
+  13: { name: 'SKY PLANKTON', sub: 'Upper atmosphere: drifting spores weave living clouds' },
+  14: { name: 'IONOSPHERE', sub: 'Sky rupture: auroral storms rewrite the DNA of everything alive' },
+  15: { name: 'INFINITY FRACTAL', sub: 'Metamathematics: transcending biology itself' },
 };
 
 export const EN_NODES: Record<NodeKind, { name: string; pos: string; neg: string }> = {

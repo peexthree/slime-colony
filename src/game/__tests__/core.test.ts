@@ -97,9 +97,9 @@ describe('Daily Challenge PRNG & Balance Constants', () => {
     expect([a(), a(), a()]).toEqual([b(), b(), b()]);
   });
 
-  it('has 6 hybrids and 5 scales with strictly increasing biomass goals', () => {
+  it('has 6 hybrids and 15 locations with strictly increasing biomass goals', () => {
     expect(HYBRIDS.length).toBe(6);
-    expect(SCALES.length).toBe(5);
+    expect(SCALES.length).toBe(15);
     expect(DNA_LEVELS.length).toBe(3);
     for (let i = 1; i < SCALES.length; i++) {
       expect(SCALES[i].biomassGoal).toBeGreaterThan(SCALES[i - 1].biomassGoal);
@@ -180,19 +180,25 @@ describe('Biolab, Codex, Leaderboard & WaveDirector', () => {
 });
 
 describe('Progression Level Gates & Caps', () => {
-  it('enforces level gates per weapon and 4-slot cap', () => {
+  it('enforces level gates per weapon, 3-slot cap and foreign-branch penalty', () => {
     const wlvl: Record<WeaponId, number> = {
       spikes: 1, mandibles: 0, orbs: 0, aura: 0, nova: 0, cysts: 0,
     };
     expect(equippedWeaponCount(wlvl)).toBe(1);
     expect(canUnlockWeapon('mandibles', wlvl, 2)).toBe(false);
     expect(canUnlockWeapon('mandibles', wlvl, 3)).toBe(true);
-    expect(canUnlockWeapon('cysts', wlvl, 9)).toBe(false);
-    expect(canUnlockWeapon('cysts', wlvl, 11)).toBe(true);
+    // мины - капстоун поздней стадии: открываются с 13 уровня
+    expect(canUnlockWeapon('cysts', wlvl, 12)).toBe(false);
+    expect(canUnlockWeapon('cysts', wlvl, 13)).toBe(true);
+
+    // чужая ветка: спikes - вермис, орбиты - симбионт -> штраф +4 уровня
+    expect(canUnlockWeapon('mandibles', wlvl, 3, 'symbiont')).toBe(false);
+    expect(canUnlockWeapon('mandibles', wlvl, 7, 'symbiont')).toBe(true);
+    expect(canUnlockWeapon('mandibles', wlvl, 3, 'vermis')).toBe(true);
+    expect(canUnlockWeapon('mandibles', wlvl, 3, null)).toBe(true);
 
     wlvl.mandibles = 1;
     wlvl.orbs = 1;
-    wlvl.aura = 1;
     expect(equippedWeaponCount(wlvl)).toBe(MAX_EQUIPPED_WEAPONS);
     expect(canUnlockWeapon('nova', wlvl, 20)).toBe(false);
     expect(canUnlockWeapon('cysts', wlvl, 20)).toBe(false);
@@ -201,7 +207,7 @@ describe('Progression Level Gates & Caps', () => {
     expect(canUpgradeWeapon('spikes', 1, 3)).toBe(true);
     expect(canUpgradeWeapon('spikes', 2, 5)).toBe(false);
     expect(canUpgradeWeapon('spikes', 2, 6)).toBe(true);
-    expect(requiredLevelForWeapon('cysts', 1)).toBe(11);
+    expect(requiredLevelForWeapon('cysts', 1)).toBe(13);
   });
 
   it('grows XP curve smoothly and monotonically', () => {
@@ -215,7 +221,7 @@ describe('Progression Level Gates & Caps', () => {
   });
 });
 
-describe('Bio-Node Zone Hold & Contesting', () => {
+describe('Bio-Node Zone Hold, Shield & Garrison', () => {
   const makeNode = (): BioNode => ({
     id: 0,
     x: 200,
@@ -226,31 +232,52 @@ describe('Bio-Node Zone Hold & Contesting', () => {
     kind: 'gen',
   });
 
+  const raiders = (count: number) =>
+    Array.from({ length: count }, (_, i) => ({ x: 205 + i * 6, y: 200 + i * 4, hp: 10, infected: 0 }));
+
   it('captures node when player holds empty zone, pauses on contest, and drains when raided', () => {
     const node = makeNode();
     const res1 = stepBioNodes([node], { x: 200, y: 200 }, [], 4.0, 1, false);
     expect(node.owner).toBe(1);
     expect(node.capture).toBe(1);
     expect(res1.ownerChanged).toContain(node);
+    // захват выдаёт био-щит
+    expect(node.shieldT).toBeGreaterThan(0);
 
     const beforeContest = node.capture;
     stepBioNodes([node], { x: 200, y: 200 }, [{ x: 210, y: 200, hp: 10, infected: 0 }], 1.0, 1, false);
     expect(node.contested).toBe(true);
     expect(node.capture).toBe(beforeContest);
+  });
 
-    const resRaid = stepBioNodes([node], { x: 800, y: 800 }, [
-      { x: 205, y: 200, hp: 10, infected: 0 },
-      { x: 195, y: 205, hp: 10, infected: 0 },
-    ], 1.0, 1, false);
+  it('shield blocks raiding of a freshly captured tower, garrison resists after it expires', () => {
+    const node = makeNode();
+    stepBioNodes([node], { x: 200, y: 200 }, [], 4.0, 1, false);
+    expect(node.owner).toBe(1);
+
+    // щит: толпа врагов не сливает свежую башню
+    const resRaid = stepBioNodes([node], { x: 800, y: 800 }, raiders(3), 4.0, 1, false);
     expect(node.raided).toBe(true);
     expect(resRaid.newlyRaided).toContain(node);
-    expect(node.capture).toBeLessThan(1);
+    expect(node.capture).toBe(1);
+    expect(node.owner).toBe(1);
 
-    stepBioNodes([node], { x: 800, y: 800 }, [
-      { x: 205, y: 200, hp: 10, infected: 0 },
-      { x: 195, y: 205, hp: 10, infected: 0 },
-      { x: 200, y: 210, hp: 10, infected: 0 },
-    ], 4.0, 1, false);
+    // время щита истекает (18 с), узел без врагов не тает
+    stepBioNodes([node], { x: 800, y: 800 }, [], 20.0, 1, false);
+    expect(node.shieldT).toBe(0);
+    expect(node.owner).toBe(1);
+
+    // одиночный враг лишь медленно точит башню
+    stepBioNodes([node], { x: 800, y: 800 }, raiders(1), 4.0, 1, false);
+    expect(node.owner).toBe(1);
+    expect(node.capture).toBeGreaterThan(0.7);
+
+    // 2+ монстра отвоёвывают башню за разумное время
+    stepBioNodes([node], { x: 800, y: 800 }, raiders(2), 4.0, 1, false);
+    expect(node.capture).toBeLessThan(1);
+    expect(node.capture).toBeGreaterThan(0);
+
+    stepBioNodes([node], { x: 800, y: 800 }, raiders(3), 4.0, 1, false);
     expect(node.owner).toBe(0);
   });
 });

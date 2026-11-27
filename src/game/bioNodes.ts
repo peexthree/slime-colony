@@ -1,4 +1,5 @@
 import type { BioNode } from '../engine/types';
+import { NODE_SHIELD_SEC } from '../engine/types';
 
 export interface NodeEnemySnapshot {
   x: number;
@@ -15,9 +16,14 @@ export interface NodeStepResult {
 
 /**
  * Обновление захвата био-узлов по удержанию зоны:
- * - Игрок внутри зоны без врагов -> заполняет узел своей энергией до +1.0 (захват)
+ * - Игрок внутри зоны без врагов -> заполняет узел энергией до +1.0 (захват ~3 с)
  * - Игрок и враги в зоне одновременно -> бой за узел (прогресс на паузе)
- * - Игрок снаружи, враги внутри -> монстры откачивают энергию и отвоёвывают башню
+ * - Игрок снаружи, враги внутри -> рейд: чужой узел откачивается быстро,
+ *   ваша башня держится благодаря био-щиту и гарнизонному сопротивлению
+ *
+ * Баланс удержания: только что захваченная башня получает щит на
+ * NODE_SHIELD_SEC секунд (капля энергии не убывает вовсе), дальше одиночный
+ * враг лишь медленно точит её, а ощутимый урон наносят 2+ монстра.
  */
 export function stepBioNodes(
   nodes: BioNode[],
@@ -31,7 +37,7 @@ export function stepBioNodes(
   const newlyRaided: BioNode[] = [];
   let heldCount = 0;
 
-  const playerChargeRate = 0.28 * captureSpeedMul * (psiWeb ? 1.5 : 1.0);
+  const playerChargeRate = 0.34 * captureSpeedMul * (psiWeb ? 1.7 : 1.0);
 
   for (const n of nodes) {
     const prevRaided = Boolean(n.raided);
@@ -52,6 +58,10 @@ export function stepBioNodes(
     if (n.warnCooldown && n.warnCooldown > 0) {
       n.warnCooldown = Math.max(0, n.warnCooldown - dt);
     }
+    if (n.shieldT && n.shieldT > 0) {
+      n.shieldT = Math.max(0, n.shieldT - dt);
+    }
+    const shielded = (n.shieldT ?? 0) > 0;
 
     let delta = 0;
     if (playerIn && enemyIn === 0) {
@@ -64,8 +74,17 @@ export function stepBioNodes(
       n.contested = true;
       n.raided = false;
     } else if (!playerIn && enemyIn > 0) {
-      const drainRate = Math.min(0.42, 0.14 + (enemyIn - 1) * 0.08);
-      delta = -drainRate * dt;
+      if (shielded) {
+        // Био-щит: свежезахваченная башня не сливается, пока щит активен
+        delta = 0;
+      } else if (n.owner === 1) {
+        // Гарнизонное сопротивление: одиночка почти бессильна, толпа эффективнее
+        delta = enemyIn === 1 ? -0.05 * dt : -Math.min(0.34, 0.12 + (enemyIn - 2) * 0.06) * dt;
+      } else {
+        // Чужой/нейтральный узел откачивается быстрее
+        const drainRate = Math.min(0.42, 0.14 + (enemyIn - 1) * 0.08);
+        delta = -drainRate * dt;
+      }
       n.contested = false;
       n.raided = n.owner === 1 || n.capture > 0.15;
     } else {
@@ -90,6 +109,9 @@ export function stepBioNodes(
       if (n.capture <= 0) n.owner = 0;
     } else if (n.owner === -1) {
       if (n.capture >= 0) n.owner = 0;
+    }
+    if (n.owner === 1 && prevOwner !== 1) {
+      n.shieldT = NODE_SHIELD_SEC;
     }
 
     if (n.owner !== prevOwner) {
