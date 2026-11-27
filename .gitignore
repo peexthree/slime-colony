@@ -20,3 +20,6 @@ Thumbs.db
 # утилиты
 .mimosa/
 *.local
+
+# Артефакты headless-симулятора балансировки
+scripts/out/
